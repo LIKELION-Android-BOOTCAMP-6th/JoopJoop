@@ -34,3 +34,11 @@
   val uiState: StateFlow<NoteUiState> = _uiState.asStateFlow()
 * **Firestore & DTO**: * DB 필드명: snake_case (예: created_at)
   Kotlin DTO 매핑 시: camelCase로 변환 (예: createdAt)
+  
+---
+
+## 📦 3. 데이터 객체 규칙 (Data Object)
+* 로직의 기준이 되는 객체 (Domain) (e.g. Note)
+* Firestore 문서 구조와 1:1 매칭 (e.g. NoteDTO)
+* 서버로 전송할 데이터 : feature/data/model  (e.g. NoteWriteRequest)
+* 서버에서 받은 원본 데이터 : feature/data/model (e.g. NoteResponse)
