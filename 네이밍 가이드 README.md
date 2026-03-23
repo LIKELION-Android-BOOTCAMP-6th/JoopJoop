@@ -32,3 +32,5 @@
   ```kotlin
   private val _uiState = MutableStateFlow(NoteUiState())
   val uiState: StateFlow<NoteUiState> = _uiState.asStateFlow()
+* **Firestore & DTO**: * DB 필드명: snake_case (예: created_at)
+  Kotlin DTO 매핑 시: camelCase로 변환 (예: createdAt)
