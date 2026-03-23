@@ -48,7 +48,6 @@
 
 ## ⚡ 4. Compose 이벤트 및 함수 규칙
 
-UI에서 ViewModel로 전달되는 이벤트는 on{Action} 형태로 사용
-
+**UI에서 ViewModel로 전달되는 이벤트는 on{Action} 형태로 사용**
 * 함수 매개변수 (예: `onNicknameChange : (String) -> Unit`)
 * 
