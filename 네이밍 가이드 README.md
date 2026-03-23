@@ -39,11 +39,16 @@
 
 ## 📦 3. 데이터 객체 규칙 (Data Object)
 
-* 로직의 기준이 되는 객체 (Domain) (e.g. Note)
-* Firestore 문서 구조와 1:1 매칭 (e.g. NoteDTO)
-* 서버로 전송할 데이터 : feature/data/model  (e.g. NoteWriteRequest)
-* 서버에서 받은 원본 데이터 : feature/data/model (e.g. NoteResponse)
+* 로직의 기준이 되는 객체 (Domain) (예: Note)
+* Firestore 문서 구조와 1:1 매칭 (예: NoteDTO)
+* 서버로 전송할 데이터 : feature/data/model  (예: NoteWriteRequest)
+* 서버에서 받은 원본 데이터 : feature/data/model (예: NoteResponse)
   
 ---
 
 ## ⚡ 4. Compose 이벤트 및 함수 규칙
+
+UI에서 ViewModel로 전달되는 이벤트는 on{Action} 형태로 사용
+
+* 함수 매개변수 (예: `onNicknameChange : (String) -> Unit`)
+* 
