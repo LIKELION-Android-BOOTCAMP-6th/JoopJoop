@@ -50,4 +50,16 @@
 
 **UI에서 ViewModel로 전달되는 이벤트는 on{Action} 형태로 사용**
 * 함수 매개변수 (예: `onNicknameChange : (String) -> Unit`)
-* 
+* ViewModel 핸들러: (예: `handleIntent(intent: NoteIntent)` )
+
+**Composable 함수: 반드시 명사로 시작하며 PascalCase (첫 글자 대문자) 사용**
+(예: `@Composable fun SettingSectionTitle(...)` )
+  
+---
+
+## 🎨 5. 리소스 네이밍 (Resource)
+
+res/ 폴더 내의 모든 파일 및 ID는 **snake_case**를 사용
+* **Icons:** `ic_{feature/category}_{name}`
+* **Images:** `img_{description).png`
+* **Strings:** `{feature}_{description}` (예: `auth_login_error_empty_email`)
