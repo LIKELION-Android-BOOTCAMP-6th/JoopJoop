@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
@@ -18,7 +22,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.joopjoop.note.WriteNoteScreen
 import com.example.joopjoop.note.NoteDetailScreen
 import com.example.joopjoop.note.NoteListScreen
-import com.example.joopjoop.note.WriteNoteScreen
 import com.example.joopjoop.note.WriteNoteUiState
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
@@ -32,18 +35,27 @@ class MainActivity : ComponentActivity() {
                 composable("noteList") { NoteListScreen(navController = navController) }
                 composable("noteDetail") { NoteDetailScreen(navController = navController) }
                 composable("writeNote") {
+                    var uiState by remember {
+                        mutableStateOf(
+                            WriteNoteUiState(
+                                selectedCategory = "일상",
+                                noteContent = "",
+                                storageHours = 12
+                            )
+                        )
+                    }
                     WriteNoteScreen(
                         navController = navController,
-                        uiState = WriteNoteUiState(
-                            selectedCategory = "일상",
-                            noteContent = "오늘 날씨가 너무 좋네요~!",
-                            storageHours = 12
-                    ))
+                        uiState = uiState,
+                        onCategorySelected = { uiState = uiState.copy(selectedCategory = it) },
+                        onContentChange = { uiState = uiState.copy(noteContent = it) },
+                        onHoursChange = { uiState = uiState.copy(storageHours = it) },
+                        onBackClick = { navController.popBackStack() }
+                    )
                 }
             }
         }
     }
-
 
 @Preview(showBackground = true)
 @Composable
