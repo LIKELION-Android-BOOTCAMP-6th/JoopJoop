@@ -2,6 +2,8 @@ package com.example.joopjoop.core.common.util
 
 
 import android.location.Location
+import com.firebase.geofire.GeoFireUtils
+import com.firebase.geofire.GeoLocation
 import kotlin.math.*
 
 object LocationUtil {
@@ -25,9 +27,8 @@ object LocationUtil {
      * (직접 구현하거나 외부 라이브러리를 활용할 수 있습니다.)
      */
     fun getGeohash(lat: Double, lng: Double): String {
-        // Geohash는 라이브러리를 쓰거나 특정 알고리즘이 필요
-        // 좌표 기반 쿼리를 위해 틀만 잡아둠.
-        return ""
+        // GeoFire 라이브러리 사용
+        return GeoFireUtils.getGeoHashForLocation(GeoLocation(lat, lng))
     }
 
     /**
