@@ -8,7 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.joopjoop.feature.map.ui.MapMainScreen
+import com.example.joopjoop.feature.map.ui.MapMockScreen
 import com.example.joopjoop.feature.map.ui.theme.JoopJoopTheme
 
 class MapTestActivity : ComponentActivity() {
@@ -17,7 +17,7 @@ class MapTestActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             JoopJoopTheme {
-                MapMainScreen()
+                MapMockScreen()
             }
         }
     }
