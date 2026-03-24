@@ -2,10 +2,8 @@ package com.example.joopjoop.feature.auth.ui.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,10 +20,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,21 +41,18 @@ import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 @Composable
 fun LoginScreen(
-    modifier: Modifier = Modifier,
+    uiState: LoginUiState, // 상태 추가
+    modifier: Modifier = Modifier, // modifier 유지
+    onEmailChange: (String) -> Unit = {}, // 이메일 변경 콜백
+    onPasswordChange: (String) -> Unit = {}, // 비밀번호 변경 콜백
+    onTogglePasswordVisibility: () -> Unit = {}, // 비밀번호 보기 토글 콜백
     onBackClick: () -> Unit = {},
-    onSignInClick: (String, String) -> Unit = { _, _ -> },
+    onSignInClick: () -> Unit = {}, // 파라미터는 ViewModel에서 state로 처리하므로 제거 가능
     onCreateAccountClick: () -> Unit = {}
 ) {
-    // remember - 화면이 다시 그려져도 값을 유지함
-    // mutableStateOf - 값이 바뀌면 Compose가 감지해서 UI를 자동으로 업데이트함
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        // 탑바 - 타이틀(로그인), 뒤로가기
         topBar = {
             Box(
                 modifier = Modifier
@@ -113,13 +104,13 @@ fun LoginScreen(
                         .background(
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.tertiary, // OrangeLight
-                                    MaterialTheme.colorScheme.primary   // OrangePrimary
+                                    MaterialTheme.colorScheme.tertiary,
+                                    MaterialTheme.colorScheme.primary
                                 )
                             )
                         )
                 )
-                
+
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -150,13 +141,13 @@ fun LoginScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
+                value = uiState.email, // state 사용
+                onValueChange = onEmailChange, // 콜백 연결
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { // hint 같은 어떤 정보가 들어가야 하는지 알려줌
+                placeholder = {
                     Text(
                         text = stringResource(R.string.email_placeholder),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant // TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 leadingIcon = {
@@ -169,8 +160,8 @@ fun LoginScreen(
                 },
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // BgSurface
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // BgSurface
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -183,22 +174,16 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // 비밀번호 부분
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.password),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            Text(
+                text = stringResource(R.string.password),
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
+                value = uiState.password, // state 사용
+                onValueChange = onPasswordChange, // 콜백 연결
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
@@ -216,19 +201,21 @@ fun LoginScreen(
                 },
                 trailingIcon = {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_visibility),
+                        painter = painterResource(
+                            id = if (uiState.isPasswordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
+                        ),
                         contentDescription = "Toggle Password Visibility",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
                             .size(24.dp)
-                            .clickable { passwordVisible = !passwordVisible }
+                            .clickable { onTogglePasswordVisibility() }
                     )
                 },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // BgSurface
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // BgSurface
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -242,13 +229,13 @@ fun LoginScreen(
 
             // 로그인 버튼
             Button(
-                onClick = { onSignInClick(email, password) },
+                onClick = onSignInClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary, // OrangePrimary
+                    containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
@@ -267,6 +254,7 @@ fun LoginScreen(
                     withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
                         append(stringResource(R.string.dont_have_account))
                     }
+                    append(" ") // 간격 추가
                     withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)) {
                         append(stringResource(R.string.create_account))
                     }
@@ -286,6 +274,6 @@ fun LoginScreen(
 @Composable
 fun LoginScreenPreview() {
     JoopJoopTheme {
-        LoginScreen()
+        LoginScreen(uiState = LoginUiState()) // 기본 state 전달
     }
 }

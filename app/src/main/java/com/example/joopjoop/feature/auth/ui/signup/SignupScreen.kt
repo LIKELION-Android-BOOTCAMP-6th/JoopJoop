@@ -171,7 +171,7 @@ fun SignupScreen(
                 Button(
                     onClick = onDuplicationCheckClick,
                     modifier = Modifier.height(56.dp),
-                    enabled = uiState.nickname.isNotBlank() && !uiState.isLoading,
+                    enabled = uiState.nickname.isNotBlank(),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -301,7 +301,7 @@ fun SignupScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = uiState.isSignupButtonEnabled && !uiState.isLoading,
+                enabled = uiState.isSignupButtonEnabled,
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
