@@ -1,6 +1,11 @@
 <resources>
-    <!-- 로그인 관련 -->
+    <!-- 인트로 관련 -->
     <string name="app_name">JoopJoop</string>
+    <string name="sub_name">줍줍</string>
+    <string name="app_description">산책과 주변 이슈들에 관심있어하는 사람들\n을 위한 쪽지 플랫폼</string>
+    <string name="go_to_login">쪽지 확인하러 가기</string>
+
+    <!-- 로그인 관련 -->
     <string name="login_title">로그인</string>
     <string name="welcome_back">돌아오셨군요!</string>
     <string name="sign_in_message">로그인을 위해 회원정보를 입력해 주세요</string>
