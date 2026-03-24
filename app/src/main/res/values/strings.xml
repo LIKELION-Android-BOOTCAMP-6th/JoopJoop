@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">JoopJoop</string>
+    <string name="title_activity_write_note_screen">WriteNoteScreen</string>
 </resources>
