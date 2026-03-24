@@ -153,7 +153,7 @@ fun LoginScreen(
                 value = email,
                 onValueChange = { email = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = {
+                placeholder = { // hint 같은 어떤 정보가 들어가야 하는지 알려줌
                     Text(
                         text = stringResource(R.string.email_placeholder),
                         color = MaterialTheme.colorScheme.onSurfaceVariant // TextSecondary

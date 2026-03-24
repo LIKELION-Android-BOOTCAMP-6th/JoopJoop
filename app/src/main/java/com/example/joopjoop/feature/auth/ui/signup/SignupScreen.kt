@@ -2,7 +2,6 @@ package com.example.joopjoop.feature.auth.ui.signup
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -20,14 +22,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,20 +40,19 @@ import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 @Composable
 fun SignupScreen(
+    uiState: SignupUiState,
     modifier: Modifier = Modifier,
+    onNicknameChange: (String) -> Unit = {},
+    onEmailChange: (String) -> Unit = {},
+    onPasswordChange: (String) -> Unit = {},
+    onPasswordVisibilityToggle: () -> Unit = {},
     onBackClick: () -> Unit = {},
-    onCreateAccountInClick: (String, String) -> Unit = { _, _ -> },
-    onLoginClick: () -> Unit = {}
+    onDuplicationCheckClick: () -> Unit = {},
+    onCreateAccountClick: () -> Unit = {}
 ) {
-    var nickname by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        // 탑바 - 타이틀(회원가입), 뒤로가기
         topBar = {
             Box(
                 modifier = Modifier
@@ -93,8 +91,7 @@ fun SignupScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 로그인 배경
-            // 박스 이미지
+            // 상단 그래픽 영역
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -103,21 +100,19 @@ fun SignupScreen(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                MaterialTheme.colorScheme.tertiary, // OrangeLight
-                                MaterialTheme.colorScheme.primary   // OrangePrimary
+                                MaterialTheme.colorScheme.tertiary,
+                                MaterialTheme.colorScheme.primary
                             )
                         )
                     )
             )
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 안내 인사
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            // 인사말
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = stringResource(R.string.join_us),
-                    color = MaterialTheme.colorScheme.onSurface, // TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -126,50 +121,88 @@ fun SignupScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 16.sp
                 )
-
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 닉네임 부분
+            // 닉네임 섹션
+            Text(
+                text = stringResource(R.string.nickname),
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                OutlinedTextField(
+                    value = uiState.nickname,
+                    onValueChange = onNicknameChange,
+                    modifier = Modifier.weight(1f),
+                    placeholder = {
+                        Text(
+                            text = "쪽지 줍는 사람",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_person),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    ),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = onDuplicationCheckClick,
+                    modifier = Modifier.height(56.dp),
+                    enabled = uiState.nickname.isNotBlank() && !uiState.isLoading,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.duplication_check),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            
+            // 닉네임 중복 확인 결과 메시지
+            if (uiState.nicknameHelperMessage.isNotEmpty()) {
                 Text(
-                    text = stringResource(R.string.nickname),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
+                    text = uiState.nicknameHelperMessage,
+                    color = when (uiState.isNicknameAvailable) {
+                        true -> MaterialTheme.colorScheme.primary
+                        false -> Color(0xFFE57373) // 부드러운 빨간색 (에러)
+                        null -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 4.dp, start = 4.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = nickname,
-                onValueChange = { nickname = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = {
-                    Text(
-                        text = "쪽지 줍는 사람",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // BgSurface
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // BgSurface
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    cursorColor = MaterialTheme.colorScheme.primary
-                ),
-            )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // 이메일 부분
+            // 이메일 섹션
             Text(
                 text = stringResource(R.string.email_address),
                 color = MaterialTheme.colorScheme.onBackground,
@@ -178,13 +211,13 @@ fun SignupScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
+                value = uiState.email,
+                onValueChange = onEmailChange,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
                         text = stringResource(R.string.email_placeholder),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant // TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 leadingIcon = {
@@ -197,8 +230,8 @@ fun SignupScreen(
                 },
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // BgSurface
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // BgSurface
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -208,25 +241,19 @@ fun SignupScreen(
                 singleLine = true
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // 비밀번호 부분
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.password),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            // 비밀번호 섹션
+            Text(
+                text = stringResource(R.string.password),
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
+                value = uiState.password,
+                onValueChange = onPasswordChange,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
@@ -249,14 +276,14 @@ fun SignupScreen(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
                             .size(24.dp)
-                            .clickable { passwordVisible = !passwordVisible }
+                            .clickable { onPasswordVisibilityToggle() }
                     )
                 },
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (uiState.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // BgSurface
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant, // BgSurface
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -265,13 +292,42 @@ fun SignupScreen(
                 ),
                 singleLine = true
             )
+
+            Spacer(modifier = Modifier.height(40.dp))
+            
+            // 회원가입 버튼
+            Button(
+                onClick = onCreateAccountClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                enabled = uiState.isSignupButtonEnabled && !uiState.isLoading,
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White
+                )
+            ) {
+                Text(
+                    text = stringResource(R.string.create_account),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun SignupScreenPreview() {
     JoopJoopTheme {
-        SignupScreen()
+        SignupScreen(
+            uiState = SignupUiState(
+                nickname = "쪽지 줍는 사람",
+                nicknameHelperMessage = "사용 가능한 닉네임입니다.",
+                isNicknameAvailable = true
+            )
+        )
     }
 }
