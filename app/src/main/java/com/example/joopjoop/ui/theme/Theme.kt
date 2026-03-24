@@ -1,4 +1,4 @@
-package com.example.joopjoop.core.designsystem
+package com.example.joopjoop.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -6,7 +6,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
@@ -25,17 +24,18 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = OrangeLight
 )
 
-private val LightColorScheme = darkColorScheme( // Design is primarily dark, so using dark-ish colors even for light mode as a fallback
-    primary = OrangePrimary,
-    onPrimary = TextPrimary,
-    background = BgDarkest,
-    onBackground = TextPrimary,
-    surface = BgDark,
-    onSurface = TextPrimary,
-    surfaceVariant = BgSurface,
-    onSurfaceVariant = TextSecondary,
-    outline = DividerColor
-)
+private val LightColorScheme =
+    darkColorScheme( // Design is primarily dark, so using dark-ish colors even for light mode as a fallback
+        primary = OrangePrimary,
+        onPrimary = TextPrimary,
+        background = BgDarkest,
+        onBackground = TextPrimary,
+        surface = BgDark,
+        onSurface = TextPrimary,
+        surfaceVariant = BgSurface,
+        onSurfaceVariant = TextSecondary,
+        outline = DividerColor
+    )
 
 @Composable
 fun JoopJoopTheme(

@@ -1,4 +1,4 @@
-package com.example.joopjoop.note.ui.theme
+package com.example.joopjoop.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

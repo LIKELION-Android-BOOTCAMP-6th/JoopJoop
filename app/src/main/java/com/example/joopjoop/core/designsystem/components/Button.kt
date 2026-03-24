@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.joopjoop.core.designsystem.OrangePrimary
+import com.example.joopjoop.ui.theme.OrangePrimary
 
 
 @Composable
