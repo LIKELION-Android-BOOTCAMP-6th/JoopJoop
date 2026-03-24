@@ -26,10 +26,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,14 +47,14 @@ import com.example.joopjoop.ui.theme.TextTertiary
 
 @Composable
 fun WriteNoteScreen(
-    modifier: Modifier = Modifier,
+    uiState: WriteNoteUiState, // 상태 추가
+    modifier: Modifier = Modifier, // 유지
+    onCategorySelected: (String) -> Unit = {},
+    onContentChange: (String) -> Unit = {},
+    onHoursChange: (Int) -> Unit = {},
     onBackClick: () -> Unit = {},
-    onLeaveNoteClick: (String, String, Int) -> Unit = { _, _, _ -> }
+    onLeaveNoteClick: () -> Unit = {}
 ) {
-    var selectedCategory by remember { mutableStateOf("일상") } // 쪽지 설정 기본값
-    var noteContent by remember { mutableStateOf("") }
-    var storageHours by remember { mutableStateOf(12) }
-
     val categories = listOf(
         stringResource(R.string.category_daily),
         stringResource(R.string.category_emotion),
@@ -69,7 +65,6 @@ fun WriteNoteScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = BgDarkest,
-        // 탑바 - 타이틀, 뒤로가기 버튼
         topBar = {
             Box(
                 modifier = Modifier
@@ -108,7 +103,7 @@ fun WriteNoteScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Category Selection
+            // 1. 카테고리 선택 부분
             Text(
                 text = stringResource(R.string.select_category),
                 color = OrangePrimary,
@@ -122,23 +117,15 @@ fun WriteNoteScreen(
                 items(categories) { category ->
                     CategorySelection(
                         text = category,
-                        isSelected = selectedCategory == category,
-                        onClick = { selectedCategory = category }
-                    )
-                }
-                item {
-                    // Empty square chip from image
-                    Box(
-                        modifier = Modifier
-                            .size(height = 40.dp, width = 60.dp)
-                            .border(1.dp, BgSurface, RoundedCornerShape(20.dp))
+                        isSelected = uiState.selectedCategory == category,
+                        onClick = { onCategorySelected(category) }
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 쪽지 입력 부분
+            // 2. 쪽지 입력 부분 (Box 내부)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -147,8 +134,8 @@ fun WriteNoteScreen(
                     .padding(20.dp)
             ) {
                 OutlinedTextField(
-                    value = noteContent,
-                    onValueChange = { noteContent = it },
+                    value = uiState.noteContent, // state 사용
+                    onValueChange = onContentChange, // 콜백 사용
                     modifier = Modifier.fillMaxSize(),
                     placeholder = {
                         Text(
@@ -166,41 +153,35 @@ fun WriteNoteScreen(
                     )
                 )
 
-                // 사진 추가 버튼
-                Column(
+                // 사진 추가 버튼 (기능은 나중에)
+                Box(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(bottom = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(bottom = 8.dp)
+                        .size(80.dp)
+                        .border(1.dp, TextTertiary, RoundedCornerShape(16.dp))
+                        .clickable { /* 사진 추가 로직 */ },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .border(1.dp, TextTertiary, RoundedCornerShape(16.dp))
-                            .clickable { /* 사진 넣기 */ },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_camera),
-                                contentDescription = null,
-                                tint = TextTertiary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.add_photo),
-                                color = TextTertiary,
-                                fontSize = 10.sp
-                            )
-                        }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_camera),
+                            contentDescription = null,
+                            tint = TextTertiary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.add_photo),
+                            color = TextTertiary,
+                            fontSize = 10.sp
+                        )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 보관 기간 부분
+            // 3. 보관 기간 조절 Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -211,13 +192,11 @@ fun WriteNoteScreen(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .background(OrangePrimary, CircleShape),
+                        modifier = Modifier.size(32.dp).background(OrangePrimary, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_visibility), // Using visibility icon as placeholder for clock
+                            painter = painterResource(id = R.drawable.ic_visibility),
                             contentDescription = null,
                             tint = BgDarkest,
                             modifier = Modifier.size(20.dp)
@@ -225,75 +204,39 @@ fun WriteNoteScreen(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text(
-                            text = stringResource(R.string.storage_period),
-                            color = TextPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.storage_period_desc),
-                            color = TextTertiary,
-                            fontSize = 12.sp
-                        )
+                        Text(text = stringResource(R.string.storage_period), color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(text = stringResource(R.string.storage_period_desc), color = TextTertiary, fontSize = 12.sp)
                     }
                 }
 
-                // 시간 선택
+                // 시간 조절 버튼
                 Row(
-                    modifier = Modifier
-                        .background(BgDarkest, RoundedCornerShape(16.dp))
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier.background(BgDarkest, RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "-",
-                        color = TextTertiary,
-                        modifier = Modifier.clickable { if (storageHours > 1) storageHours-- }
-                    )
+                    Text("-", color = TextTertiary, modifier = Modifier.clickable { onHoursChange(uiState.storageHours - 1) })
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = "${storageHours}${stringResource(R.string.hours_unit)}",
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("${uiState.storageHours}h", color = TextPrimary, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = "+",
-                        color = TextTertiary,
-                        modifier = Modifier.clickable { storageHours++ }
-                    )
+                    Text("+", color = TextTertiary, modifier = Modifier.clickable { onHoursChange(uiState.storageHours + 1) })
                 }
             }
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // 쪽지 남기기 버튼
+            // 4. 쪽지 남기기 버튼
             Button(
-                onClick = { onLeaveNoteClick(selectedCategory, noteContent, storageHours) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp),
+                onClick = onLeaveNoteClick, // 이제 인자 없이 깔끔하게!
+                modifier = Modifier.fillMaxWidth().height(64.dp),
                 shape = RoundedCornerShape(32.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = OrangePrimary,
-                    contentColor = TextPrimary
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary, contentColor = TextPrimary)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "> ", fontWeight = FontWeight.Black, fontSize = 20.sp)
-                    Text(
-                        text = stringResource(R.string.leave_note_button),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(text = "> ${stringResource(R.string.leave_note_button)}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
 }
 
-// 카테고리 선택 목록
 @Composable
 fun CategorySelection(
     text: String,
@@ -320,8 +263,14 @@ fun CategorySelection(
 
 @Preview(showBackground = true)
 @Composable
-fun WriteNoteScreenPreview() {
+fun WriteNoteScreenPreview() { // 더미데이터
     JoopJoopTheme {
-        WriteNoteScreen()
+        WriteNoteScreen(
+            uiState = WriteNoteUiState(
+                selectedCategory = "일상",
+                noteContent = "오늘 날씨가 너무 좋네요~!",
+                storageHours = 12
+            )
+        )
     }
 }
