@@ -37,4 +37,5 @@
     <string name="hours_unit">시간</string>
     <string name="leave_note_button">쪽지 남기기</string>
     <string name="title_activity_write_note_screen">WriteNoteScreen</string>
+    <string name="title_activity_main">MainActivity</string>
 </resources>
