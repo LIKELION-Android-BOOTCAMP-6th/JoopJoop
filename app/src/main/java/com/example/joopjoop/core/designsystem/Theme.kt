@@ -1,6 +1,5 @@
-package com.example.joopjoop.ui.theme
+package com.example.joopjoop.core.designsystem
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
