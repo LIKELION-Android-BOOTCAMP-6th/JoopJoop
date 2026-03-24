@@ -13,9 +13,10 @@
 
     <!-- 회원가입 관련 -->
     <string name="signup_title">회원가입</string>
-    <string name="join_us">어서오세요!</string>
+    <string name="join_us">쪽지 남길 준비되셨나요?</string>
     <string name="sign_up_message">회원가입을 위해 회원정보를 입력해 주세요</string>
     <string name="nickname">닉네임</string>
+    <string name="duplication_check">중복확인</string>
     <!-- 쪽지 작성 관련 -->
     <string name="write_note_title">쪽지 남기기</string>
     <string name="select_category">카테고리 선택</string>
