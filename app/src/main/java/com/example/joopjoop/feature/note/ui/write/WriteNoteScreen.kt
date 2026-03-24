@@ -69,6 +69,7 @@ fun WriteNoteScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = BgDarkest,
+        // 탑바 - 타이틀, 뒤로가기 버튼
         topBar = {
             Box(
                 modifier = Modifier
@@ -119,7 +120,7 @@ fun WriteNoteScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(categories) { category ->
-                    CategoryChip(
+                    CategorySelection(
                         text = category,
                         isSelected = selectedCategory == category,
                         onClick = { selectedCategory = category }
@@ -137,7 +138,7 @@ fun WriteNoteScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Note Input Area
+            // 쪽지 입력 부분
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -165,7 +166,7 @@ fun WriteNoteScreen(
                     )
                 )
 
-                // Add Photo Button
+                // 사진 추가 버튼
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -175,8 +176,8 @@ fun WriteNoteScreen(
                     Box(
                         modifier = Modifier
                             .size(80.dp)
-                            .border(1.dp, TextTertiary, RoundedCornerShape(16.dp)) // Dash effect not directly available in border
-                            .clickable { /* Add Photo */ },
+                            .border(1.dp, TextTertiary, RoundedCornerShape(16.dp))
+                            .clickable { /* 사진 넣기 */ },
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -199,7 +200,7 @@ fun WriteNoteScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Storage Period Card
+            // 보관 기간 부분
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -238,7 +239,7 @@ fun WriteNoteScreen(
                     }
                 }
 
-                // Hours Selector
+                // 시간 선택
                 Row(
                     modifier = Modifier
                         .background(BgDarkest, RoundedCornerShape(16.dp))
@@ -267,7 +268,7 @@ fun WriteNoteScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Submit Button
+            // 쪽지 남기기 버튼
             Button(
                 onClick = { onLeaveNoteClick(selectedCategory, noteContent, storageHours) },
                 modifier = Modifier
@@ -292,8 +293,9 @@ fun WriteNoteScreen(
     }
 }
 
+// 카테고리 선택 목록
 @Composable
-fun CategoryChip(
+fun CategorySelection(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit

@@ -52,13 +52,16 @@ fun LoginScreen(
     onSignInClick: (String, String) -> Unit = { _, _ -> },
     onCreateAccountClick: () -> Unit = {}
 ) {
+    // remember - 화면이 다시 그려져도 값을 유지함
+    // mutableStateOf - 값이 바뀌면 Compose가 감지해서 UI를 자동으로 업데이트함
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background, // BgDarkest
+        containerColor = MaterialTheme.colorScheme.background,
+        // 탑바 - 타이틀, 뒤로가기
         topBar = {
             Box(
                 modifier = Modifier
@@ -97,7 +100,7 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Welcome Card
+            // 로그인 배경
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -138,7 +141,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Email Field
+            // 이메일 부분
             Text(
                 text = stringResource(R.string.email_address),
                 color = MaterialTheme.colorScheme.onBackground,
@@ -179,7 +182,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Password Field
+            // 비밀번호 부분
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -237,7 +240,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Sign In Button
+            // 로그인 버튼
             Button(
                 onClick = { onSignInClick(email, password) },
                 modifier = Modifier
@@ -258,7 +261,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Create Account Link
+            // 계정 만들기 링크
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
