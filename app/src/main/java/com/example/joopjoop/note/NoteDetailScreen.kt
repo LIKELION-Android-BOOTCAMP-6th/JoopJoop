@@ -56,10 +56,12 @@ import com.example.joopjoop.note.ui.theme.JoopJoopTheme
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.DividerColor
+import com.example.joopjoop.ui.theme.OrangeDark
 import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextSecondary
 import com.example.joopjoop.ui.theme.TextTertiary
+import kotlinx.coroutines.NonCancellable.isActive
 
 @Composable
 fun NoteDetailScreen(navController: NavController){
@@ -71,7 +73,7 @@ fun NoteDetailScreen(navController: NavController){
                 DetailTopBar(navController)
             },
             bottomBar = {
-                DetailBottomBar()
+                DetailBottomBar(navController)
             }) { innerPadding ->
             NoteDetail(
                 modifier = Modifier.padding(innerPadding)
@@ -164,7 +166,8 @@ fun NoteDetail(modifier: Modifier = Modifier) {
             DetailActionButton(
                 icon = R.drawable.outline_thumb_up_24,
                 label = "좋아요",
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
             )
             DetailActionButton(
                 icon = R.drawable.outline_bookmark_24,
@@ -207,17 +210,27 @@ fun DetailTopBar(navController: NavController) {
 // 공통으로 쓰일 하단 버튼
 @Composable
 fun DetailActionButton(icon: Int, label: String, modifier: Modifier = Modifier) {
+
+    var isActive by remember { mutableStateOf(false) }
+
     Box(
         modifier = modifier
             .height(48.dp)
             .border(1.dp, DividerColor, RoundedCornerShape(8.dp))
-            .clickable { /* 액션 */ },
+            .clickable { isActive = !isActive },
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(painterResource(id = icon), contentDescription = null, tint = TextPrimary, modifier = Modifier.size(18.dp))
+            Icon(painterResource(id = icon),
+                contentDescription = null,
+                tint = if (isActive) OrangePrimary else TextPrimary,
+                modifier = Modifier.size(18.dp))
+
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = label, color = TextPrimary, fontSize = 14.sp)
+
+            Text(text = label,
+                color = if (isActive) OrangePrimary else TextPrimary,
+                fontSize = 14.sp)
         }
     }
 }
@@ -225,7 +238,7 @@ fun DetailActionButton(icon: Int, label: String, modifier: Modifier = Modifier) 
 
 // 화면 하단 네비게이션 바
 @Composable
-fun DetailBottomBar() {
+fun DetailBottomBar(navController: NavController) {
     var selectedTab by remember { mutableStateOf("MAP") }
 
     val selectedColor = OrangePrimary
@@ -267,7 +280,8 @@ fun DetailBottomBar() {
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .clickable { selectedTab = "WRITE" },
+                    .clickable { selectedTab = "WRITE"
+                        navController.navigate("writeNote")},
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(

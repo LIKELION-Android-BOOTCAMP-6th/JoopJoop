@@ -11,12 +11,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.joopjoop.note.WriteNoteScreen
 import com.example.joopjoop.note.NoteDetailScreen
 import com.example.joopjoop.note.NoteListScreen
 import com.example.joopjoop.note.WriteNoteScreen
+import com.example.joopjoop.note.WriteNoteUiState
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 class MainActivity : ComponentActivity() {
@@ -28,11 +31,18 @@ class MainActivity : ComponentActivity() {
             NavHost(navController = navController, startDestination = "noteList") {
                 composable("noteList") { NoteListScreen(navController = navController) }
                 composable("noteDetail") { NoteDetailScreen(navController = navController) }
-                composable("writeNote") { WriteNoteScreen(navController = navController) }
+                composable("writeNote") {
+                    WriteNoteScreen(
+                        navController = navController,
+                        uiState = WriteNoteUiState(
+                            selectedCategory = "일상",
+                            noteContent = "오늘 날씨가 너무 좋네요~!",
+                            storageHours = 12
+                    ))
+                }
             }
         }
     }
-}
 
 
 @Preview(showBackground = true)
@@ -40,4 +50,4 @@ class MainActivity : ComponentActivity() {
 fun GreetingPreview() {
     JoopJoopTheme {
     }
-}
+}}
