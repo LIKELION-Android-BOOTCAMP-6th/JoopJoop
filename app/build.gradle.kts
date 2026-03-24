@@ -62,4 +62,7 @@ dependencies {
     implementation("com.google.maps.android:maps-compose:4.4.1")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.2.0")
+
+    // Compose에서 ViewModel을 사용하기 위한 필수 라이브러리
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
 }

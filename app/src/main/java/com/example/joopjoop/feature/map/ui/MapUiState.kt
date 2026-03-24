@@ -1,7 +1,15 @@
 package com.example.joopjoop.feature.map.ui
 
-import com.example.joopjoop.core.model.NoteDTO
+import com.example.joopjoop.core.common.util.LocationUtil
 import com.google.android.gms.maps.model.LatLng
+
+// 1. 임시 DTO를 여기에 정의하여 모든 파일이 이 모델을 바라보게 합니다.
+data class NoteDTO(
+    val id: String,
+    val latitude: Double,
+    val longitude: Double,
+    val category: String = "일상"
+)
 
 data class MapUiState(
     val currentUserLocation: LatLng? = null, // F-MAP-02: 현재 사용자 위치 (기준점)
@@ -14,27 +22,26 @@ data class MapUiState(
     /**
      * [F-MAP-05 관련] 내 위치에서 30m 이내에 있어 '줍기'가 가능한 쪽지들
      */
-// NoteDTO 아직 없음
-//    val pickableNotes: List<NoteDTO>
-//        get() = if (currentUserLocation == null) emptyList()
-//        else notes.filter { note ->
-//            LocationUtil.calculateDistance(
-//                currentUserLocation.latitude, currentUserLocation.longitude,
-//                note.latitude, note.longitude
-//            ) <= 30f
-//        }
-//
-//    /**
-//     * [F-MAP-03 관련] 지도는 표시되지만, 거리가 멀어(30m 초과) 아직 주울 수 없는 쪽지들
-//     */
-//    val distantNotes: List<NoteDTO>
-//        get() = if (currentUserLocation == null) notes
-//        else notes.filter { note ->
-//            LocationUtil.calculateDistance(
-//                currentUserLocation.latitude, currentUserLocation.longitude,
-//                note.latitude, note.longitude
-//            ) > 30f
-//        }
+    val pickableNotes: List<NoteDTO>
+        get() = if (currentUserLocation == null) emptyList()
+        else notes.filter { note ->
+            LocationUtil.calculateDistance(
+                currentUserLocation.latitude, currentUserLocation.longitude,
+                note.latitude, note.longitude
+            ) <= 30f
+        }
+
+    /**
+     * [F-MAP-03 관련] 지도는 표시되지만, 거리가 멀어(30m 초과) 아직 주울 수 없는 쪽지들
+     */
+    val distantNotes: List<NoteDTO>
+        get() = if (currentUserLocation == null) notes
+        else notes.filter { note ->
+            LocationUtil.calculateDistance(
+                currentUserLocation.latitude, currentUserLocation.longitude,
+                note.latitude, note.longitude
+            ) > 30f
+        }
 
     /**
      * F-MAP-08: 주변 쪽지 개수 텍스트 계산
