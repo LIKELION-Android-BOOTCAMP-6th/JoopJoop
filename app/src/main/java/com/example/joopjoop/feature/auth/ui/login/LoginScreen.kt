@@ -61,7 +61,7 @@ fun LoginScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        // 탑바 - 타이틀, 뒤로가기
+        // 탑바 - 타이틀(로그인), 뒤로가기
         topBar = {
             Box(
                 modifier = Modifier

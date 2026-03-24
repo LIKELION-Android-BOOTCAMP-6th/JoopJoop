@@ -1,8 +1,9 @@
 <resources>
+    <!-- 로그인 관련 -->
     <string name="app_name">JoopJoop</string>
     <string name="login_title">로그인</string>
     <string name="welcome_back">돌아오셨군요!</string>
-    <string name="sign_in_message">로그인을 위해 회원 정보를 입력해 주세요</string>
+    <string name="sign_in_message">로그인을 위해 회원정보를 입력해 주세요</string>
     <string name="email_address">이메일 주소</string>
     <string name="email_placeholder">name@example.com</string>
     <string name="password">비밀번호</string>
@@ -10,6 +11,12 @@
     <string name="dont_have_account">계정이 없으신가요?</string>
     <string name="create_account">계정 만들기</string>
 
+    <!-- 회원가입 관련 -->
+    <string name="signup_title">회원가입</string>
+    <string name="join_us">어서오세요!</string>
+    <string name="sign_up_message">회원가입을 위해 회원정보를 입력해 주세요</string>
+    <string name="nickname">닉네임</string>
+    <!-- 쪽지 작성 관련 -->
     <string name="write_note_title">쪽지 남기기</string>
     <string name="select_category">카테고리 선택</string>
     <string name="category_daily">일상</string>
