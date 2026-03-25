@@ -2,6 +2,8 @@ package com.example.joopjoop.feature.note.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.joopjoop.feature.note.data.repository.NoteRepository
+import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
 import com.example.joopjoop.feature.note.ui.list.NoteItem
 import com.example.joopjoop.feature.note.ui.list.NoteListUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,7 +12,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class NoteListViewModel : ViewModel() {
+class NoteListViewModel(
+    private val repository: NoteRepository = NoteRepositoryImpl()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NoteListUiState())
     val uiState: StateFlow<NoteListUiState> = _uiState.asStateFlow()
@@ -19,20 +23,18 @@ class NoteListViewModel : ViewModel() {
         loadNotes()
     }
 
-    // 테스트용 가상 데이터로 목록 불러오기
+    // 테스트용 가상 데이터로 목록 불러옴
     private fun loadNotes() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-
-            val mockNotes = List(20) { index ->
+            val notes = repository.getNotes().map { dto ->
                 NoteItem(
-                    id = index.toString(),
-                    content = "맛있는 빵집 정보를 공유합니다!",
-                    distance = "100m"
+                    id = dto.id,
+                    content = dto.content,
+                    distance = dto.distance
                 )
             }
-
-            _uiState.update { it.copy(notes = mockNotes, isLoading = false) }
+            _uiState.update { it.copy(notes = notes, isLoading = false) }
         }
     }
 

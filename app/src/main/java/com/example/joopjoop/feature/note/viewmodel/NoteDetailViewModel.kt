@@ -2,6 +2,8 @@ package com.example.joopjoop.feature.note.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.joopjoop.feature.note.data.repository.NoteRepository
+import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
 import com.example.joopjoop.feature.note.ui.detail.NoteDetailUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,30 +11,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class NoteDetailViewModel : ViewModel() {
+class NoteDetailViewModel(
+    private val repository: NoteRepository = NoteRepositoryImpl()
+) : ViewModel() {
 
-    // UI 상태를 관리하는 StateFlow
     private val _uiState = MutableStateFlow(NoteDetailUiState())
     val uiState: StateFlow<NoteDetailUiState> = _uiState.asStateFlow()
 
-    // 특정 쪽지의 상세 데이터를 가져오는 함수 (나중에 noteId를 인자로 받을 수 있습니다)
+    // 특정 쪽지의 상세 데이터를 가져옴
     fun loadNoteDetail(noteId: String) {
         viewModelScope.launch {
-
-            // 테스트용 데이터 설정
+            val dto = repository.getNoteDetail(noteId)
             _uiState.update {
                 it.copy(
-                    authorName = "김철수 디자이너",
-                    createdAt = "2026.03.25",
-                    title = "오늘의 디자인 영감: 미니멀리즘과 공간의 미학",
-                    content = "공간이 주는 여백의 미는 현대 디자인에서 가장 중요한 요소 중 하나입니다. " +
-                    "단순함 속에서 발견하는 풍요로움을 김철수 디자이너와 함께 탐구해보세요. " +
-                    "공간이 주는 여백의 미는 현대 디자인에서 가장 중요한 요소 중 하나입니다. " +
-                    "단순함 속에서 발견하는 풍요로움을 김철수 디자이너와 함께 탐구해보세요. " +
-                    "공간이 주는 여백의 미는 현대 디자인에서 가장 중요한 요소 중 하나입니다. " +
-                    "단순함 속에서 발견하는 풍요로움을 김철수 디자이너와 함께 탐구해보세요. ",
-                    isLiked = false,
-                    isBookmarked = false
+                    authorName = dto.authorName,
+                    createdAt = dto.createdAt,
+                    viewCount = dto.viewCount + 1, // 조회수 증가
+                    likeCount = dto.likeCount,
+                    title = dto.title,
+                    content = dto.content,
                 )
             }
         }

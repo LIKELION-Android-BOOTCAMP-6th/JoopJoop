@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -23,6 +26,7 @@ import com.example.joopjoop.feature.note.ui.detail.NoteDetailScreen
 import com.example.joopjoop.feature.note.ui.list.NoteListScreen
 import com.example.joopjoop.feature.note.ui.write.WriteNoteScreen
 import com.example.joopjoop.feature.note.ui.write.WriteNoteUiState
+import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 class MainActivity : ComponentActivity() {
@@ -35,22 +39,24 @@ class MainActivity : ComponentActivity() {
                 composable("noteList") { NoteListScreen(navController = navController) }
                 composable("noteDetail") { NoteDetailScreen(navController = navController) }
                 composable("writeNote") {
-                    var uiState by remember {
-                        mutableStateOf(
-                            WriteNoteUiState(
-                                selectedCategory = "일상",
-                                noteContent = "",
-                                storageHours = 12
-                            )
-                        )
+                    val viewModel: WriteNoteViewModel = viewModel()
+                    val uiState by viewModel.uiState.collectAsState()
+
+                    LaunchedEffect(uiState.isSubmitSuccess) {
+                        if (uiState.isSubmitSuccess) {
+                            viewModel.resetNote()
+                            navController.popBackStack()
+                        }
                     }
+
                     WriteNoteScreen(
                         navController = navController,
                         uiState = uiState,
-                        onCategorySelected = { uiState = uiState.copy(selectedCategory = it) },
-                        onContentChange = { uiState = uiState.copy(noteContent = it) },
-                        onHoursChange = { uiState = uiState.copy(storageHours = it) },
-                        onBackClick = { navController.popBackStack() }
+                        onCategorySelected = viewModel::onCategorySelected,
+                        onContentChange = viewModel::onContentChange,
+                        onHoursChange = viewModel::onHoursChange,
+                        onBackClick = { navController.popBackStack() },
+                        onLeaveNoteClick = viewModel::submitNote
                     )
                 }
             }
