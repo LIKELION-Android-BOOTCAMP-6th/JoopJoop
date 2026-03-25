@@ -38,7 +38,6 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
 }
 
@@ -66,7 +65,4 @@ dependencies {
 
     // Compose에서 ViewModel을 사용하기 위한 필수 라이브러리
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
-
-    // Jetpack Compose Navigation
-    implementation("androidx.navigation:navigation-compose:2.8.0")
 }
