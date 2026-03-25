@@ -57,7 +57,7 @@
 - MVVM
 
 ## Database
-
+- firestore
 
 ## API
 
@@ -74,3 +74,6 @@
 
 # 🚀 향후 확장 기능 (Future Plans)
 - 추가예정
+
+
+# 푸쉬테스트 - 원화

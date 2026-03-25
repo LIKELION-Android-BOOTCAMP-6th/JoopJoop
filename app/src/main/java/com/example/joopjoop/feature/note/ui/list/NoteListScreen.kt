@@ -1,7 +1,5 @@
 package com.example.joopjoop.note
 
-import android.R.attr.fontWeight
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -238,7 +236,8 @@ fun ListBottomBar(navController: NavController) {
                     color = if (selectedTab == "MAP") selectedColor else unselectedColor,
                     fontSize = 8.sp,
                     textAlign = TextAlign.Center
-                )}
+                )
+            }
 
                 // WRITE 탭
                 Column(

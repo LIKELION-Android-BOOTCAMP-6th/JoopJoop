@@ -1,6 +1,10 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
+
+    // 보안 플러그인 적용 (local.properties를 자동으로 읽습니다)
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -53,5 +57,15 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // 구글 맵 & 위치 관련 라이브러리
+    implementation("com.google.maps.android:maps-compose:4.4.1")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+
+    // Compose에서 ViewModel을 사용하기 위한 필수 라이브러리
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+
+    // navigation 라이브러리
     implementation("androidx.navigation:navigation-compose:2.8.9")
 }

@@ -2,4 +2,8 @@
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    id("com.google.gms.google-services") version "4.4.4" apply false
+
+    // 구글 맵 보안 플러그인 추가
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin") version "2.0.1" apply false
 }

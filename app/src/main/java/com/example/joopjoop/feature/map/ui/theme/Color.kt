@@ -1,4 +1,4 @@
-package com.example.joopjoop.note.ui.theme
+package com.example.joopjoop.feature.map.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
