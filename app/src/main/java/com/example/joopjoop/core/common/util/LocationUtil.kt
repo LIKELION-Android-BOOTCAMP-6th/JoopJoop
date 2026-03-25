@@ -1,12 +1,33 @@
 package com.example.joopjoop.core.common.util
 
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.location.Location
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
+import com.google.android.gms.location.LocationServices
 import kotlin.math.*
 
 object LocationUtil {
+
+    /**
+     * [추가] 사용자의 마지막으로 확인된 위치를 가져옵니다.
+     * @param onLocationReceived 위치를 성공적으로 가져왔을 때 실행할 콜백
+     */
+    @SuppressLint("MissingPermission") // 호출 전 권한 체크가 완료되었다고 가정.
+    fun getLastLocation(context: Context, onLocationReceived: (Location) -> Unit) {
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+        // 시스템에 기록된 마지막 위치 요청
+        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+            if (location != null) {
+                onLocationReceived(location) // 성공적으로 가져오면 콜백 실행
+            } else {
+                // 위치가 null일 경우(GPS가 꺼진 직후 등)에 대한 처리가 필요.
+            }
+        }
+    }
 
     /**
      * 두 지점 간의 직선 거리(미터)를 계산합니다. (Haversine 공식 사용)
