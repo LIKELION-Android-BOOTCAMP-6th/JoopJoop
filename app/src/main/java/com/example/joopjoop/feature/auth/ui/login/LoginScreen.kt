@@ -255,7 +255,12 @@ fun LoginScreen(
                         append(stringResource(R.string.dont_have_account))
                     }
                     append(" ") // 간격 추가
-                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)) {
+                    withStyle(
+                        style = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    ) {
                         append(stringResource(R.string.create_account))
                     }
                 },

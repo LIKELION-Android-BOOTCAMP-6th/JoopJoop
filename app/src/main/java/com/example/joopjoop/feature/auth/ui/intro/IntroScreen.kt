@@ -152,7 +152,12 @@ fun IntroScreen(
                     withStyle(style = SpanStyle(color = TextSecondary)) {
                         append(stringResource(R.string.dont_have_account))
                     }
-                    withStyle(style = SpanStyle(color = OrangePrimary, fontWeight = FontWeight.Bold)) {
+                    withStyle(
+                        style = SpanStyle(
+                            color = OrangePrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    ) {
                         append(stringResource(R.string.create_account))
                     }
                 },
