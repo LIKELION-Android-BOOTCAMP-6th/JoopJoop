@@ -66,6 +66,4 @@ dependencies {
 
     // Compose에서 ViewModel을 사용하기 위한 필수 라이브러리
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
-    // Geohash 생성을 위한 Firebase 공식 라이브러리 (Geofire)
-    implementation("com.firebase:geofire-android-common:3.2.0")
 }

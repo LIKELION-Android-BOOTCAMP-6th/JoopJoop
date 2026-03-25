@@ -267,8 +267,8 @@ fun WriteNoteScreenPreview() { // 더미데이터
     JoopJoopTheme {
         WriteNoteScreen(
             uiState = WriteNoteUiState(
-                selectedCategory = "일상",
-                noteContent = "오늘 날씨가 너무 좋네요~!",
+                selectedCategory = "감성",
+                noteContent = "날씨가 참 좋네요~",
                 storageHours = 12
             )
         )
