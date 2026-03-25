@@ -19,10 +19,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.joopjoop.note.WriteNoteScreen
-import com.example.joopjoop.note.NoteDetailScreen
-import com.example.joopjoop.note.NoteListScreen
-import com.example.joopjoop.note.WriteNoteUiState
+import com.example.joopjoop.feature.note.ui.detail.NoteDetailScreen
+import com.example.joopjoop.feature.note.ui.list.NoteListScreen
+import com.example.joopjoop.feature.note.ui.write.WriteNoteScreen
+import com.example.joopjoop.feature.note.ui.write.WriteNoteUiState
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 class MainActivity : ComponentActivity() {

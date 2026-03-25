@@ -1,12 +1,5 @@
-package com.example.joopjoop.note
+package com.example.joopjoop.feature.note.ui.detail
 
-import android.R.attr.contentDescription
-import android.R.attr.text
-import android.app.Activity
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,34 +33,41 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.joopjoop.R
-import com.example.joopjoop.note.ui.theme.JoopJoopTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.joopjoop.feature.note.viewmodel.NoteDetailViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.DividerColor
-import com.example.joopjoop.ui.theme.OrangeDark
+import com.example.joopjoop.ui.theme.JoopJoopTheme
 import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextSecondary
 import com.example.joopjoop.ui.theme.TextTertiary
-import kotlinx.coroutines.NonCancellable.isActive
 
 @Composable
 fun NoteDetailScreen(
-    modifier: Modifier = Modifier,
     navController: NavController,
-    uiState: NoteDetailUiState = NoteDetailUiState()){
+    noteId: String = "1", // 나중에 NavArgs에서 받아올 ID
+    viewModel: NoteDetailViewModel = viewModel()
+){
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // 화면 진입 시 데이터 불러오기
+    LaunchedEffect(noteId) {
+        viewModel.loadNoteDetail(noteId)
+        viewModel.incrementViewCount() // 화면 들어올 때 조회수 증가
+    }
     JoopJoopTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -79,7 +79,11 @@ fun NoteDetailScreen(
                 DetailBottomBar(navController)
             }) { innerPadding ->
             NoteDetail(
-                uiState = uiState, modifier = Modifier.padding(innerPadding)
+                uiState = uiState,
+                modifier = Modifier.padding(innerPadding),
+                // 버튼 클릭 이벤트 ViewModel로 연결
+                onLikeClick = { viewModel.toggleLike() },
+                onBookmarkClick = { viewModel.toggleBookmark() }
             )
         }
     }
@@ -87,7 +91,12 @@ fun NoteDetailScreen(
 
 
 @Composable
-fun NoteDetail(modifier: Modifier = Modifier, uiState: NoteDetailUiState = NoteDetailUiState()){
+fun NoteDetail(
+    modifier: Modifier = Modifier,
+    uiState: NoteDetailUiState = NoteDetailUiState(),
+    onLikeClick: () -> Unit = {}, // 좋아요 클릭
+    onBookmarkClick: () -> Unit = {} // 스크랩 클릭
+){
 
     val scrollState = rememberScrollState()
 
@@ -141,7 +150,7 @@ fun NoteDetail(modifier: Modifier = Modifier, uiState: NoteDetailUiState = NoteD
 
         // 본문 텍스트 영역
         Text(
-            text = "오늘의 디자인 영감:\n미니멀리즘과 공간의 미학",
+            text = uiState.title,
             color = TextPrimary,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
@@ -149,12 +158,7 @@ fun NoteDetail(modifier: Modifier = Modifier, uiState: NoteDetailUiState = NoteD
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "공간이 주는 여백의 미는 현대 디자인에서 가장 중요한 요소 중 하나입니다. " +
-                    "단순함 속에서 발견하는 풍요로움을 김철수 디자이너와 함께 탐구해보세요. " +
-                    "공간이 주는 여백의 미는 현대 디자인에서 가장 중요한 요소 중 하나입니다. " +
-                    "단순함 속에서 발견하는 풍요로움을 김철수 디자이너와 함께 탐구해보세요. " +
-                    "공간이 주는 여백의 미는 현대 디자인에서 가장 중요한 요소 중 하나입니다. " +
-                    "단순함 속에서 발견하는 풍요로움을 김철수 디자이너와 함께 탐구해보세요.",
+            text = uiState.content,
             color = TextSecondary,
             fontSize = 14.sp,
             lineHeight = 22.sp
@@ -171,12 +175,14 @@ fun NoteDetail(modifier: Modifier = Modifier, uiState: NoteDetailUiState = NoteD
                 icon = R.drawable.outline_thumb_up_24,
                 label = "좋아요",
                 isActive = uiState.isLiked,
+                onClick = onLikeClick,
                 modifier = Modifier.weight(1f)
             )
             DetailActionButton(
                 icon = R.drawable.outline_bookmark_24,
                 label = "스크랩",
                 isActive = uiState.isBookmarked,
+                onClick = onBookmarkClick,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -218,14 +224,15 @@ fun DetailActionButton(
     modifier: Modifier = Modifier,
     icon: Int,
     label: String,
-    isActive: Boolean = false
+    isActive: Boolean = false,
+    onClick: () -> Unit = {}
 ) {
 
     Box(
         modifier = modifier
             .height(48.dp)
             .border(1.dp, DividerColor, RoundedCornerShape(8.dp))
-            .clickable { /*ViewModel로 처리*/ },
+            .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -246,7 +253,7 @@ fun DetailActionButton(
 
 // 화면 하단 네비게이션 바
 @Composable
-fun DetailBottomBar(navController: NavController, uiState: NoteListUiState = NoteListUiState()) {
+fun DetailBottomBar(navController: NavController) {
 
     var selectedTab by remember { mutableStateOf("MAP") }
 

@@ -36,6 +36,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.joopjoop.R
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
@@ -47,6 +49,7 @@ import com.example.joopjoop.ui.theme.TextTertiary
 
 @Composable
 fun WriteNoteScreen(
+    navController: NavController,
     uiState: WriteNoteUiState, // 상태 추가
     modifier: Modifier = Modifier, // 유지
     onCategorySelected: (String) -> Unit = {},
@@ -80,7 +83,7 @@ fun WriteNoteScreen(
                         .padding(8.dp)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
+                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
                         contentDescription = "Back",
                         tint = TextPrimary,
                         modifier = Modifier.size(24.dp)
@@ -266,8 +269,9 @@ fun CategorySelection(
 fun WriteNoteScreenPreview() { // 더미데이터
     JoopJoopTheme {
         WriteNoteScreen(
+            navController = rememberNavController(),
             uiState = WriteNoteUiState(
-                selectedCategory = "일상",
+                selectedCategory = "감성",
                 noteContent = "오늘 날씨가 너무 좋네요~!",
                 storageHours = 12
             )

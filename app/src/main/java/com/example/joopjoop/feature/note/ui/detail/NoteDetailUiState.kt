@@ -1,8 +1,8 @@
-package com.example.joopjoop.note
+package com.example.joopjoop.feature.note.ui.detail
 
 data class NoteDetailUiState(
-    val authorName: String = "",        // 작성자 이름 (예: "김철수 디자이너")
-    val createdAt: String = "",         // 작성일 (예: "2023.10.27")
+    val authorName: String = "김철수 디자이너",        // 작성자 이름 (예: "김철수 디자이너")
+    val createdAt: String = "2026.03.25",         // 작성일 (예: "2023.10.27")
     val viewCount: Int = 0,             // 조회수
     val likeCount: Int = 0,             // 좋아요 수
     val imageUri: String? = null,       // 메인 이미지

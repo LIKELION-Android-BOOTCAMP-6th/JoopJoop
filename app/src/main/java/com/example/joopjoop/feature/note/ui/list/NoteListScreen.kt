@@ -1,5 +1,6 @@
-package com.example.joopjoop.note
+package com.example.joopjoop.feature.note.ui.list
 
+import android.R.attr.text
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -47,18 +48,25 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.joopjoop.R
-import com.example.joopjoop.note.ui.theme.JoopJoopTheme
+import com.example.joopjoop.feature.note.viewmodel.NoteListViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
+import com.example.joopjoop.ui.theme.JoopJoopTheme
 import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextTertiary
 
 @Composable
-fun NoteListScreen(navController: NavController) {
+fun NoteListScreen(navController: NavController){
+
+    val viewModel: NoteListViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     JoopJoopTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -66,9 +74,8 @@ fun NoteListScreen(navController: NavController) {
             topBar = { ListTopBar(navController) },
             bottomBar = { ListBottomBar(navController) }
         ) { innerPadding ->
-            val itemsList = List(100) { "Item $it" }
             NoteList(
-                items = itemsList,
+                uiState = uiState,
                 modifier = Modifier.padding(innerPadding),
                 navController = navController
             )
@@ -77,7 +84,7 @@ fun NoteListScreen(navController: NavController) {
 }
 
 @Composable
-fun NoteList(items: List<String>, modifier: Modifier = Modifier, navController: NavController,) {
+fun NoteList(uiState: NoteListUiState, modifier: Modifier = Modifier, navController: NavController,) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -90,8 +97,11 @@ fun NoteList(items: List<String>, modifier: Modifier = Modifier, navController: 
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(items) {
-            NoteCard(onClick = { navController.navigate("noteDetail") }) // 카드 형태로...
+        items(uiState.notes) { note ->
+            NoteCard(
+                item = note,
+                onClick = { navController.navigate("noteDetail") }
+            ) // 카드 형태로...
         }
     }}}
 
@@ -133,7 +143,7 @@ fun ListTopBar(navController: NavController) {
 
 // 개별 쪽지 형태
 @Composable
-fun NoteCard(onClick: () -> Unit = {}){
+fun NoteCard(item: NoteItem, onClick: () -> Unit = {}){
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -160,7 +170,7 @@ fun NoteCard(onClick: () -> Unit = {}){
             Spacer(modifier = Modifier.height(8.dp))
             // 쪽지 본문 일부 노출(한줄만, 넘어가면 ... 처리)
             Text(
-                text = "여기에 맛있는 빵집이...", // 테스트용 쪽지 내용
+                text = item.content,
                 color = TextPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
@@ -189,7 +199,7 @@ fun NoteCard(onClick: () -> Unit = {}){
 
                 //거리 텍스트
                 Text(
-                    text = "100m", // 테스트용 거리
+                    text = item.distance,
                     color = TextTertiary, // 컬러
                     fontSize = 12.sp
                 )

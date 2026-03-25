@@ -1,4 +1,4 @@
-package com.example.joopjoop.note
+package com.example.joopjoop.feature.note.ui.list
 
 data class NoteListUiState(
     val notes: List<NoteItem> = emptyList(),  // 쪽지 목록
