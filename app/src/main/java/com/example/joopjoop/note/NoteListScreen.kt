@@ -58,7 +58,6 @@ import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextTertiary
-import kotlin.jvm.java
 
 @Composable
 fun NoteListScreen(navController: NavController) {

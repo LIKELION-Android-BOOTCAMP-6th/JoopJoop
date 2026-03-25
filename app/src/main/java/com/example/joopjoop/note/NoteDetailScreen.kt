@@ -64,7 +64,10 @@ import com.example.joopjoop.ui.theme.TextTertiary
 import kotlinx.coroutines.NonCancellable.isActive
 
 @Composable
-fun NoteDetailScreen(navController: NavController){
+fun NoteDetailScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    uiState: NoteDetailUiState = NoteDetailUiState()){
     JoopJoopTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -76,7 +79,7 @@ fun NoteDetailScreen(navController: NavController){
                 DetailBottomBar(navController)
             }) { innerPadding ->
             NoteDetail(
-                modifier = Modifier.padding(innerPadding)
+                uiState = uiState, modifier = Modifier.padding(innerPadding)
             )
         }
     }
@@ -84,7 +87,7 @@ fun NoteDetailScreen(navController: NavController){
 
 
 @Composable
-fun NoteDetail(modifier: Modifier = Modifier) {
+fun NoteDetail(modifier: Modifier = Modifier, uiState: NoteDetailUiState = NoteDetailUiState()){
 
     val scrollState = rememberScrollState()
 
@@ -112,8 +115,9 @@ fun NoteDetail(modifier: Modifier = Modifier) {
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Text(text = "김철수 디자이너", color = TextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                Text(text = "2023.10.27 • 조회 128 • 좋아요 12", color = TextTertiary, fontSize = 11.sp)
+                Text(text = uiState.authorName)
+                Text(text = "${uiState.createdAt} • 조회 ${uiState.viewCount} • 좋아요 ${uiState.likeCount}")
+
             }
         }
 
@@ -166,12 +170,13 @@ fun NoteDetail(modifier: Modifier = Modifier) {
             DetailActionButton(
                 icon = R.drawable.outline_thumb_up_24,
                 label = "좋아요",
-                modifier = Modifier
-                    .weight(1f)
+                isActive = uiState.isLiked,
+                modifier = Modifier.weight(1f)
             )
             DetailActionButton(
                 icon = R.drawable.outline_bookmark_24,
                 label = "스크랩",
+                isActive = uiState.isBookmarked,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -209,15 +214,18 @@ fun DetailTopBar(navController: NavController) {
 
 // 공통으로 쓰일 하단 버튼
 @Composable
-fun DetailActionButton(icon: Int, label: String, modifier: Modifier = Modifier) {
-
-    var isActive by remember { mutableStateOf(false) }
+fun DetailActionButton(
+    modifier: Modifier = Modifier,
+    icon: Int,
+    label: String,
+    isActive: Boolean = false
+) {
 
     Box(
         modifier = modifier
             .height(48.dp)
             .border(1.dp, DividerColor, RoundedCornerShape(8.dp))
-            .clickable { isActive = !isActive },
+            .clickable { /*ViewModel로 처리*/ },
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -238,7 +246,8 @@ fun DetailActionButton(icon: Int, label: String, modifier: Modifier = Modifier) 
 
 // 화면 하단 네비게이션 바
 @Composable
-fun DetailBottomBar(navController: NavController) {
+fun DetailBottomBar(navController: NavController, uiState: NoteListUiState = NoteListUiState()) {
+
     var selectedTab by remember { mutableStateOf("MAP") }
 
     val selectedColor = OrangePrimary
