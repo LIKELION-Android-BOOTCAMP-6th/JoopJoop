@@ -15,5 +15,8 @@ data class SignupUiState(
     val nicknameHelperMessage: String = "",
 
     // 버튼 활성화 여부
-    val isSignupButtonEnabled: Boolean = false
+    val isSignupButtonEnabled: Boolean = false,
+
+    // 에러 발생 시 토스트
+    val errorEvent: String? = null
 )
