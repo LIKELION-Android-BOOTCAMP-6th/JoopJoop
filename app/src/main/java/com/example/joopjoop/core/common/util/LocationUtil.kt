@@ -7,7 +7,6 @@ import android.location.Location
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
 import com.google.android.gms.location.LocationServices
-import kotlin.math.*
 
 object LocationUtil {
 

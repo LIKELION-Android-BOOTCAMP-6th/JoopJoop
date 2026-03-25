@@ -185,7 +185,7 @@ fun SignupScreen(
                     )
                 }
             }
-            
+
             // 닉네임 중복 확인 결과 메시지
             if (uiState.nicknameHelperMessage.isNotEmpty()) {
                 Text(
@@ -294,7 +294,7 @@ fun SignupScreen(
             )
 
             Spacer(modifier = Modifier.height(40.dp))
-            
+
             // 회원가입 버튼
             Button(
                 onClick = onCreateAccountClick,
