@@ -268,7 +268,7 @@ fun WriteNoteScreenPreview() { // 더미데이터
         WriteNoteScreen(
             uiState = WriteNoteUiState(
                 selectedCategory = "감성",
-                noteContent = "오늘 날씨가 너무 좋네요~!",
+                noteContent = "",
                 storageHours = 12
             )
         )
