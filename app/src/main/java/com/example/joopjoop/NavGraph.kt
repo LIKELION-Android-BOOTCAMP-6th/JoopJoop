@@ -61,7 +61,7 @@ fun RootNavHost() {
         // 2. 메인 그래프 (Main Graph)
         // 바텀 네비게이션이 존재하는 '그릇' 화면.
         composable(Routes.MAIN) {
-            PlaceholderScreen("바텀 네비바 포함 Main 화면")
+            MainScreen(rootNavController = rootNavController)
         }
 
         // 3. 서브 그래프 (Sub Graph / 상세 화면)
