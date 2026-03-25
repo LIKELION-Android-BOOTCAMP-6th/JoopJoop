@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -90,20 +91,48 @@ fun NoteList(uiState: NoteListUiState, modifier: Modifier = Modifier, navControl
             .fillMaxSize()
             .background(BgDarkest)
     ) {
+        // 로딩 화면 표시
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = OrangePrimary)
+            }
+        } else if(uiState.notes.isEmpty()){
+            Box(modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ){
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_mail_24),
+                        contentDescription = null,
+                        tint = TextTertiary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "주변에 쪽지가 없어요",
+                        color = TextTertiary,
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        } else {
     // 쪽지 리스트
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2), // 한 줄 두개씩
-        contentPadding = PaddingValues(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        items(uiState.notes) { note ->
-            NoteCard(
-                item = note,
-                onClick = { navController.navigate("noteDetail") }
-            ) // 카드 형태로...
-        }
-    }}}
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2), // 한 줄 두개씩
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                items(uiState.notes) { note ->
+                    NoteCard(
+                        item = note,
+                        onClick = { navController.navigate("noteDetail") }
+                    ) // 카드 형태로...
+                }
+            }}}}
 
 @Composable
 fun ListTopBar(navController: NavController) {
@@ -295,11 +324,11 @@ fun ListBottomBar(navController: NavController) {
         }
     }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun GreetingPreview() {
     JoopJoopTheme {
-        ListBottomBar(navController = rememberNavController())
+        NoteListScreen(navController = rememberNavController())
     }
 }
 
