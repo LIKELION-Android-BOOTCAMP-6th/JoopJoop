@@ -69,4 +69,12 @@ dependencies {
 
     // Geohash 생성을 위한 Firebase 공식 라이브러리 (Geofire)
     implementation("com.firebase:geofire-android-common:3.2.0")
+
+    // 파이어베이스 관련 라이브러리
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    // 사용할 서비스들
+    implementation("com.google.firebase:firebase-auth-ktx")     // 인증용
+    implementation("com.google.firebase:firebase-firestore-ktx") // 데이터베이스용
+    // Coroutines를 Firebase와 함께 쓰기 위한 라이브러리 (await() 사용 위함)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }
