@@ -21,7 +21,7 @@ import com.google.maps.android.compose.*
  * 역할: 전체 레이아웃 구성, 권한 처리, 컴포넌트 조립 및 뷰모델 상태 연결
  */
 @Composable
-fun MapMockScreen(
+fun MapScreen(
     viewModel: MapViewModel = viewModel()
 ) {
     val context = LocalContext.current
