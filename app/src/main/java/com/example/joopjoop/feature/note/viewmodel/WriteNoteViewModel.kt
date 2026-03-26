@@ -1,11 +1,16 @@
 package com.example.joopjoop.feature.note.viewmodel
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.service.notification.Condition.newId
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.repository.NoteRepository
 import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
 import com.example.joopjoop.feature.note.ui.write.WriteNoteUiState
+import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +18,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class WriteNoteViewModel(
-    private val repository: NoteRepository = NoteRepositoryImpl()
+    private val repository: NoteRepository = NoteRepositoryImpl(),
+    private val fusedLocationClient: FusedLocationProviderClient
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WriteNoteUiState())
@@ -27,12 +33,15 @@ class WriteNoteViewModel(
         _uiState.update { it.copy(selectedCategory = category) }
     }
 
-    // 내용 입력 (200자 제한)
+    // 내용 입력 (300자 제한)
     fun onContentChange(content: String) {
         if (content.length <= 300) {
             _uiState.update { it.copy(noteContent = content) }
         }
     }
+
+    val isSaveEnabled: Boolean
+        get() = _uiState.value.noteContent.isNotBlank()
 
     private val timeOptions = listOf(3, 6, 12, 24)
 
@@ -68,35 +77,57 @@ class WriteNoteViewModel(
         get() = _uiState.value.noteContent.isNotBlank()
 
     // 쪽지 제출
-    fun submitNote() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSubmitting = true) }
+    fun submitNote(context: android.content.Context) {
+        val hasFineLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarseLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
 
-            try {
-                val request = NoteRequest(
-                    content = _uiState.value.noteContent,
-                    category = _uiState.value.selectedCategory,
-                    storageHours = _uiState.value.storageHours,
-                    imageUri = _uiState.value.selectedImageUri
-                )
+        if (hasFineLocation || hasCoarseLocation) {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    val lat = location.latitude
+                    val lng = location.longitude
+                } else {
+                    _uiState.update { it.copy(errorMessage = "위치 권한이 필요합니다.") }
 
-                // 성공 시 ID를 받아옴
-                val newId = repository.createNote(request)
+                    viewModelScope.launch {
+                        _uiState.update { it.copy(isSubmitting = true) }
+                        try {
+                            val request = NoteRequest(
+                                content = _uiState.value.noteContent,
+                                category = _uiState.value.selectedCategory,
+                                storageHours = _uiState.value.storageHours,
+                                imageUri = _uiState.value.selectedImageUri,
+                                latitude = 0.0,
+                                longitude = 0.0,
+                                authorName = "사용자",
+                                location = "현재 위치"
+                            )
 
-                _uiState.update {
-                    it.copy(
-                        isSubmitSuccess = true,
-                        createdNoteId = newId
-                    )
+                            // 성공 시 ID를 받아옴
+                            val newId = repository.createNote(request)
+
+                            _uiState.update {
+                                it.copy(
+                                    isSubmitSuccess = true,
+                                    createdNoteId = newId
+                                )
+                            }
+                        } catch (e: Exception) {
+                            _uiState.update { it.copy(errorMessage = e.message) }
+                        } finally {
+                            _uiState.update { it.copy(isSubmitting = false) }
+                        }
+                    }
                 }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = e.message) }
-            } finally {
-                _uiState.update { it.copy(isSubmitting = false) }
             }
         }
     }
-
 
    // 에러 메시지 초기화
     fun clearError() {
@@ -106,5 +137,4 @@ class WriteNoteViewModel(
     // 작성 초기화 - 쪽지 제출 성공 후 화면을 초기 상태로..
     fun resetNote() {
         _uiState.update { WriteNoteUiState() }
-    }
-            }
+    }}

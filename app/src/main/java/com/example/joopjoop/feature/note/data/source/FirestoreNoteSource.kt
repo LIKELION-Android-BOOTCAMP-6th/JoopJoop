@@ -20,6 +20,7 @@ class FirestoreNoteSource {
         val formatter = SimpleDateFormat("M월 dd일", Locale.getDefault())
         return formatter.format(date)
     }
+
     suspend fun getNotes(): List<NoteDTO> {
         val snapshot = db.collection(collectionPath).get().await()
         return snapshot.documents.mapNotNull { doc ->
@@ -49,7 +50,7 @@ class FirestoreNoteSource {
         )
     }
 
-    suspend fun saveNote(request: NoteRequest): String {
+    suspend fun createNote(request: NoteRequest): String {
         // 1. ID 자동 생성
         val documentRef = db.collection(collectionPath).document()
         val generatedId = documentRef.id
@@ -57,27 +58,29 @@ class FirestoreNoteSource {
         // 2. 서버에 저장할 데이터 구성
         val noteData = hashMapOf(
             "id" to generatedId,
-            "authorName" to request.authorName, // ⭐ 여기에 이름을 넣어야 서버에 저장됩니다!
+            "authorName" to request.authorName,
             "location" to request.location,
             "content" to request.content,
             "category" to request.category,
             "storageHours" to request.storageHours,
             "imageUri" to request.imageUri,
             "createdAt" to com.google.firebase.Timestamp.now(),
-            // 위치 정보를 받아 위도/경도 추가
             "latitude" to 0.0,
             "longitude" to 0.0
         )
+
 
         // 3. Firestore에 저장 (await - 문서 저장 반환)
         documentRef.set(noteData).await()
 
         return generatedId // 생성된 ID 반환
     }
+
     suspend fun incrementViewCount(noteId: String) {
         val docRef = db.collection(collectionPath).document(noteId)
         docRef.update("viewCount", FieldValue.increment(1)).await()
     }
+
     suspend fun updateLikeCount(noteId: String, increment: Int) {
         val docRef = db.collection(collectionPath).document(noteId)
         // increment가 1이면 +1, -1이면 -1

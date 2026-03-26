@@ -16,7 +16,18 @@ class NoteRepositoryImpl : NoteRepository {
     }
 
     override suspend fun createNote(request: NoteRequest): String {
-        return source.saveNote(request)
+        val noteData = hashMapOf(
+            "content" to request.content,
+            "category" to request.category,
+            "storageHours" to request.storageHours,
+            "imageUri" to request.imageUri,
+            "latitude" to request.latitude,
+            "longitude" to request.longitude,
+            "createdAt" to System.currentTimeMillis(),
+            "authorName" to request.authorName,
+            "location" to request.location
+        )
+        return source.createNote(request)
     }
 
     override suspend fun incrementViewCount(noteId: String) {

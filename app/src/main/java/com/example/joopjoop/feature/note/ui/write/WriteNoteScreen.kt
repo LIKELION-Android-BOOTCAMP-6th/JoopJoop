@@ -67,9 +67,7 @@ fun WriteNoteScreen(
     )
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = BgDarkest,
-        topBar = {
+        modifier = modifier.fillMaxSize(), containerColor = BgDarkest, topBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -81,8 +79,7 @@ fun WriteNoteScreen(
                         .align(Alignment.CenterStart)
                         .clip(RoundedCornerShape(12.dp))
                         .clickable { onBackClick() }
-                        .padding(8.dp)
-                ) {
+                        .padding(8.dp)) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_arrow_back_24),
                         contentDescription = "Back",
@@ -97,8 +94,7 @@ fun WriteNoteScreen(
                     fontWeight = FontWeight.Bold
                 )
             }
-        }
-    ) { innerPadding ->
+        }) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -122,8 +118,7 @@ fun WriteNoteScreen(
                     CategorySelection(
                         text = category,
                         isSelected = uiState.selectedCategory == category,
-                        onClick = { onCategorySelected(category) }
-                    )
+                        onClick = { onCategorySelected(category) })
                 }
             }
 
@@ -140,21 +135,28 @@ fun WriteNoteScreen(
                 OutlinedTextField(
                     value = uiState.noteContent, // state 사용
                     onValueChange = onContentChange, // 콜백 사용
-                    modifier = Modifier.fillMaxSize(),
-                    placeholder = {
+                    modifier = Modifier.fillMaxSize(), placeholder = {
                         Text(
                             text = stringResource(R.string.note_placeholder),
                             color = TextTertiary,
                             fontSize = 16.sp
                         )
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
+                    }, colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
                         cursorColor = OrangePrimary
                     )
+                )
+
+                Text(
+                    text = "${uiState.noteContent.length} / 300",
+                    color = if (uiState.noteContent.length >= 300) OrangePrimary else TextTertiary,
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 8.dp, end = 8.dp)
                 )
 
                 // 사진 추가 버튼 (기능은 나중에)
@@ -164,8 +166,7 @@ fun WriteNoteScreen(
                         .padding(bottom = 8.dp)
                         .size(80.dp)
                         .border(1.dp, TextTertiary, RoundedCornerShape(16.dp))
-                        .clickable { /* 사진 추가 로직 */ },
-                    contentAlignment = Alignment.Center
+                        .clickable { /* 사진 추가 로직 */ }, contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
@@ -196,7 +197,9 @@ fun WriteNoteScreen(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier.size(32.dp).background(OrangePrimary, CircleShape),
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(OrangePrimary, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -208,21 +211,42 @@ fun WriteNoteScreen(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text(text = stringResource(R.string.storage_period), color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        Text(text = stringResource(R.string.storage_period_desc), color = TextTertiary, fontSize = 12.sp)
+                        Text(
+                            text = stringResource(R.string.storage_period),
+                            color = TextPrimary,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = stringResource(R.string.storage_period_desc),
+                            color = TextTertiary,
+                            fontSize = 12.sp
+                        )
                     }
                 }
 
                 // 시간 조절 버튼
                 Row(
-                    modifier = Modifier.background(BgDarkest, RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier
+                        .background(BgDarkest, RoundedCornerShape(16.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("-", color = TextTertiary, modifier = Modifier.clickable { onDecreaseHours() })
+                    Text(
+                        "-",
+                        color = TextTertiary,
+                        modifier = Modifier.clickable { onDecreaseHours() })
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text("${uiState.storageHours}h", color = TextPrimary, fontWeight = FontWeight.Bold)
+                    Text(
+                        "${uiState.storageHours}h",
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text("+", color = TextTertiary, modifier = Modifier.clickable { onIncreaseHours() })
+                    Text(
+                        "+",
+                        color = TextTertiary,
+                        modifier = Modifier.clickable { onIncreaseHours() })
                 }
             }
 
@@ -231,11 +255,19 @@ fun WriteNoteScreen(
             // 4. 쪽지 남기기 버튼
             Button(
                 onClick = onLeaveNoteClick, // 이제 인자 없이 깔끔하게!
-                modifier = Modifier.fillMaxWidth().height(64.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp),
                 shape = RoundedCornerShape(32.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary, contentColor = TextPrimary)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = OrangePrimary, contentColor = TextPrimary
+                )
             ) {
-                Text(text = "> ${stringResource(R.string.leave_note_button)}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "> ${stringResource(R.string.leave_note_button)}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -243,9 +275,7 @@ fun WriteNoteScreen(
 
 @Composable
 fun CategorySelection(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
+    text: String, isSelected: Boolean, onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -253,9 +283,7 @@ fun CategorySelection(
             .clip(RoundedCornerShape(20.dp))
             .background(if (isSelected) OrangePrimary else BgSurface)
             .clickable { onClick() }
-            .padding(horizontal = 20.dp),
-        contentAlignment = Alignment.Center
-    ) {
+            .padding(horizontal = 20.dp), contentAlignment = Alignment.Center) {
         Text(
             text = text,
             color = if (isSelected) TextPrimary else TextTertiary,
@@ -270,11 +298,8 @@ fun CategorySelection(
 fun WriteNoteScreenPreview() { // 더미데이터
     JoopJoopTheme {
         WriteNoteScreen(
-            navController = rememberNavController(),
-            uiState = WriteNoteUiState(
-                selectedCategory = "감성",
-                noteContent = "오늘 날씨가 너무 좋네요~!",
-                storageHours = 12
+            navController = rememberNavController(), uiState = WriteNoteUiState(
+                selectedCategory = "감성", noteContent = "오늘 날씨가 너무 좋네요~!", storageHours = 12
             )
         )
     }
