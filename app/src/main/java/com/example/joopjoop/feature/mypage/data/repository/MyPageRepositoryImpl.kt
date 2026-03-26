@@ -1,57 +1,37 @@
 package com.example.joopjoop.feature.mypage.data.repository
 
-import com.example.joopjoop.feature.mypage.data.model.MyNoteSummary
-import com.example.joopjoop.feature.mypage.data.model.ProfileSummary
-import com.example.joopjoop.feature.mypage.data.model.ScrapSummary
+import com.example.joopjoop.core.model.Note
+import com.example.joopjoop.core.model.Scrap
+import com.example.joopjoop.core.model.User
+import com.example.joopjoop.core.repository.MyPageRepository
 
-/**
- * Temporary repository that combines auth-like and note-like data.
- * No external data source is connected yet.
- */
 class MyPageRepositoryImpl : MyPageRepository {
 
-    override fun getProfile(): ProfileSummary {
-        return ProfileSummary(
-            userId = "demo-user-92",
-            nickname = "줍줍이_92",
-            noteCount = 100,
-            profileImageUrl = null
-        )
-    }
-
-    override fun getMyNotes(): List<MyNoteSummary> {
-        return listOf(
-            MyNoteSummary(
-                noteId = "note-1",
-                previewText = "오늘은 날씨가 너무 좋아서 산책을 다녀왔다.",
-                createdAt = "24.11.20",
-                imageUrl = null
-            ),
-            MyNoteSummary(
-                noteId = "note-2",
-                previewText = "퇴근길에 본 하늘은 보라색이었다. 잊지 않으려고 기록한다.",
-                createdAt = "24.11.18",
-                imageUrl = null
+    override suspend fun getUserProfile(userId: String): Result<User> {
+        // TODO: 실제로는 firestoreUserSource에서 가져와야 함
+        return Result.success(
+            User(
+                userId = userId,
+                nickname = "줍줍마스터",
+                profileImageUrl = "",
+                noteCount = 12
             )
         )
     }
 
-    override fun getScraps(): List<ScrapSummary> {
-        return listOf(
-            ScrapSummary(
-                scrapId = "scrap-1",
-                sourceNoteId = "note-55",
-                previewText = "작은 것들로부터 얻는 커다란 행복",
-                createdAt = "24.11.21",
-                imageUrl = null
-            ),
-            ScrapSummary(
-                scrapId = "scrap-2",
-                sourceNoteId = "note-61",
-                previewText = "Playlist #04",
-                createdAt = "24.11.19",
-                imageUrl = null
-            )
+    override suspend fun getMyPosts(userId: String): Result<List<Note>> {
+        // 임시 리스트 리턴
+        val fakeNotes = listOf(
+            Note(noteId = "1", contentText = "오늘 날씨가 좋아서 쪽지 남겨요!", userNickname = "줍줍마스터"),
+            Note(noteId = "2", contentText = "여기 맛집 발견!", userNickname = "줍줍마스터")
+        )
+        return Result.success(fakeNotes)
+    }
+
+    override suspend fun getMyScraps(userId: String): Result<List<Scrap>> {
+        // 임시 스크랩 리스트 리턴
+        return Result.success(
+            listOf(Scrap(noteId = "s1", contentText = "나중에 가볼 곳 스크랩"))
         )
     }
 }
