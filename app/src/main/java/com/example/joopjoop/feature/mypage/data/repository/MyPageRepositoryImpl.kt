@@ -4,8 +4,11 @@ import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.core.model.User
 import com.example.joopjoop.core.repository.MyPageRepository
+import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
 
-class MyPageRepositoryImpl : MyPageRepository {
+class MyPageRepositoryImpl(
+    private val userSource: FirestoreUserSource
+) : MyPageRepository {
 
     override suspend fun getUserProfile(userId: String): Result<User> {
         // TODO: 실제로는 firestoreUserSource에서 가져와야 함
