@@ -24,4 +24,9 @@ class FirebaseAuthSource {
             throw e
         }
     }
+
+    // 로그인
+    suspend fun login(email: String, password: String) {
+        auth.signInWithEmailAndPassword(email, password).await()
+    }
 }

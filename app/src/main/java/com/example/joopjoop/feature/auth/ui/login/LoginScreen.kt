@@ -43,8 +43,8 @@ import com.example.joopjoop.ui.theme.JoopJoopTheme
 fun LoginScreen(
     uiState: LoginUiState, // 상태 추가
     modifier: Modifier = Modifier, // modifier 유지
-    onEmailChange: (String) -> Unit = {}, // 이메일 변경 콜백
-    onPasswordChange: (String) -> Unit = {}, // 비밀번호 변경 콜백
+    onEmailInput: (String) -> Unit = {}, // 이메일 업데이트 콜백
+    onPasswordInput: (String) -> Unit = {}, // 비밀번호 업데이트 콜백
     onTogglePasswordVisibility: () -> Unit = {}, // 비밀번호 보기 토글 콜백
     onBackClick: () -> Unit = {},
     onSignInClick: () -> Unit = {}, // 파라미터는 ViewModel에서 state로 처리하므로 제거 가능
@@ -142,7 +142,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = uiState.email, // state 사용
-                onValueChange = onEmailChange, // 콜백 연결
+                onValueChange = onEmailInput, // 콜백 연결
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
@@ -183,7 +183,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = uiState.password, // state 사용
-                onValueChange = onPasswordChange, // 콜백 연결
+                onValueChange = onPasswordInput, // 콜백 연결
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(

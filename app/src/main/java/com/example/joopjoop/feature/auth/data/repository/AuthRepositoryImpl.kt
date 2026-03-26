@@ -13,11 +13,12 @@ class AuthRepositoryImpl (
         return userSource.isNicknameAvailable(nickname)
     }
 
-    override suspend fun signUp(email: String,
-                                password: String,
-                                nickname: String
+    override suspend fun signUp(
+        email: String,
+        password: String,
+        nickname: String
     ): Result<Unit> {
-        return try{
+        return try {
             // firebase auth를 통해 계정 생성
             val uid = authSource.signUp(email, password)
 
@@ -26,9 +27,25 @@ class AuthRepositoryImpl (
 
             // 성공 시
             Result.success<Unit>(Unit)
-        } catch (e: Exception){
+        } catch (e: Exception) {
             // 실패 시 에러 던지기
             Result.failure<Unit>(e)
+        }
+    }
+
+    override suspend fun login(
+        email: String,
+        password: String
+    ): Result<Unit> {
+        return try {
+            // FirebaseAuthSource를 통해 실제 로그인을 시도합니다.
+            authSource.login(email, password)
+
+            // 성공하면 Result.success를 반환합니다.
+            Result.success(Unit)
+        } catch (e: Exception) {
+            // 실패(비번 틀림, 없는 계정 등)하면 에러와 함께 failure를 반환합니다.
+            Result.failure(e)
         }
     }
 }

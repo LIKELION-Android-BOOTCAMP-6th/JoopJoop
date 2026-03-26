@@ -18,5 +18,5 @@ data class SignupUiState(
     val isSignupButtonEnabled: Boolean = false,
 
     // 에러 발생 시 토스트
-    val errorEvent: String? = null
+    val errorMessage: String? = null
 )

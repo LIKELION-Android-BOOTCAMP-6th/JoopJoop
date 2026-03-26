@@ -67,19 +67,19 @@ class SignupViewModel : ViewModel() {
 
             result.onSuccess {
                 // 성공 로직 (가입 성공 토스트)
-                _uiState.update { it.copy(errorEvent = "회원가입에 성공했습니다!") }
+                _uiState.update { it.copy(errorMessage = "회원가입에 성공했습니다!") }
             }.onFailure { exception ->
                 // 실패 로직 (가입 실패 토스트)
                 // 에러 메시지를 errorEvent에 담음
                 _uiState.update {
-                    it.copy(errorEvent = exception.message ?: "회원가입 실패")
+                    it.copy(errorMessage = exception.message ?: "회원가입 실패")
                 }
             }
         }
     }
 
     fun consumeErrorEvent() {
-        _uiState.update { it.copy(errorEvent = null) }
+        _uiState.update { it.copy(errorMessage = null) }
     }
     // 닉네임 체크
     fun checkNickname(){
