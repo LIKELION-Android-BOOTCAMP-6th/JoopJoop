@@ -66,7 +66,6 @@ fun NoteDetailScreen(
     // 화면 진입 시 데이터 불러오기
     LaunchedEffect(noteId) {
         viewModel.loadNoteDetail(noteId)
-        viewModel.incrementViewCount() // 화면 들어올 때 조회수 증가
     }
     JoopJoopTheme {
         Scaffold(

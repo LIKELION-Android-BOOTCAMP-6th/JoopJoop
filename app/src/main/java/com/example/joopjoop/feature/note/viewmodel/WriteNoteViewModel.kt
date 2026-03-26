@@ -77,15 +77,6 @@ class WriteNoteViewModel(
         }
     }
 
-    // UI에서 넘어온 시간 값이 현재보다 크면 증가, 작으면 감소
-    fun onHoursChange(hours: Int) {
-        if (hours > _uiState.value.storageHours) {
-            increaseHours()
-        } else {
-            decreaseHours()
-        }
-    }
-
     // 에러 메시지 초기화
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }

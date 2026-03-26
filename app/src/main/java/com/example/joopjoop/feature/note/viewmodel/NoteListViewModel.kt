@@ -38,13 +38,5 @@ class NoteListViewModel(
         }
     }
 
-    // 쪽지 목록 업데이트 (나중에 서버에서 데이터 받아올 때 사용)
-    fun updateNotes(notes: List<NoteItem>) {
-        _uiState.update { it.copy(notes = notes) }
-    }
 
-    // 로딩 상태 변경
-    fun setLoading(isLoading: Boolean) {
-        _uiState.update { it.copy(isLoading = isLoading) }
-    }
 }

@@ -54,7 +54,8 @@ fun WriteNoteScreen(
     modifier: Modifier = Modifier, // 유지
     onCategorySelected: (String) -> Unit = {},
     onContentChange: (String) -> Unit = {},
-    onHoursChange: (Int) -> Unit = {},
+    onIncreaseHours: () -> Unit = {},
+    onDecreaseHours: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onLeaveNoteClick: () -> Unit = {}
 ) {
@@ -217,11 +218,11 @@ fun WriteNoteScreen(
                     modifier = Modifier.background(BgDarkest, RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("-", color = TextTertiary, modifier = Modifier.clickable { onHoursChange(uiState.storageHours - 1) })
+                    Text("-", color = TextTertiary, modifier = Modifier.clickable { onDecreaseHours() })
                     Spacer(modifier = Modifier.width(16.dp))
                     Text("${uiState.storageHours}h", color = TextPrimary, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text("+", color = TextTertiary, modifier = Modifier.clickable { onHoursChange(uiState.storageHours + 1) })
+                    Text("+", color = TextTertiary, modifier = Modifier.clickable { onIncreaseHours() })
                 }
             }
 

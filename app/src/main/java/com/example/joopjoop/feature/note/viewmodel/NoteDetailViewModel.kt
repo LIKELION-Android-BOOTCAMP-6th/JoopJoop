@@ -52,12 +52,5 @@ class NoteDetailViewModel(
             currentState.copy(isBookmarked = !currentState.isBookmarked)
         }
     }
-
-    // 조회수 증가
-    fun incrementViewCount() {
-        _uiState.update { currentState ->
-            currentState.copy(viewCount = currentState.viewCount + 1)
-        }
-    }
 }
 

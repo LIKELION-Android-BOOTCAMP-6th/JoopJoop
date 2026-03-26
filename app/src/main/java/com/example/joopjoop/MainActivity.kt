@@ -54,7 +54,8 @@ class MainActivity : ComponentActivity() {
                         uiState = uiState,
                         onCategorySelected = viewModel::onCategorySelected,
                         onContentChange = viewModel::onContentChange,
-                        onHoursChange = viewModel::onHoursChange,
+                        onIncreaseHours = viewModel::increaseHours,
+                        onDecreaseHours = viewModel::decreaseHours,
                         onBackClick = { navController.popBackStack() },
                         onLeaveNoteClick = viewModel::submitNote
                     )
