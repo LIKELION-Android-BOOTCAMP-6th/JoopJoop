@@ -32,11 +32,19 @@ import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 @Composable
 fun LoginRoute(
-    viewModel: LoginViewModel = viewModel(),
     onLoginSuccess: () -> Unit,
     onBackClick: () -> Unit,
     onCreateAccountClick: () -> Unit
 ) {
+    // AppContainer에서 Repository 가져오기
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val appContainer = (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
+
+    // 팩토리를 사용해서 ViewModel 생성
+    val viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(appContainer.authRepository)
+    )
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState.isLoginSuccess) {

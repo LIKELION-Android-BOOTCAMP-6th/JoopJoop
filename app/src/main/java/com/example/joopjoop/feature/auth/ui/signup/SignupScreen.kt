@@ -47,25 +47,31 @@ import com.example.joopjoop.ui.theme.JoopJoopTheme
 fun SignupRoute(
     onBackClick: () -> Unit,
     onSignupSuccess: () -> Unit, // 가입 성공 시 로직 (로그인 화면으로 이동 등)
-    viewModel: SignupViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val message: String = uiState.errorMessage ?: ""
-    val context = androidx.compose.ui.platform.LocalContext.current // 토스트용 컨텍스트
+    // 1. AppContainer에서 Repository 가져오기
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val appContainer = (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
 
-    // 회원가입 성공 메시지가 감지되면 성공 콜백 호출
+    // 2. 팩토리를 사용하여 ViewModel 생성 (중요!)
+    val viewModel: SignupViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(appContainer.authRepository)
+    )
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // 에러 토스트 처리 로직
     androidx.compose.runtime.LaunchedEffect(uiState.errorMessage) {
-        if (uiState.errorMessage == "회원가입에 성공했습니다!") {
-            // 성공 시: 토스트 띄우고 + 화면 이동
-            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT)
-                .show()
-            onSignupSuccess()
-        }else{
-            // 실패 시 토스트만 띄우기 (이메일 중복, 형식 오류 등)
+        uiState.errorMessage?.let { message ->
             android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+            viewModel.consumeErrorEvent()
         }
-        // 공통 - 이벤트를 소모하여 메시지가 중복으로 뜨지 않게 함
-        viewModel.consumeErrorEvent()
+    }
+
+    // 회원가입 성공 처리 로직
+    androidx.compose.runtime.LaunchedEffect(uiState.isSignupSuccess) { // isSignupSuccess 플래그가 있다면 활용
+        if (uiState.isSignupSuccess) {
+            onSignupSuccess()
+        }
     }
     SignupScreen(
         uiState = uiState,

@@ -4,9 +4,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.repository.AuthRepository
-import com.example.joopjoop.feature.auth.data.repository.AuthRepositoryImpl
-import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
-import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
 import com.example.joopjoop.feature.auth.ui.signup.SignupUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,12 +11,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class SignupViewModel : ViewModel() {
-
-    private val authRepository: AuthRepository = AuthRepositoryImpl(
-        authSource = FirebaseAuthSource(),
-        userSource = FirestoreUserSource(),
-    )
+class SignupViewModel(
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignupUiState())
     val uiState: StateFlow<SignupUiState> = _uiState.asStateFlow()

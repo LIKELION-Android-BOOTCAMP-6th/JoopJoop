@@ -15,14 +15,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LoginViewModel: ViewModel() {
+class LoginViewModel(
+    private val authRepository: AuthRepository // 인터페이스를 주입받음
+) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
-
-    private val authRepository: AuthRepository = AuthRepositoryImpl(
-        authSource = FirebaseAuthSource(),
-        userSource = FirestoreUserSource(),
-    )
 
     // 이메일 입력 업데이트
     fun onEmailInput(email: String){
