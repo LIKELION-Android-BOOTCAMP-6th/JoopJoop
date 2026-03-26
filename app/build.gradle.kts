@@ -70,6 +70,9 @@ dependencies {
     // Geohash 생성을 위한 Firebase 공식 라이브러리 (Geofire)
     implementation("com.firebase:geofire-android-common:3.2.0")
 
+    // Jetpack Compose Navigation
+    implementation("androidx.navigation:navigation-compose:2.8.0")
+
     // 파이어베이스 관련 라이브러리
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     // 사용할 서비스들
