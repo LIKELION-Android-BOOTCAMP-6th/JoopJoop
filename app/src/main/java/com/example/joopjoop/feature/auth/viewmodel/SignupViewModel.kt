@@ -1,11 +1,9 @@
 package com.example.joopjoop.feature.auth.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.repository.AuthRepository
-import com.example.joopjoop.feature.auth.data.repository.AuthRepositoryImpl
-import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
-import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
 import com.example.joopjoop.feature.auth.ui.signup.SignupUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,12 +11,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class SignupViewModel : ViewModel() {
-
-    private val authRepository: AuthRepository = AuthRepositoryImpl(
-        authSource = FirebaseAuthSource(),
-        userSource = FirestoreUserSource(),
-    )
+class SignupViewModel(
+    private val authRepository: AuthRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignupUiState())
     val uiState: StateFlow<SignupUiState> = _uiState.asStateFlow()
@@ -54,32 +49,8 @@ class SignupViewModel : ViewModel() {
     fun togglePasswordVisibility() {
         _uiState.update { it.copy(passwordVisible = !it.passwordVisible) }
     }
-    fun signUp() {
-        val state = _uiState.value
-
-        viewModelScope.launch {
-            // Repository에 회원가입 요청
-            val result = authRepository.signUp(
-                email = state.email,
-                password = state.password,
-                nickname = state.nickname
-            )
-
-            result.onSuccess {
-                // 성공 로직 (가입 성공 토스트)
-                _uiState.update { it.copy(errorEvent = "회원가입에 성공했습니다!") }
-            }.onFailure { exception ->
-                // 실패 로직 (가입 실패 토스트)
-                // 에러 메시지를 errorEvent에 담음
-                _uiState.update {
-                    it.copy(errorEvent = exception.message ?: "회원가입 실패")
-                }
-            }
-        }
-    }
-
     fun consumeErrorEvent() {
-        _uiState.update { it.copy(errorEvent = null) }
+        _uiState.update { it.copy(errorMessage = null) }
     }
     // 닉네임 체크
     fun checkNickname(){
@@ -118,6 +89,57 @@ class SignupViewModel : ViewModel() {
             it.copy(
                 isSignupButtonEnabled = isEmailValid && isPasswordValid && isNicknameValid
             )
+        }
+    }
+    // 계정만들기
+    fun signUp() {
+        val state = _uiState.value
+        Log.d("SignUp", "회원가입 시작: ${state.email}")
+
+        viewModelScope.launch {
+            // Repository에 회원가입 요청
+            val result = authRepository.signUp(
+                email = state.email,
+                password = state.password,
+                nickname = state.nickname
+            )
+
+            Log.d("SignUp", "결과 도착: $result")
+
+            // AuthResult 분기처리
+            when (result) {
+                is com.example.joopjoop.feature.auth.data.model.AuthResult.Success -> {
+                    // 성공 시
+                    Log.d("SignUp", "회원가입 성공, 가입된 유저 : ${result.data.nickname}")
+                    _uiState.update { it.copy(errorMessage = "회원가입에 성공했습니다!") }
+                }
+                is com.example.joopjoop.feature.auth.data.model.AuthResult.Failure -> {
+                    // 실패 시
+                    Log.e("SignUp", "실패: ${result.exception.message}")
+                    // 1. 발생한 예외(Exception)의 종류에 따라
+                    val friendlyMessage = when (result.exception) {
+                        // 이미 가입된 이메일인 경우
+                        is com.google.firebase.auth.FirebaseAuthUserCollisionException ->
+                            "이미 가입된 이메일 주소입니다. 다른 이메일을 사용해 주세요."
+                        // 이메일 형식이 잘못된 경우
+                        is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
+                            "유효하지 않은 이메일 형식입니다."
+                        // 네트워크 연결이 불안정한 경우
+                        is com.google.firebase.FirebaseNetworkException ->
+                            "네트워크 연결이 불안정합니다. 인터넷 설정을 확인해 주세요."
+                        // 그 외 알 수 없는 에러
+                        else -> "회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+                    }
+
+                    // 2. 결정된 친절한 메시지를 UI State에 업데이트합니다.
+                    _uiState.update {
+                        it.copy(errorMessage = friendlyMessage)
+                    }
+                }
+                is com.example.joopjoop.feature.auth.data.model.AuthResult.Loading -> {
+                    // 필요시 로딩 상태 UI 반영할 것
+                }
+            }
         }
     }
 }
