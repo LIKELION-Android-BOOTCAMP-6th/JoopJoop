@@ -34,6 +34,13 @@ class LoginViewModel: ViewModel() {
         _uiState.value = _uiState.value.copy(password = password)
     }
 
+    // 비밀번호 보이기/숨기기 토글 함수
+    fun togglePasswordVisibility() {
+        _uiState.update {
+            it.copy(isPasswordVisible = !it.isPasswordVisible)
+        }
+    }
+
     // 로그인 실행
     fun login() {
         val email = _uiState.value.email

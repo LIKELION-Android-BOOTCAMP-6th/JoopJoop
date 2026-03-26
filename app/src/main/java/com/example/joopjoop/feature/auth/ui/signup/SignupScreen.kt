@@ -22,6 +22,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,9 +36,38 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.joopjoop.R
+import com.example.joopjoop.feature.auth.viewmodel.SignupViewModel
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
+@Composable
+fun SignupRoute(
+    onBackClick: () -> Unit,
+    onSignupSuccess: () -> Unit, // 가입 성공 시 로직 (로그인 화면으로 이동 등)
+    viewModel: SignupViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // 회원가입 성공 메시지가 감지되면 성공 콜백 호출
+    androidx.compose.runtime.LaunchedEffect(uiState.errorMessage) {
+        if (uiState.errorMessage == "회원가입에 성공했습니다!") {
+            onSignupSuccess()
+            viewModel.consumeErrorEvent() // 이벤트 소비
+        }
+    }
+    SignupScreen(
+        uiState = uiState,
+        onNicknameInput = viewModel::onNicknameInput,
+        onEmailInput = viewModel::onEmailInput,
+        onPasswordInput = viewModel::onPasswordInput,
+        onPasswordVisibilityToggle = viewModel::togglePasswordVisibility,
+        onDuplicationCheckClick = viewModel::checkNickname,
+        onCreateAccountClick = viewModel::signUp,
+        onBackClick = onBackClick
+    )
+}
 @Composable
 fun SignupScreen(
     uiState: SignupUiState,

@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.auth.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.repository.AuthRepository
@@ -54,30 +55,6 @@ class SignupViewModel : ViewModel() {
     fun togglePasswordVisibility() {
         _uiState.update { it.copy(passwordVisible = !it.passwordVisible) }
     }
-    fun signUp() {
-        val state = _uiState.value
-
-        viewModelScope.launch {
-            // Repository에 회원가입 요청
-            val result = authRepository.signUp(
-                email = state.email,
-                password = state.password,
-                nickname = state.nickname
-            )
-
-            result.onSuccess {
-                // 성공 로직 (가입 성공 토스트)
-                _uiState.update { it.copy(errorMessage = "회원가입에 성공했습니다!") }
-            }.onFailure { exception ->
-                // 실패 로직 (가입 실패 토스트)
-                // 에러 메시지를 errorEvent에 담음
-                _uiState.update {
-                    it.copy(errorMessage = exception.message ?: "회원가입 실패")
-                }
-            }
-        }
-    }
-
     fun consumeErrorEvent() {
         _uiState.update { it.copy(errorMessage = null) }
     }
@@ -118,6 +95,35 @@ class SignupViewModel : ViewModel() {
             it.copy(
                 isSignupButtonEnabled = isEmailValid && isPasswordValid && isNicknameValid
             )
+        }
+    }
+    // 계정만들기
+    fun signUp() {
+        val state = _uiState.value
+        Log.d("SignUp", "회원가입 시작: ${state.email}")
+
+        viewModelScope.launch {
+            // Repository에 회원가입 요청
+            val result = authRepository.signUp(
+                email = state.email,
+                password = state.password,
+                nickname = state.nickname
+            )
+
+            Log.d("SignUp", "결과 도착: $result")
+
+            result.onSuccess {
+                Log.d("SignUp", "성공!")
+                // 성공 로직 (가입 성공 토스트)
+                _uiState.update { it.copy(errorMessage = "회원가입에 성공했습니다!") }
+            }.onFailure { exception ->
+                Log.e("SignUp", "실패: ${exception.message}")
+                // 실패 로직 (가입 실패 토스트)
+                // 에러 메시지를 errorEvent에 담음
+                _uiState.update {
+                    it.copy(errorMessage = exception.message ?: "회원가입 실패")
+                }
+            }
         }
     }
 }
