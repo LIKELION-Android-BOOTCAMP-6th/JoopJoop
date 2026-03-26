@@ -37,18 +37,24 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             NavHost(navController = navController, startDestination = "noteList") {
                 composable("noteList") { NoteListScreen(navController = navController) }
-                composable("noteDetail") { NoteDetailScreen(navController = navController) }
+                composable("noteDetail/{noteId}") { backStackEntry ->
+                    val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
+                    NoteDetailScreen(navController = navController, noteId = noteId) }
                 composable("writeNote") {
                     val viewModel: WriteNoteViewModel = viewModel()
                     val uiState by viewModel.uiState.collectAsState()
 
                     LaunchedEffect(uiState.isSubmitSuccess) {
-                        if (uiState.isSubmitSuccess) {
-                            viewModel.resetNote()
-                            navController.popBackStack()
+                        if (uiState.isSubmitSuccess && uiState.createdNoteId != null) {
+                            val newId = uiState.createdNoteId
+                            viewModel.resetNote() // 상태 초기화
+
+                            // 작성 화면은 스택에서 제거하고 상세 화면으로 이동
+                            navController.navigate("noteDetail/$newId") {
+                                popUpTo("writeNote") { inclusive = true }
+                            }
                         }
                     }
-
                     WriteNoteScreen(
                         navController = navController,
                         uiState = uiState,

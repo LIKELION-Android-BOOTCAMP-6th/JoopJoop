@@ -24,7 +24,7 @@ class NoteListViewModel(
     }
 
     // 테스트용 가상 데이터로 목록 불러옴
-    private fun loadNotes() {
+    fun loadNotes() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val notes = repository.getNotes().map { dto ->

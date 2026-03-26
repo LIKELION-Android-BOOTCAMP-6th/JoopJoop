@@ -21,30 +21,41 @@ class NoteDetailViewModel(
     // 특정 쪽지의 상세 데이터를 가져옴
     fun loadNoteDetail(noteId: String) {
         viewModelScope.launch {
+            // 조회수 +1 요청
+            repository.incrementViewCount(noteId)
+            // 조회수 반영된 최신 데이터 가져오기
             val dto = repository.getNoteDetail(noteId)
             _uiState.update {
                 it.copy(
                     authorName = dto.authorName,
                     createdAt = dto.createdAt,
-                    viewCount = dto.viewCount + 1, // 조회수 증가
+                    viewCount = dto.viewCount,
                     likeCount = dto.likeCount,
-                    title = dto.title,
                     content = dto.content,
+                    location = dto.location
                 )
             }
         }
     }
 
     // 좋아요 버튼 클릭 처리
-    fun toggleLike() {
-        _uiState.update { currentState ->
-            val newLikeStatus = !currentState.isLiked
-            currentState.copy(
-                isLiked = newLikeStatus,
-                likeCount = if (newLikeStatus) currentState.likeCount + 1 else currentState.likeCount - 1
-            )
+    fun toggleLike(noteId: String) {
+        viewModelScope.launch {
+            val currentState = _uiState.value
+            val isNowLiked = !currentState.isLiked
+
+            // +1 or -1
+            val amount = if (isNowLiked) 1 else -1
+
+            repository.updateLikeCount(noteId, amount)
+            _uiState.update { state ->
+                state.copy(
+                    isLiked = isNowLiked,
+                    likeCount = state.likeCount + amount
+                    )
+                }
+            }
         }
-    }
 
     // 스크랩 버튼 클릭 처리
     fun toggleBookmark() {

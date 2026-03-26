@@ -81,7 +81,7 @@ fun NoteDetailScreen(
                 uiState = uiState,
                 modifier = Modifier.padding(innerPadding),
                 // 버튼 클릭 이벤트 ViewModel로 연결
-                onLikeClick = { viewModel.toggleLike() },
+                onLikeClick = { viewModel.toggleLike(noteId) },
                 onBookmarkClick = { viewModel.toggleBookmark() }
             )
         }
@@ -108,7 +108,9 @@ fun NoteDetail(
     ) {
         // 유저 정보
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // 프로필 이미지 (기본 아이콘)
@@ -121,10 +123,35 @@ fun NoteDetail(
                 contentDescription = null,
                 tint = TextTertiary
             )
+            //이름
             Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(text = uiState.authorName)
-                Text(text = "${uiState.createdAt} • 조회 ${uiState.viewCount} • 좋아요 ${uiState.likeCount}")
+            Column(
+                modifier = Modifier.padding(start = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(1.dp))
+            {
+
+                Text(
+                    text = uiState.authorName,
+                    color = TextPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 18.sp
+                )
+                //작성일-조회수-좋아요수
+                Text(
+                    text = "${uiState.createdAt} 조회 ${uiState.viewCount} 좋아요 ${uiState.likeCount}",
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                    lineHeight = 14.sp
+                )
+                // 위치
+                Text(
+                    text = uiState.location,
+                    color = TextSecondary,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 14.sp
+                )
 
             }
         }
@@ -148,14 +175,6 @@ fun NoteDetail(
         Spacer(modifier = Modifier.height(20.dp))
 
         // 본문 텍스트 영역
-        Text(
-            text = uiState.title,
-            color = TextPrimary,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            lineHeight = 26.sp
-        )
-        Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = uiState.content,
             color = TextSecondary,

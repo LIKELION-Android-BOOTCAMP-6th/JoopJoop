@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +56,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.joopjoop.R
 import com.example.joopjoop.feature.note.viewmodel.NoteListViewModel
+import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.JoopJoopTheme
@@ -68,6 +70,9 @@ fun NoteListScreen(navController: NavController){
     val viewModel: NoteListViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(Unit) {
+        viewModel.loadNotes()
+    }
     JoopJoopTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -129,7 +134,7 @@ fun NoteList(uiState: NoteListUiState, modifier: Modifier = Modifier, navControl
                 items(uiState.notes) { note ->
                     NoteCard(
                         item = note,
-                        onClick = { navController.navigate("noteDetail") }
+                        onClick = { navController.navigate("noteDetail/${note.id}") }
                     ) // 카드 형태로...
                 }
             }}}}

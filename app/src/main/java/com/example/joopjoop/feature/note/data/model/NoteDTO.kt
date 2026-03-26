@@ -6,8 +6,8 @@ data class NoteDTO(
     val createdAt: String = "",
     val viewCount: Int = 0,
     val likeCount: Int = 0,
+    val location: String = "",
     val imageUri: String? = null,
-    val title: String = "",
     val content: String = "",
     val distance: String = "",
 )
