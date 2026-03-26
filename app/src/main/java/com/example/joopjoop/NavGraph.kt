@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -14,6 +15,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
+import com.example.joopjoop.feature.mypage.ui.main.MyPageScreen
+import com.example.joopjoop.feature.mypage.ui.post.MyPostListContent
+import com.example.joopjoop.feature.mypage.ui.scrap.MyScrapListContent
+import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModel
 
 // Routes 정의
 object Routes {
@@ -107,8 +112,30 @@ fun MainNavHost(
         composable(Routes.MAP) {
             PlaceholderScreen("지도 화면")
         }
+        // [수정] 마이페이지 경로에 실제 뷰모델과 화면을 연결
         composable(Routes.MYPAGE) {
-            PlaceholderScreen("마이페이지 화면")
+            // Context를 통해 Application에 접근하여 AppContainer를 가져옴.
+            val context = LocalContext.current
+            val appContainer = (context.applicationContext as JoopJoopApplication).container
+
+            // 창고의 팩토리를 사용하여 뷰모델을 생성.
+            // (이미 MyPageRepositoryImpl이 주입된 상태)
+            val myPageViewModel: MyPageViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+                factory = appContainer.myPageViewModelFactory
+            )
+
+            // 실제 마이페이지 화면으로 교체
+            MyPageScreen(
+                viewModel = myPageViewModel,
+                // [F-MY-02] 내가 쓴 쪽지 리스트 부품 주입
+                postContent = {
+                    MyPostListContent(viewModel = myPageViewModel)
+                },
+                // [F-MY-03] 스크랩 리스트 부품 주입
+                scrapContent = {
+                    MyScrapListContent(viewModel = myPageViewModel)
+                }
+            )
         }
     }
 }

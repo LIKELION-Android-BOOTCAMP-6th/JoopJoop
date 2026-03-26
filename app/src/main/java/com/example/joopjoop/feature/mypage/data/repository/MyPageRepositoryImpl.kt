@@ -1,7 +1,7 @@
 package com.example.joopjoop.feature.mypage.data.repository
 
 import com.example.joopjoop.core.model.Note
-import com.example.joopjoop.core.model.Scrap
+import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.User
 import com.example.joopjoop.core.repository.MyPageRepository
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
@@ -31,10 +31,46 @@ class MyPageRepositoryImpl(
         return Result.success(fakeNotes)
     }
 
-    override suspend fun getMyScraps(userId: String): Result<List<Scrap>> {
-        // 임시 스크랩 리스트 리턴
-        return Result.success(
-            listOf(Scrap(noteId = "s1", contentText = "나중에 가볼 곳 스크랩"))
+    override suspend fun getMyScraps(userId: String): Result<List<Note>> {
+        // VO 구조에 맞춘 임시 데이터 리스트
+        val dummyScraps = listOf(
+            // 1. 이미지가 있는 쪽지 (이미지 예시 좌측 상단)
+            Note(
+                noteId = "s1",
+                userId = userId,
+                userNickname = "줍줍이_92",
+                contentText = "오늘은 날씨가 너무 좋아서 산책을 다녀왔다. 줍줍한 낙엽이 예쁘네.",
+                imageUrl = "https://example.com/sunset.jpg", // 노을 사진 예시
+                location = NoteLocation(address = "서울시 성동구")
+            ),
+            // 2. 텍스트 위주의 메모 (이미지 예시 좌측 중앙)
+            Note(
+                noteId = "s2",
+                userId = userId,
+                userNickname = "줍줍이_92",
+                contentText = "\"작은 것들로부터 얻는 커다란 행복\"",
+                category = "MEMO", // 카테고리 활용
+                imageUrl = null
+            ),
+            // 3. 사진과 긴 텍스트가 섞인 쪽지 (이미지 예시 중앙 하단)
+            Note(
+                noteId = "s3",
+                userId = userId,
+                userNickname = "줍줍이_92",
+                contentText = "퇴근길에 본 하늘은 보라색이었다. 잊지 않으려고 기록한다.",
+                imageUrl = "https://example.com/purple_sky.jpg"
+            ),
+            // 4. 짧은 텍스트 메모
+            Note(
+                noteId = "s4",
+                userId = userId,
+                userNickname = "줍줍이_92",
+                contentText = "플레이리스트 공유해용!",
+                category = "MUSIC",
+                imageUrl = null
+            )
         )
+
+        return Result.success(dummyScraps)
     }
 }
