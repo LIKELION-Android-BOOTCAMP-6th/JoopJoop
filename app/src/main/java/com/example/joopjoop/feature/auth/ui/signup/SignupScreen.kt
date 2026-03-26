@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.auth.ui.signup
 
+import android.R.id.message
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -49,13 +50,22 @@ fun SignupRoute(
     viewModel: SignupViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val message: String = uiState.errorMessage ?: ""
+    val context = androidx.compose.ui.platform.LocalContext.current // 토스트용 컨텍스트
 
     // 회원가입 성공 메시지가 감지되면 성공 콜백 호출
     androidx.compose.runtime.LaunchedEffect(uiState.errorMessage) {
         if (uiState.errorMessage == "회원가입에 성공했습니다!") {
+            // 성공 시: 토스트 띄우고 + 화면 이동
+            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT)
+                .show()
             onSignupSuccess()
-            viewModel.consumeErrorEvent() // 이벤트 소비
+        }else{
+            // 실패 시 토스트만 띄우기 (이메일 중복, 형식 오류 등)
+            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
         }
+        // 공통 - 이벤트를 소모하여 메시지가 중복으로 뜨지 않게 함
+        viewModel.consumeErrorEvent()
     }
     SignupScreen(
         uiState = uiState,
@@ -287,7 +297,7 @@ fun SignupScreen(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
-                        text = "••••••••",
+                        text = "8자리 이상 입력해 주세요.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },

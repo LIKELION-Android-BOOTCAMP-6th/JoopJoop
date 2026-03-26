@@ -122,8 +122,24 @@ class SignupViewModel : ViewModel() {
                 is com.example.joopjoop.feature.auth.data.model.AuthResult.Failure -> {
                     // 실패 시
                     Log.e("SignUp", "실패: ${result.exception.message}")
+                    // 1. 발생한 예외(Exception)의 종류에 따라
+                    val friendlyMessage = when (result.exception) {
+                        // 이미 가입된 이메일인 경우
+                        is com.google.firebase.auth.FirebaseAuthUserCollisionException ->
+                            "이미 가입된 이메일 주소입니다. 다른 이메일을 사용해 주세요."
+                        // 이메일 형식이 잘못된 경우
+                        is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
+                            "유효하지 않은 이메일 형식입니다."
+                        // 네트워크 연결이 불안정한 경우
+                        is com.google.firebase.FirebaseNetworkException ->
+                            "네트워크 연결이 불안정합니다. 인터넷 설정을 확인해 주세요."
+                        // 그 외 알 수 없는 에러
+                        else -> "회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+                    }
+
+                    // 2. 결정된 친절한 메시지를 UI State에 업데이트합니다.
                     _uiState.update {
-                        it.copy(errorMessage = result.exception.message ?: "회원가입 실패")
+                        it.copy(errorMessage = friendlyMessage)
                     }
                 }
                 is com.example.joopjoop.feature.auth.data.model.AuthResult.Loading -> {
