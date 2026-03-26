@@ -20,6 +20,5 @@ class AppContainer {
         AuthRepositoryImpl(firebaseAuthSource, firestoreUserSource)
     }
 
-
     // 추가되는 기능(MyPage, Setting 등)도 여기에 등록
 }
