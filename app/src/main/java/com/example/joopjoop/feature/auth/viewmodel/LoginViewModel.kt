@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.repository.AuthRepository
+import com.example.joopjoop.feature.auth.data.model.AuthResult
 import com.example.joopjoop.feature.auth.data.repository.AuthRepositoryImpl
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
@@ -49,17 +50,34 @@ class LoginViewModel: ViewModel() {
         if(email.isBlank() || password.isBlank()) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             val result = authRepository.login(email, password)
 
-            result.onSuccess {
-                _uiState.update { it.copy(isLoading = false, isLoginSuccess = true) }
-                Log.d("LoginViewModel", "로그인 성공 유저 : ${_uiState.value.email}")
-            }.onFailure { exception ->
-                _uiState.update { it.copy(isLoading = false, errorMessage = exception.message)
+            when (result) {
+                is AuthResult.Success -> {
+                    // 성공 시: 로딩 끄고, 성공 플래그 true
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isLoginSuccess = true
+                        )
+                    }
+                    Log.d("LoginViewModel", "로그인 성공! 유저 이메일: ${result.data.email}")
                 }
-                Log.d("LoginViewModel", "로그인 실패 : ${exception.message}")
+                is AuthResult.Failure -> {
+                    // 실패 시: 로딩 끄고, 에러 메시지 업데이트
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = result.exception.message ?: "로그인에 실패했습니다."
+                        )
+                    }
+                    Log.e("LoginViewModel", "로그인 실패: ${result.exception.message}")
+                }
+                is AuthResult.Loading -> {
+                    _uiState.update { it.copy(isLoading = true) }
+                }
             }
         }
     }

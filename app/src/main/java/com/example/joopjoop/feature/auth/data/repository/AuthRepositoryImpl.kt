@@ -1,6 +1,8 @@
 package com.example.joopjoop.feature.auth.data.repository
 
 import com.example.joopjoop.core.repository.AuthRepository
+import com.example.joopjoop.feature.auth.data.model.AuthResult
+import com.example.joopjoop.feature.auth.data.model.UserResponse
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
 
@@ -17,35 +19,41 @@ class AuthRepositoryImpl (
         email: String,
         password: String,
         nickname: String
-    ): Result<Unit> {
+    ): AuthResult<UserResponse> { // 가입된 정보 반환
         return try {
             // firebase auth를 통해 계정 생성
-            val uid = authSource.signUp(email, password)
+            val uid: String = authSource.signUp(email, password)
 
             // 계정 생성 성공 시 Firestore에 사용자 정보 저장
             userSource.saveUser(uid, email, nickname)
 
             // 성공 시
-            Result.success<Unit>(Unit)
+            val user = UserResponse(
+                uid = uid,
+                email = email,
+                nickname = nickname
+            )
+            AuthResult.Success(user)
         } catch (e: Exception) {
             // 실패 시 에러 던지기
-            Result.failure<Unit>(e)
+            AuthResult.Failure(e)
         }
     }
 
+    // 로그인 성공 시 유저 정보를 가져와 반환
     override suspend fun login(
         email: String,
         password: String
-    ): Result<Unit> {
+    ): AuthResult<UserResponse> {
         return try {
             // FirebaseAuthSource를 통해 실제 로그인을 시도합니다.
-            authSource.login(email, password)
+            val uid = authSource.login(email, password)
 
             // 성공하면 Result.success를 반환합니다.
-            Result.success(Unit)
+            AuthResult.Success(UserResponse(uid = uid, email = email))
         } catch (e: Exception) {
             // 실패(비번 틀림, 없는 계정 등)하면 에러와 함께 failure를 반환합니다.
-            Result.failure(e)
+            AuthResult.Failure(e)
         }
     }
 }

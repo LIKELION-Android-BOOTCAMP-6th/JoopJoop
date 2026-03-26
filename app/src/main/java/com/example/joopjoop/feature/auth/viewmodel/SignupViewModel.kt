@@ -112,16 +112,22 @@ class SignupViewModel : ViewModel() {
 
             Log.d("SignUp", "결과 도착: $result")
 
-            result.onSuccess {
-                Log.d("SignUp", "성공!")
-                // 성공 로직 (가입 성공 토스트)
-                _uiState.update { it.copy(errorMessage = "회원가입에 성공했습니다!") }
-            }.onFailure { exception ->
-                Log.e("SignUp", "실패: ${exception.message}")
-                // 실패 로직 (가입 실패 토스트)
-                // 에러 메시지를 errorEvent에 담음
-                _uiState.update {
-                    it.copy(errorMessage = exception.message ?: "회원가입 실패")
+            // AuthResult 분기처리
+            when (result) {
+                is com.example.joopjoop.feature.auth.data.model.AuthResult.Success -> {
+                    // 성공 시
+                    Log.d("SignUp", "회원가입 성공, 가입된 유저 : ${result.data.nickname}")
+                    _uiState.update { it.copy(errorMessage = "회원가입에 성공했습니다!") }
+                }
+                is com.example.joopjoop.feature.auth.data.model.AuthResult.Failure -> {
+                    // 실패 시
+                    Log.e("SignUp", "실패: ${result.exception.message}")
+                    _uiState.update {
+                        it.copy(errorMessage = result.exception.message ?: "회원가입 실패")
+                    }
+                }
+                is com.example.joopjoop.feature.auth.data.model.AuthResult.Loading -> {
+                    // 필요시 로딩 상태 UI 반영할 것
                 }
             }
         }

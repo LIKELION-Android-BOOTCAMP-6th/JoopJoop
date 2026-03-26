@@ -26,7 +26,9 @@ class FirebaseAuthSource {
     }
 
     // 로그인
-    suspend fun login(email: String, password: String) {
-        auth.signInWithEmailAndPassword(email, password).await()
+    suspend fun login(email: String, password: String): String { // : String 추가
+        val result = auth.signInWithEmailAndPassword(email, password).await()
+        // 로그인된 유저의 UID를 반환합니다.
+        return result.user?.uid ?: throw Exception("로그인 실패")
     }
 }
