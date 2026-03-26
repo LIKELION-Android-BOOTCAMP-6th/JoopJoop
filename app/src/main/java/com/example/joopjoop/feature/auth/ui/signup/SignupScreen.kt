@@ -42,13 +42,13 @@ import com.example.joopjoop.ui.theme.JoopJoopTheme
 fun SignupScreen(
     uiState: SignupUiState,
     modifier: Modifier = Modifier,
-    onNicknameChange: (String) -> Unit = {},
-    onEmailChange: (String) -> Unit = {},
-    onPasswordChange: (String) -> Unit = {},
+    onNicknameInput: (String) -> Unit = {},
+    onEmailInput: (String) -> Unit = {},
+    onPasswordInput: (String) -> Unit = {},
     onPasswordVisibilityToggle: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onDuplicationCheckClick: () -> Unit = {},
-    onCreateAccountClick: () -> Unit = {}
+    onCreateAccountClick: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -139,7 +139,7 @@ fun SignupScreen(
             ) {
                 OutlinedTextField(
                     value = uiState.nickname,
-                    onValueChange = onNicknameChange,
+                    onValueChange = onNicknameInput,
                     modifier = Modifier.weight(1f),
                     placeholder = {
                         Text(
@@ -185,7 +185,7 @@ fun SignupScreen(
                     )
                 }
             }
-            
+
             // 닉네임 중복 확인 결과 메시지
             if (uiState.nicknameHelperMessage.isNotEmpty()) {
                 Text(
@@ -212,7 +212,7 @@ fun SignupScreen(
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = uiState.email,
-                onValueChange = onEmailChange,
+                onValueChange = onEmailInput,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
@@ -253,7 +253,7 @@ fun SignupScreen(
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = uiState.password,
-                onValueChange = onPasswordChange,
+                onValueChange = onPasswordInput,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = {
                     Text(
@@ -294,7 +294,7 @@ fun SignupScreen(
             )
 
             Spacer(modifier = Modifier.height(40.dp))
-            
+
             // 회원가입 버튼
             Button(
                 onClick = onCreateAccountClick,
@@ -324,9 +324,9 @@ fun SignupScreenPreview() {
     JoopJoopTheme {
         SignupScreen(
             uiState = SignupUiState(
-                nickname = "쪽지 줍는 사람",
-                nicknameHelperMessage = "사용 가능한 닉네임입니다.",
-                isNicknameAvailable = true
+                nickname = "냐옹이",
+                nicknameHelperMessage = "",
+                isNicknameAvailable = false
             )
         )
     }
