@@ -40,7 +40,7 @@ class MyPageRepositoryImpl(
                 userId = userId,
                 userNickname = "줍줍이_92",
                 contentText = "오늘은 날씨가 너무 좋아서 산책을 다녀왔다. 줍줍한 낙엽이 예쁘네.",
-                imageUrl = "https://example.com/sunset.jpg", // 노을 사진 예시
+                imageUrl = "https://lh3.googleusercontent.com/proxy/DNVIwWacFoW3Za-pUNm8BiFDjLDOUAaq6y3dVk0TVXZSvlRvLGAqznzidRc1c7d-TqVhTxP8-h2D14HNgDEwfWvD0td6hQK1okNte93oCTs", // 노을 사진 예시
                 location = NoteLocation(address = "서울시 성동구")
             ),
             // 2. 텍스트 위주의 메모 (이미지 예시 좌측 중앙)
@@ -58,7 +58,7 @@ class MyPageRepositoryImpl(
                 userId = userId,
                 userNickname = "줍줍이_92",
                 contentText = "퇴근길에 본 하늘은 보라색이었다. 잊지 않으려고 기록한다.",
-                imageUrl = "https://example.com/purple_sky.jpg"
+                imageUrl = "https://cdn.eyesmag.com/content/uploads/posts/2025/01/22/shutterstock_2491179401-06f50759-c2c5-49cb-b10b-ba47ca6d2166.jpg"
             ),
             // 4. 짧은 텍스트 메모
             Note(

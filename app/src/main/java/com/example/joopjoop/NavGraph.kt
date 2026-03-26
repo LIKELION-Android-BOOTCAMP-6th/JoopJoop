@@ -129,11 +129,20 @@ fun MainNavHost(
                 viewModel = myPageViewModel,
                 // [F-MY-02] 내가 쓴 쪽지 리스트 부품 주입
                 postContent = {
-                    MyPostListContent(viewModel = myPageViewModel)
+                    MyPostListContent(
+                        viewModel = myPageViewModel,
+                        onNoteClick = { noteId ->
+                            mainNavController.navigate("note_detail/$noteId")
+                        }
+                    )
                 },
-                // [F-MY-03] 스크랩 리스트 부품 주입
                 scrapContent = {
-                    MyScrapListContent(viewModel = myPageViewModel)
+                    MyScrapListContent(
+                        viewModel = myPageViewModel,
+                        onNoteClick = { noteId ->
+                            mainNavController.navigate("note_detail/$noteId")
+                        }
+                    )
                 }
             )
         }

@@ -50,7 +50,7 @@ fun MyPageScreen(
             // 2. 탭 선택 바 (직접 구현 필요)
             MyPageTabRow(
                 selectedTab = uiState.selectedTab,
-                onTabSelected = { viewModel.selectTab(it) }
+                onTabSelected = { viewModel.onTabSelected(it) }
             )
 
             // 3. 컨텐츠 영역 (주입받은 부품 사용)

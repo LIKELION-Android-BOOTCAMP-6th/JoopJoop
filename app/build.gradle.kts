@@ -80,4 +80,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx") // 데이터베이스용
     // Coroutines를 Firebase와 함께 쓰기 위한 라이브러리 (await() 사용 위함)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+
+    // Coil Compose
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

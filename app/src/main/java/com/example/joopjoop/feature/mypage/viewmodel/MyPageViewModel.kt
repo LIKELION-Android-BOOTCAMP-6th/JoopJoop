@@ -29,25 +29,89 @@ class MyPageViewModel(
     private val _scrapUiState = MutableStateFlow(MyScrapUiState())
     val scrapUiState = _scrapUiState.asStateFlow()
 
+    // 현재 세션의 유저 ID (실제로는 Auth에서 가져와야 함)
+    private var currentUserId: String = "test_user_id"
+
     init {
-        // 초기 데이터 로드 (현재 로그인한 유저 ID를 넘겨야 함)
-        loadMyPageData("test_user_id")
+        // 초기 진입 시: 유저 프로필과 첫 번째 탭(POSTS) 데이터만 로드
+        loadUserProfile(currentUserId)
+        loadMyPosts(currentUserId)
     }
 
-    fun loadMyPageData(userId: String) {
+    // 1. 유저 프로필 로드
+    private fun loadUserProfile(userId: String) {
         viewModelScope.launch {
-            // 각 상태 업데이트 로직
-            val user = myPageRepository.getUserProfile(userId).getOrNull()
-            val posts = myPageRepository.getMyPosts(userId).getOrDefault(emptyList())
-            val scraps = myPageRepository.getMyScraps(userId).getOrDefault(emptyList())
-
-            _uiState.update { it.copy(user = user) }
-            _postUiState.update { it.copy(posts = posts) }
-            _scrapUiState.update { it.copy(scraps = scraps) }
+            _uiState.update { it.copy(isLoading = true) }
+            val result = myPageRepository.getUserProfile(userId)
+            _uiState.update { it.copy(
+                user = result.getOrNull(),
+                isLoading = false
+            )}
         }
     }
 
-    fun selectTab(tab: MyPageTab) {
+    // 2. 내가 작성한 쪽지 로드
+    private fun loadMyPosts(userId: String) {
+        viewModelScope.launch {
+            _postUiState.update { it.copy(isLoading = true, errorMessage = null) }
+            val result = myPageRepository.getMyPosts(userId)
+
+            if (result.isSuccess) {
+                _postUiState.update { it.copy(
+                    posts = result.getOrDefault(emptyList()),
+                    isLoading = false
+                )}
+            } else {
+                _postUiState.update { it.copy(
+                    isLoading = false,
+                    errorMessage = "쪽지를 불러오지 못했습니다. 다시 시도해주세요."
+                )}
+            }
+        }
+    }
+
+    // 3. 스크랩한 쪽지 로드
+    // MyPageViewModel.kt 내부
+    private fun loadMyScraps(userId: String) {
+        if (_scrapUiState.value.isLoading) return
+
+        viewModelScope.launch {
+            // 로딩 시작 및 이전 에러 메시지 초기화
+            _scrapUiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            val result = myPageRepository.getMyScraps(userId)
+
+            result.onSuccess { scrapList ->
+                _scrapUiState.update { it.copy(
+                    scraps = scrapList,
+                    isLoading = false
+                )}
+            }.onFailure { exception ->
+                _scrapUiState.update { it.copy(
+                    isLoading = false,
+                    errorMessage = "스크랩 목록을 불러오지 못했습니다."
+                )}
+            }
+        }
+    }
+
+    // 탭 전환 처리 (Lazy Loading 핵심 로직)
+    fun onTabSelected(tab: MyPageTab) {
         _uiState.update { it.copy(selectedTab = tab) }
+
+        when (tab) {
+            MyPageTab.POSTS -> {
+                // 작성 쪽지가 비어있을 때만 로드 (필요시 refresh 로직 별도 구성)
+                if (_postUiState.value.posts.isEmpty()) {
+                    loadMyPosts(currentUserId)
+                }
+            }
+            MyPageTab.SCRAPS -> {
+                // 스크랩 탭을 처음 누르는 시점에 데이터가 없으면 로드
+                if (_scrapUiState.value.scraps.isEmpty()) {
+                    loadMyScraps(currentUserId)
+                }
+            }
+        }
     }
 }
