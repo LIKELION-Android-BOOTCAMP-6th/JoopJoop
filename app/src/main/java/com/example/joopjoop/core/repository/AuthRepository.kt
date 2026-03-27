@@ -1,5 +1,8 @@
 package com.example.joopjoop.core.repository
 
+import com.example.joopjoop.feature.auth.data.model.AuthResult
+import com.example.joopjoop.feature.auth.data.model.UserResponse
+
 // 인증 및 사용자 관리
 interface AuthRepository{
 
@@ -16,5 +19,12 @@ interface AuthRepository{
     suspend fun signUp(email: String,
                        password: String,
                        nickname: String
-    ): Result<Unit>
+    ): AuthResult<UserResponse>
+
+    // 이메일 로그인 실행
+    // return: 성공 시 AuthResult.Success(UserResponse)
+    // 실패 시 AuthResult.Failure(Exception)
+    suspend fun login(email: String,
+                      password: String
+    ): AuthResult<UserResponse>
 }
