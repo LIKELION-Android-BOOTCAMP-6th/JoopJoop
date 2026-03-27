@@ -103,12 +103,29 @@ class WriteNoteViewModel(
         if (currentState.noteContent.isBlank() || currentState.isSubmitting) return
 
         _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
-        performSubmit(context, currentState.latitude, currentState.longitude)
 
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location != null && location.latitude != 0.0) {
+                performSubmit(context, location.latitude, location.longitude)
+            } else {
+                // 위치를 못 잡았다면 실시간 위치 요청
+                val priority = Priority.PRIORITY_HIGH_ACCURACY
+                fusedLocationClient.getCurrentLocation(priority, null).addOnSuccessListener { curLoc ->
+                    if (curLoc != null) {
+                        performSubmit(context, curLoc.latitude, curLoc.longitude)
+                    } else {
+                        _uiState.update { it.copy(isSubmitting = false, errorMessage = "위치 정보를 가져올 수 없습니다. GPS를 켜주세요.") }
+                    }
+                }
+            }
+        }.addOnFailureListener {
+            _uiState.update { it.copy(isSubmitting = false, errorMessage = "위치 획득 실패") }
+        }
     }
-
-
     fun performSubmit(context: Context, lat: Double, lng: Double) {
+        if (lat == 0.0 || lng == 0.0) {
+            return
+        }
         viewModelScope.launch {
             try {
                 val currentState = _uiState.value
@@ -128,8 +145,8 @@ class WriteNoteViewModel(
                     category = currentState.selectedCategory,
                     storageHours = currentState.storageHours,
                     imageUri = currentState.selectedImageUri,
-                    latitude = currentState.latitude,
-                    longitude = currentState.longitude,
+                    latitude = lat,
+                    longitude = lng,
                     createdAt = currentTime,
                     expiresAt = expiresTime,
                     geohash = hash,

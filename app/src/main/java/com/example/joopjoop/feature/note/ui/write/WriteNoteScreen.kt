@@ -254,7 +254,7 @@ fun WriteNoteScreen(
 
             // 4. 쪽지 남기기 버튼
             Button(
-                onClick = onLeaveNoteClick, // 이제 인자 없이 깔끔하게!
+                onClick = onLeaveNoteClick, // 이제 인자 없이 깔끔하게
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp),

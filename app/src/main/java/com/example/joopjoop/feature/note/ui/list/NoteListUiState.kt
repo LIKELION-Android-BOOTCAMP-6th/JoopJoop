@@ -3,8 +3,10 @@ package com.example.joopjoop.feature.note.ui.list
 data class NoteListUiState(
     val notes: List<NoteItem> = emptyList(),  // 쪽지 목록
     val isLoading: Boolean = false,            // 로딩 중 여부
+    val distance: String = "",     // 거리
     val myLatitude: Double = 0.0,  // 내 현재 위도
     val myLongitude: Double = 0.0  // 내 현재 경도
+
 )
 
 data class NoteItem(

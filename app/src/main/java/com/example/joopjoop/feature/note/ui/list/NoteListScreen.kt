@@ -77,6 +77,7 @@ fun NoteListScreen(
     LaunchedEffect(Unit) {
         viewModel.loadNotes()
     }
+
     JoopJoopTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -183,7 +184,7 @@ fun ListTopBar(navController: NavController) {
 @Composable
 fun NoteCard(item: NoteItem, onClick: () -> Unit = {}){
     val isLocked = !item.isWithinRange
-        Column(
+    Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
@@ -220,7 +221,8 @@ fun NoteCard(item: NoteItem, onClick: () -> Unit = {}){
 
             // 내용 - 본문 일부 노출(한줄만, 넘어가면 ... 처리)
             Text(
-                text = if (isLocked) "가까이 이동해서 확인하세요" else item.content,                color = TextPrimary,
+                text = if (isLocked) "가까이 이동해서 확인하세요" else item.content,
+                color = TextPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,

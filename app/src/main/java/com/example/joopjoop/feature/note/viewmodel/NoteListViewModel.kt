@@ -2,6 +2,7 @@ package com.example.joopjoop.feature.note.viewmodel
 
 import android.annotation.SuppressLint
 import android.location.Location
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.model.Note
@@ -13,6 +14,9 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -25,6 +29,14 @@ class NoteListViewModel(
     val uiState: StateFlow<NoteListUiState> = _uiState.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            uiState
+                .map { it.myLatitude to it.myLongitude }
+                .distinctUntilChanged() // 값이 실제로 변했을 때만
+                .collect { (lat, lng) ->
+                    loadNotes()
+                }
+        }
         fetchCurrentLocation()
     }
     @SuppressLint("MissingPermission")
@@ -38,41 +50,49 @@ class NoteListViewModel(
                         myLongitude = it.longitude
                     )
                 }
-                loadNotes()
             }
+            // 일단 리스트를 새로고침
+            loadNotes()
         }
     }
     fun loadNotes() {
+        val myLat = _uiState.value.myLatitude
+        val myLng = _uiState.value.myLongitude
+        val currentTime = System.currentTimeMillis()
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            val myLat = _uiState.value.myLatitude
-            val myLng = _uiState.value.myLongitude
-
             val allNotes = repository.getNotes()
-
-
-            val notes = allNotes.map { note ->
-                val results = FloatArray(1)
-                Location.distanceBetween(
-                    myLat,
-                    myLng,
-                    note.location.latitude,
-                    note.location.longitude,
-                    results)
-                val distanceInMeters = results[0]
-                NoteItem(
-                    id = note.noteId,
-                    content = note.contentText,
-                    distance = "${distanceInMeters.toInt()}m",
-                    isWithinRange = distanceInMeters <= 30f,
-                    latitude = note.location.latitude,
-                    longitude = note.location.longitude
-                )
-            }
+            val notes = allNotes
+                .filter { note ->
+                    note.expiresAt.time > currentTime
+                }
+                .map { note ->
+                    val results = FloatArray(1)
+                    Location.distanceBetween(
+                        myLat,
+                        myLng,
+                        note.location.latitude,
+                        note.location.longitude,
+                        results
+                    )
+                    note to results[0]
+                }
+                .sortedBy { it.second } // float 기준 정렬
+                .map { (note, distanceInMeters) ->
+                    // 정렬된 순서대로 NoteItem으로 변환(거리순)
+                    NoteItem(
+                        id = note.noteId,
+                        content = note.contentText,
+                        distance = if (distanceInMeters >= 1000) "${(distanceInMeters / 1000).toInt()}km"
+                        else "${distanceInMeters.toInt()}m",
+                        isWithinRange = distanceInMeters <= 30f,
+                        latitude = note.location.latitude,
+                        longitude = note.location.longitude,
+                    )
+                }
             _uiState.update { it.copy(notes = notes, isLoading = false) }
         }
     }
-
-
 }
