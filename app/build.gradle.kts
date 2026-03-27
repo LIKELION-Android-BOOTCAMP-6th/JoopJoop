@@ -81,6 +81,9 @@ dependencies {
     // Coroutines를 Firebase와 함께 쓰기 위한 라이브러리 (await() 사용 위함)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
+    // Coil Compose
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
     // 네비게이션을 위한 라이브러리
     implementation("androidx.navigation:navigation-compose:2.8.0")
 }
