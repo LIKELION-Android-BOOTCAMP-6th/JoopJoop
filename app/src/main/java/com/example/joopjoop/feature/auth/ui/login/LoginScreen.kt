@@ -28,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.joopjoop.R
 import com.example.joopjoop.feature.auth.viewmodel.LoginViewModel
+import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 @Composable
@@ -38,20 +39,47 @@ fun LoginRoute(
 ) {
     // AppContainer에서 Repository 가져오기
     val context = androidx.compose.ui.platform.LocalContext.current
-    val appContainer = (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
+    val appContainer =
+        (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
 
     // 팩토리를 사용해서 ViewModel 생성
+    val notificationViewModel: NotificationViewModel =
+        androidx.lifecycle.viewmodel.compose.viewModel()
     val viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(appContainer.authRepository)
+        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(
+            appContainer.authRepository,
+            notificationViewModel = notificationViewModel
+        )
     )
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // 권한 요청용 런처
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // 권한 허용 시 알림 시작 (Worker 등록)
+            notificationViewModel.startPeriodicNotification()
+        }
+        // 권한이 거부되어도 로그인은 진행시켜야 하므로 여기서 onLoginSuccess()를 호출하지는 않음
+        onLoginSuccess()
+    }
+
+    // 로그인 성공 감지
     LaunchedEffect(uiState.isLoginSuccess) {
         if (uiState.isLoginSuccess) {
-            onLoginSuccess()
+            // Android 13 (API 33) 이상인 경우에만 런타임 권한 요청
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                // 13 미만은 이미 Manifest 선언으로 권한이 있으므로 바로 시작 후 이동
+                notificationViewModel.startPeriodicNotification()
+                onLoginSuccess()
+            }
         }
     }
+    // POST_NOTIFICATIONS는 **Android 13(API 33) 이상부터 위험 권한으로 분류되어 확인 필요
 
     LoginScreen(
         uiState = uiState,
@@ -166,7 +194,11 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text(stringResource(R.string.email_placeholder)) },
                 leadingIcon = {
-                    Icon(painterResource(R.drawable.ic_email), null, modifier = Modifier.size(20.dp))
+                    Icon(
+                        painterResource(R.drawable.ic_email),
+                        null,
+                        modifier = Modifier.size(20.dp)
+                    )
                 },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true
@@ -209,14 +241,23 @@ fun LoginScreen(
             // 로그인 버튼
             Button(
                 onClick = onSignInClick,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 enabled = !uiState.isLoading // 로딩 중일 때 버튼 비활성화
             ) {
                 if (uiState.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
                 } else {
-                    Text(stringResource(R.string.sign_in), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.sign_in),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
@@ -229,7 +270,12 @@ fun LoginScreen(
                         append(stringResource(R.string.dont_have_account))
                     }
                     append(" ")
-                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)) {
+                    withStyle(
+                        style = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    ) {
                         append(stringResource(R.string.create_account))
                     }
                 },
@@ -242,6 +288,7 @@ fun LoginScreen(
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
