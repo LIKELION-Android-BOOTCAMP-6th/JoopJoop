@@ -47,8 +47,10 @@ import com.example.joopjoop.R
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Brush
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.joopjoop.feature.note.viewmodel.NoteDetailViewModel
+import com.example.joopjoop.feature.note.viewmodel.NoteListViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.DividerColor
@@ -62,8 +64,10 @@ import com.example.joopjoop.ui.theme.TextTertiary
 fun NoteDetailScreen(
     navController: NavController,
     noteId: String = "1", // 나중에 NavArgs에서 받아올 ID
-    viewModel: NoteDetailViewModel = viewModel()
+    factory: ViewModelProvider.Factory
 ){
+//    val viewModel: NoteDetailViewModel = viewModel()
+    val viewModel: NoteDetailViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // 화면 진입 시 데이터 불러오기
@@ -380,7 +384,7 @@ fun DetailBottomBar(navController: NavController) {
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview2() {
-    JoopJoopTheme {
-        NoteDetailScreen(navController = rememberNavController())
-    }
+//    JoopJoopTheme {
+//        NoteDetailScreen(navController = rememberNavController())
+//    }
 }

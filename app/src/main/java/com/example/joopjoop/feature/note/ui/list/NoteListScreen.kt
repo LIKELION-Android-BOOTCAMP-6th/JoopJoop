@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -65,9 +66,13 @@ import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextTertiary
 
 @Composable
-fun NoteListScreen(navController: NavController){
+fun NoteListScreen(
+    navController: NavController,
+    factory: ViewModelProvider.Factory
+){
 
-    val viewModel: NoteListViewModel = viewModel()
+//    val viewModel: NoteListViewModel = viewModel()
+    val viewModel: NoteListViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
@@ -134,7 +139,7 @@ fun NoteList(uiState: NoteListUiState, modifier: Modifier = Modifier, navControl
                 items(uiState.notes) { note ->
                     NoteCard(
                         item = note,
-                        onClick = { navController.navigate("noteDetail/${note.id}") }
+                        onClick = { navController.navigate("noteDetail/${note.id}") }   //  쪽지 클릭시 상세 화면으로 이동
                     ) // 카드 형태로...
                 }
             }}}}
@@ -331,11 +336,11 @@ fun ListBottomBar(navController: NavController) {
         }
     }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun GreetingPreview() {
-    JoopJoopTheme {
-        NoteListScreen(navController = rememberNavController())
-    }
-}
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun GreetingPreview() {
+////    JoopJoopTheme {
+////        NoteListScreen(navController = rememberNavController())
+////    }
+//}
 

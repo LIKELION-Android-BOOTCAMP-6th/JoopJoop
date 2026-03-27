@@ -1,5 +1,6 @@
 package com.example.joopjoop.core.di
 
+import android.content.Context
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.MyPageRepository
 import com.example.joopjoop.core.repository.NoteRepository
@@ -10,11 +11,13 @@ import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.example.joopjoop.feature.mypage.data.repository.MyPageRepositoryImpl
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModelFactory
 import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
+import com.example.joopjoop.feature.note.viewmodel.NoteViewModelFactory
+import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModelFactory
 import kotlin.getValue
 
 // 앱 전체의 의존성을 관리하는 중앙 컨테이너
 
-class AppContainer {
+class AppContainer(context: Context) {
 
     // 1. 데이터 소스 (싱글톤으로 관리)
     private val firebaseAuthSource by lazy { FirebaseAuthSource() }
@@ -42,5 +45,19 @@ class AppContainer {
     // 여기서 팩토리까지 관리하면 NavGraph 코드가 더 짧아짐
     val myPageViewModelFactory: MyPageViewModelFactory by lazy {
         MyPageViewModelFactory(myPageRepository)
+    }
+
+    // note (noteList, noteDetail 관련 Viewmodel Factory)
+    val noteViewModelFactory: NoteViewModelFactory by lazy {
+        NoteViewModelFactory(noteRepository)
+    }
+
+    // writeNote
+    val writeNoteViewModelFactory: WriteNoteViewModelFactory by lazy {
+        // 구글 위치 서비스 클라이언트 생성
+        val fusedLocationClient = com.google.android.gms.location.LocationServices
+            .getFusedLocationProviderClient(context)
+
+        WriteNoteViewModelFactory(noteRepository, fusedLocationClient)
     }
 }

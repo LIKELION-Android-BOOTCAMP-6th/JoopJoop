@@ -1,8 +1,8 @@
 package com.example.joopjoop.feature.note.data.model
 
 data class NoteRequest(
-    val authorId: String = "",      // 작성자 ID
-    val authorName: String = "김철수 디자이너",    // 작성자 이름
+    val authorId: String = "",      // 작성자 ID (userId)
+    val authorName: String = "김철수 디자이너",    // 작성자 이름 (nickname)
     val location: String = "강남구 역삼동",      // 주소
     val content: String = "",       // 쪽지 내용
     val category: String = "",      // 카테고리 (예: "일상")
@@ -10,4 +10,5 @@ data class NoteRequest(
     val imageUri: String? = null,   // 첨부 이미지 (없으면 null)
     val latitude: Double = 0.0,     // 쪽지 위치 위도
     val longitude: Double = 0.0,    // 쪽지 위치 경도
+    val geohash: String,            // 쪽지 geohash
 )
