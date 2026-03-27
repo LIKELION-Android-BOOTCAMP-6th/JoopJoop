@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
                 composable("writeNote") {
                     val context = LocalContext.current
                     val viewModel: WriteNoteViewModel = viewModel(
-                        factory = appContainer.writeNoteViewModelFactory
+                        factory = appContainer.noteViewModelFactory
                     )
                     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
