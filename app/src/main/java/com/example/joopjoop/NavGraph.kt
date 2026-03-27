@@ -9,12 +9,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
+import com.example.joopjoop.feature.auth.ui.intro.IntroScreen
+import com.example.joopjoop.feature.auth.ui.login.LoginRoute
+import com.example.joopjoop.feature.auth.ui.signup.SignupRoute
+import com.example.joopjoop.feature.auth.viewmodel.LoginViewModel
+import com.example.joopjoop.feature.auth.viewmodel.SignupViewModel
 import com.example.joopjoop.feature.map.ui.MapScreen
 import com.example.joopjoop.feature.map.viewmodel.MapViewModel
 import com.example.joopjoop.feature.mypage.ui.main.MyPageScreen
@@ -55,18 +61,62 @@ fun RootNavHost() {
     val context = LocalContext.current
     val appContainer = (context.applicationContext as JoopJoopApplication).container
 
+// 로그인 여부에 따라 화면분기를 위해서는 아래의 authRepository.currentUserUid 필요
+
+//    // 리포지토리를 통해 현재 로그인 상태 확인
+//    val isLoggedIn = appContainer.authRepository.currentUserUid != null
+//
+//    // 로그인 상태면 메인(지도), 아니면 인증(인트로) 화면으로!
+//    val startDest = if (isLoggedIn) Routes.MAIN else Routes.AUTH
+
     NavHost(
         navController = rootNavController,
         // [개발 단계 전용] 구글 로그인 연동 전까지는 바로 메인으로 진입.
-        startDestination = Routes.MAIN
+        startDestination = Routes.AUTH
     ) {
 
         // 1. 인증 그래프 (Auth Graph)
         // Intro, Login, Signup 등을 포함하며 로그인 완료 시 스택에서 제거됩니다.
         navigation(startDestination = Routes.INTRO, route = Routes.AUTH) {
-            composable(Routes.INTRO) { PlaceholderScreen("인트로 화면") }
-            composable(Routes.LOGIN) { PlaceholderScreen("로그인 화면") }
-            composable(Routes.SIGNUP) { PlaceholderScreen("회원가입 화면") }
+            composable(Routes.INTRO) {
+                // 인트로 화면 (필요 시 뷰모델 주입)
+                IntroScreen(
+                    onLoginClick = { rootNavController.navigate(Routes.LOGIN) },
+                    onSignupClick = { rootNavController.navigate(Routes.SIGNUP) }
+                )
+            }
+            composable(Routes.LOGIN) {
+                val loginViewModel: LoginViewModel = viewModel(
+                    factory = appContainer.authViewModelFactory
+                )
+
+                LoginRoute(
+                    viewModel = loginViewModel,
+                    onLoginSuccess = {
+                        rootNavController.navigate(Routes.MAIN) {
+                            popUpTo(Routes.AUTH) { inclusive = true }
+                        }
+                    },
+                    onBackClick = { rootNavController.popBackStack() },
+                    onCreateAccountClick = { rootNavController.navigate(Routes.SIGNUP) }
+                )
+            }
+            composable(Routes.SIGNUP) {
+                // 마찬가지로 상단의 appContainer를 사용합니다.
+                val signupViewModel: SignupViewModel = viewModel(
+                    factory = appContainer.authViewModelFactory
+                )
+
+                SignupRoute(
+                    viewModel = signupViewModel,
+                    onSignupSuccess = {
+                        rootNavController.popBackStack()
+                    },
+                    onBackClick = {
+                        rootNavController.popBackStack()
+                    }
+                )
+            }
         }
 
         // 2. 메인 그래프 (Main Graph)

@@ -6,6 +6,7 @@ import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.auth.data.repository.AuthRepositoryImpl
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
+import com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory
 import com.example.joopjoop.feature.map.viewmodel.MapViewModelFactory
 import com.example.joopjoop.feature.mypage.data.repository.MyPageRepositoryImpl
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModelFactory
@@ -48,4 +49,7 @@ class AppContainer {
     val mapViewModelFactory: MapViewModelFactory by lazy {
         MapViewModelFactory(noteRepository)
     }
+
+    // feature/auth 전용 팩토리 추가
+    val authViewModelFactory = AuthViewModelFactory(authRepository)
 }

@@ -2,9 +2,23 @@ package com.example.joopjoop.feature.auth.ui.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,26 +39,28 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.joopjoop.R
 import com.example.joopjoop.feature.auth.viewmodel.LoginViewModel
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 @Composable
 fun LoginRoute(
+    viewModel: LoginViewModel, // NavGraph에서 주입받은 뷰모델
     onLoginSuccess: () -> Unit,
     onBackClick: () -> Unit,
     onCreateAccountClick: () -> Unit
 ) {
-    // AppContainer에서 Repository 가져오기
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val appContainer = (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
 
-    // 팩토리를 사용해서 ViewModel 생성
-    val viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(appContainer.authRepository)
-    )
+// 매개변수에 viewModel추가해서 NavGraph에서 생성하도록 수정했음 - 원화
+// 아래는 주석처리 해둠
 
+//    // AppContainer에서 Repository 가져오기
+//    val context = androidx.compose.ui.platform.LocalContext.current
+//    val appContainer = (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
+//    // 팩토리를 사용해서 ViewModel 생성
+//    val viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+//        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(appContainer.authRepository)
+//    )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState.isLoginSuccess) {
@@ -166,7 +182,11 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text(stringResource(R.string.email_placeholder)) },
                 leadingIcon = {
-                    Icon(painterResource(R.drawable.ic_email), null, modifier = Modifier.size(20.dp))
+                    Icon(
+                        painterResource(R.drawable.ic_email),
+                        null,
+                        modifier = Modifier.size(20.dp)
+                    )
                 },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true
@@ -209,14 +229,23 @@ fun LoginScreen(
             // 로그인 버튼
             Button(
                 onClick = onSignInClick,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 enabled = !uiState.isLoading // 로딩 중일 때 버튼 비활성화
             ) {
                 if (uiState.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
                 } else {
-                    Text(stringResource(R.string.sign_in), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.sign_in),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
@@ -229,7 +258,12 @@ fun LoginScreen(
                         append(stringResource(R.string.dont_have_account))
                     }
                     append(" ")
-                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)) {
+                    withStyle(
+                        style = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    ) {
                         append(stringResource(R.string.create_account))
                     }
                 },
@@ -242,6 +276,7 @@ fun LoginScreen(
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {

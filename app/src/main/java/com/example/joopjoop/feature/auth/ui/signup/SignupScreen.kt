@@ -1,6 +1,5 @@
 package com.example.joopjoop.feature.auth.ui.signup
 
-import android.R.id.message
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -38,31 +37,37 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.joopjoop.R
 import com.example.joopjoop.feature.auth.viewmodel.SignupViewModel
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 @Composable
 fun SignupRoute(
+    viewModel: SignupViewModel,
     onBackClick: () -> Unit,
     onSignupSuccess: () -> Unit, // 가입 성공 시 로직 (로그인 화면으로 이동 등)
 ) {
-    // 1. AppContainer에서 Repository 가져오기
+
+// 매개변수에 viewModel추가해서 NavGraph에서 생성하도록 수정했음 - 원화
+// 아래는 주석처리 해둠
+
+//    // 1. AppContainer에서 Repository 가져오기
+//    val context = androidx.compose.ui.platform.LocalContext.current
+//    val appContainer = (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
+//
+//    // 2. 팩토리를 사용하여 ViewModel 생성 (중요!)
+//    val viewModel: SignupViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+//        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(appContainer.authRepository)
+//    )
+
     val context = androidx.compose.ui.platform.LocalContext.current
-    val appContainer = (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
-
-    // 2. 팩토리를 사용하여 ViewModel 생성 (중요!)
-    val viewModel: SignupViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(appContainer.authRepository)
-    )
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // 에러 토스트 처리 로직
     androidx.compose.runtime.LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { message ->
-            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT)
+                .show()
             viewModel.consumeErrorEvent()
         }
     }
@@ -84,6 +89,7 @@ fun SignupRoute(
         onBackClick = onBackClick
     )
 }
+
 @Composable
 fun SignupScreen(
     uiState: SignupUiState,
