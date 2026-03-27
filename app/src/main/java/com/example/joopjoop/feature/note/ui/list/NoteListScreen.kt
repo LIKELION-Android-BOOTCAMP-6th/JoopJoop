@@ -70,7 +70,6 @@ fun NoteListScreen(
     navController: NavController,
     factory: ViewModelProvider.Factory
 ){
-
 //    val viewModel: NoteListViewModel = viewModel()
     val viewModel: NoteListViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -290,51 +289,53 @@ fun ListBottomBar(navController: NavController) {
                 )
             }
 
-                // WRITE 탭
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { selectedTab = "WRITE"
-                            navController.navigate("writeNote")},
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.outline_edit_square_24),
-                        contentDescription = null,
-                        tint = if (selectedTab == "WRITE") selectedColor else unselectedColor,
+            // WRITE 탭
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable {
+                        selectedTab = "WRITE"
+                        navController.navigate("writeNote")
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.outline_edit_square_24),
+                    contentDescription = null,
+                    tint = if (selectedTab == "WRITE") selectedColor else unselectedColor,
 
-                        )
-                    Text(
-                        text = "WRITE",
-                        color = if (selectedTab == "WRITE") selectedColor else unselectedColor,
-                        fontSize = 8.sp,
-                        textAlign = TextAlign.Center
                     )
-                }
-
-                // MY PAGE 탭
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable{ selectedTab = "MY PAGE"},
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_person_24),
-                        contentDescription = null,
-                        tint = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
-                    )
-                    Text(
-                        text = "MY PAGE",
-                        color = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
-                        fontSize = 8.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
+                Text(
+                    text = "WRITE",
+                    color = if (selectedTab == "WRITE") selectedColor else unselectedColor,
+                    fontSize = 8.sp,
+                    textAlign = TextAlign.Center
+                )
             }
+
+            // MY PAGE 탭
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { selectedTab = "MY PAGE" },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_person_24),
+                    contentDescription = null,
+                    tint = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
+                )
+                Text(
+                    text = "MY PAGE",
+                    color = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
+                    fontSize = 8.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+
         }
     }
+}
 
 //@Preview(showBackground = true, showSystemUi = true)
 //@Composable

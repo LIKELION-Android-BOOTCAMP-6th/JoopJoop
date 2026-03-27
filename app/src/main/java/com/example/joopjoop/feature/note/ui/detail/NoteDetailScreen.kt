@@ -50,7 +50,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.joopjoop.feature.note.viewmodel.NoteDetailViewModel
-import com.example.joopjoop.feature.note.viewmodel.NoteListViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.DividerColor

@@ -65,8 +65,8 @@ class FirestoreNoteSource(
             "storageHours" to request.storageHours,
             "imageUri" to request.imageUri,
             "createdAt" to com.google.firebase.Timestamp.now(),
-            "latitude" to 0.0,
-            "longitude" to 0.0
+            "latitude" to request.latitude,
+            "longitude" to request.longitude
         )
 
 
