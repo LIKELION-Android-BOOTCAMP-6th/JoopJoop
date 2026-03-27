@@ -1,18 +1,18 @@
 package com.example.joopjoop.feature.note.data.source
 
-import com.example.joopjoop.feature.note.data.model.NoteRequest
-import kotlinx.coroutines.tasks.await
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import com.example.joopjoop.feature.note.data.model.NoteDTO
+import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 
-class FirestoreNoteSource {
-    private val db = Firebase.firestore
+class FirestoreNoteSource(
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+) {
     private val collectionPath = "notes"
 
     fun formatDate(date: Date?): String {
@@ -20,6 +20,7 @@ class FirestoreNoteSource {
         val formatter = SimpleDateFormat("M월 dd일", Locale.getDefault())
         return formatter.format(date)
     }
+
     suspend fun getNotes(): List<NoteDTO> {
         val snapshot = db.collection(collectionPath).get().await()
         return snapshot.documents.mapNotNull { doc ->
@@ -74,10 +75,12 @@ class FirestoreNoteSource {
 
         return generatedId // 생성된 ID 반환
     }
+
     suspend fun incrementViewCount(noteId: String) {
         val docRef = db.collection(collectionPath).document(noteId)
         docRef.update("viewCount", FieldValue.increment(1)).await()
     }
+
     suspend fun updateLikeCount(noteId: String, increment: Int) {
         val docRef = db.collection(collectionPath).document(noteId)
         // increment가 1이면 +1, -1이면 -1

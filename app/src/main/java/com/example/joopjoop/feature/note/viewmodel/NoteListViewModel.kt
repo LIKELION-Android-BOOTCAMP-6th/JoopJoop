@@ -2,8 +2,7 @@ package com.example.joopjoop.feature.note.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.joopjoop.feature.note.data.repository.NoteRepository
-import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
+import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.ui.list.NoteItem
 import com.example.joopjoop.feature.note.ui.list.NoteListUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class NoteListViewModel(
-    private val repository: NoteRepository = NoteRepositoryImpl()
+    private val repository: NoteRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NoteListUiState())

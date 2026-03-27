@@ -1,11 +1,13 @@
 package com.example.joopjoop.feature.note.data.repository
 
+import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.data.model.NoteDTO
 import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 
-class NoteRepositoryImpl : NoteRepository {
-    private val source = FirestoreNoteSource()
+class NoteRepositoryImpl(
+    private val source: FirestoreNoteSource
+) : NoteRepository {
 
     override suspend fun getNotes(): List<NoteDTO> {
         return source.getNotes()

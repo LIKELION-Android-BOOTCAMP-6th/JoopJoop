@@ -2,8 +2,7 @@ package com.example.joopjoop.feature.note.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.joopjoop.feature.note.data.repository.NoteRepository
-import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
+import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.ui.detail.NoteDetailUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,7 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class NoteDetailViewModel(
-    private val repository: NoteRepository = NoteRepositoryImpl()
+    private val repository: NoteRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NoteDetailUiState())
@@ -52,10 +51,10 @@ class NoteDetailViewModel(
                 state.copy(
                     isLiked = isNowLiked,
                     likeCount = state.likeCount + amount
-                    )
-                }
+                )
             }
         }
+    }
 
     // 스크랩 버튼 클릭 처리
     fun toggleBookmark() {

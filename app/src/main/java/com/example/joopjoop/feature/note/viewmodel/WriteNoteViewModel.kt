@@ -2,9 +2,8 @@ package com.example.joopjoop.feature.note.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.data.model.NoteRequest
-import com.example.joopjoop.feature.note.data.repository.NoteRepository
-import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
 import com.example.joopjoop.feature.note.ui.write.WriteNoteUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +12,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class WriteNoteViewModel(
-    private val repository: NoteRepository = NoteRepositoryImpl()
+    private val repository: NoteRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WriteNoteUiState())
@@ -98,7 +97,7 @@ class WriteNoteViewModel(
     }
 
 
-   // 에러 메시지 초기화
+    // 에러 메시지 초기화
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
@@ -107,4 +106,4 @@ class WriteNoteViewModel(
     fun resetNote() {
         _uiState.update { WriteNoteUiState() }
     }
-            }
+}
