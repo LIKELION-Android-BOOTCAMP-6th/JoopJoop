@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.auth.viewmodel
 
+import android.app.Notification
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,7 @@ import com.example.joopjoop.feature.auth.data.repository.AuthRepositoryImpl
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
 import com.example.joopjoop.feature.auth.ui.login.LoginUiState
+import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +18,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
-    private val authRepository: AuthRepository // 인터페이스를 주입받음
+    private val authRepository: AuthRepository, // 인터페이스를 주입받음
+    private val notificationViewModel: NotificationViewModel
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -53,6 +56,7 @@ class LoginViewModel(
 
             when (result) {
                 is AuthResult.Success -> {
+                    notificationViewModel.startPeriodicNotification()
                     // 성공 시: 로딩 끄고, 성공 플래그 true
                     _uiState.update {
                         it.copy(

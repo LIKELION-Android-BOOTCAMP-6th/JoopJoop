@@ -14,9 +14,7 @@ import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 
 // 앱 전체의 의존성을 관리하는 중앙 컨테이너
-
 class AppContainer {
-
     // 1. 데이터 소스 (싱글톤으로 관리)
     private val firebaseAuthSource by lazy { FirebaseAuthSource() }
     private val firestoreUserSource by lazy { FirestoreUserSource() }

@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.auth.ui.signup
 
+import android.R.id.message
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -61,6 +62,17 @@ fun SignupRoute(
 //    )
 
     val context = androidx.compose.ui.platform.LocalContext.current
+    val appContainer = (
+            context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
+
+    val viewModel: SignupViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(
+            authRepository = appContainer.authRepository,
+            // NotificationViewModel을 생성
+            notificationViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+        )
+    )
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // 에러 토스트 처리 로직

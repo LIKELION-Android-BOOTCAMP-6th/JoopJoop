@@ -87,4 +87,7 @@ dependencies {
 
     // 네비게이션을 위한 라이브러리
     implementation("androidx.navigation:navigation-compose:2.8.0")
+
+    // WorkManager 라이브러리 추가 (CoroutineWorker 사용 가능)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }

@@ -2,23 +2,9 @@ package com.example.joopjoop.feature.auth.ui.login
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.joopjoop.R
 import com.example.joopjoop.feature.auth.viewmodel.LoginViewModel
+import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 @Composable
@@ -50,9 +37,22 @@ fun LoginRoute(
     onBackClick: () -> Unit,
     onCreateAccountClick: () -> Unit
 ) {
+    // AppContainer에서 Repository 가져오기
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val appContainer =
+        (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
 
-// 매개변수에 viewModel추가해서 NavGraph에서 생성하도록 수정했음 - 원화
-// 아래는 주석처리 해둠
+    // 팩토리를 사용해서 ViewModel 생성
+    val notificationViewModel: NotificationViewModel =
+        androidx.lifecycle.viewmodel.compose.viewModel()
+    val viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(
+            appContainer.authRepository, notificationViewModel = notificationViewModel
+        )
+    )
+
+    // 매개변수에 viewModel추가해서 NavGraph에서 생성하도록 수정했음 - 원화
+    // 아래는 주석처리 해둠
 
 //    // AppContainer에서 Repository 가져오기
 //    val context = androidx.compose.ui.platform.LocalContext.current
@@ -63,11 +63,32 @@ fun LoginRoute(
 //    )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // 권한 요청용 런처
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // 권한 허용 시 알림 시작 (Worker 등록)
+            notificationViewModel.startPeriodicNotification()
+        }
+        // 권한이 거부되어도 로그인은 진행시켜야 하므로 여기서 onLoginSuccess()를 호출하지는 않음
+        onLoginSuccess()
+    }
+
+    // 로그인 성공 감지
     LaunchedEffect(uiState.isLoginSuccess) {
         if (uiState.isLoginSuccess) {
-            onLoginSuccess()
+            // Android 13 (API 33) 이상인 경우에만 런타임 권한 요청
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                // 13 미만은 이미 Manifest 선언으로 권한이 있으므로 바로 시작 후 이동
+                notificationViewModel.startPeriodicNotification()
+                onLoginSuccess()
+            }
         }
     }
+    // POST_NOTIFICATIONS는 **Android 13(API 33) 이상부터 위험 권한으로 분류되어 확인 필요
 
     LoginScreen(
         uiState = uiState,
