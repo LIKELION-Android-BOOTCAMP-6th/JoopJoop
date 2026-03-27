@@ -1,20 +1,21 @@
 package com.example.joopjoop.core.di
 
+import android.content.Context
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.MyPageRepository
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.auth.data.repository.AuthRepositoryImpl
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
-import com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory
-import com.example.joopjoop.feature.map.viewmodel.MapViewModelFactory
 import com.example.joopjoop.feature.mypage.data.repository.MyPageRepositoryImpl
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModelFactory
 import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
+import com.example.joopjoop.feature.note.viewmodel.NoteViewModelFactory
 
 // 앱 전체의 의존성을 관리하는 중앙 컨테이너
-class AppContainer {
+class AppContainer(context: Context) {
+
     // 1. 데이터 소스 (싱글톤으로 관리)
     private val firebaseAuthSource by lazy { FirebaseAuthSource() }
     private val firestoreUserSource by lazy { FirestoreUserSource() }
@@ -43,11 +44,23 @@ class AppContainer {
         MyPageViewModelFactory(myPageRepository)
     }
 
-    // Map 화면을 위한 팩토리
-    val mapViewModelFactory: MapViewModelFactory by lazy {
-        MapViewModelFactory(noteRepository)
+    // note (noteList, noteDetail, writeNote)
+    val noteViewModelFactory: NoteViewModelFactory by lazy {
+        // 구글 위치 서비스 클라이언트 생성
+        val fusedLocationClient = com.google.android.gms.location.LocationServices
+            .getFusedLocationProviderClient(context)
+
+        NoteViewModelFactory(noteRepository, fusedLocationClient)
     }
 
-    // feature/auth 전용 팩토리 추가
-    val authViewModelFactory = AuthViewModelFactory(authRepository)
+    // 상단 noteViewModelFactory로 아래 write부분 병합됐기에 아래 코드 주석 처리함
+    // WriteNoteViewModelFactory 파일은 삭제됨
+    // writeNote
+//    val writeNoteViewModelFactory: WriteNoteViewModelFactory by lazy {
+//        // 구글 위치 서비스 클라이언트 생성
+//        val fusedLocationClient = com.google.android.gms.location.LocationServices
+//            .getFusedLocationProviderClient(context)
+//
+//        WriteNoteViewModelFactory(noteRepository, fusedLocationClient)
+//    }
 }

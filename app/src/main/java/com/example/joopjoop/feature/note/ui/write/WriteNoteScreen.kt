@@ -258,9 +258,12 @@ fun WriteNoteScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp),
+                enabled = uiState.noteContent.isNotBlank() && !uiState.isSubmitting,
                 shape = RoundedCornerShape(32.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = OrangePrimary, contentColor = TextPrimary
+                    containerColor = OrangePrimary, contentColor = TextPrimary,
+                    disabledContainerColor = OrangePrimary.copy(alpha = 0.3f),
+                    disabledContentColor = TextTertiary
                 )
             ) {
                 Text(

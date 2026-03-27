@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -65,9 +66,12 @@ import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextTertiary
 
 @Composable
-fun NoteListScreen(navController: NavController){
-
-    val viewModel: NoteListViewModel = viewModel()
+fun NoteListScreen(
+    navController: NavController,
+    factory: ViewModelProvider.Factory
+){
+//    val viewModel: NoteListViewModel = viewModel()
+    val viewModel: NoteListViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
@@ -134,7 +138,7 @@ fun NoteList(uiState: NoteListUiState, modifier: Modifier = Modifier, navControl
                 items(uiState.notes) { note ->
                     NoteCard(
                         item = note,
-                        onClick = { navController.navigate("noteDetail/${note.id}") }
+                        onClick = { navController.navigate("noteDetail/${note.id}") }   //  쪽지 클릭시 상세 화면으로 이동
                     ) // 카드 형태로...
                 }
             }}}}
@@ -178,11 +182,12 @@ fun ListTopBar(navController: NavController) {
 // 개별 쪽지 형태
 @Composable
 fun NoteCard(item: NoteItem, onClick: () -> Unit = {}){
+    val isLocked = !item.isWithinRange
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
-                .clickable { onClick() }
+                .clickable(enabled = !isLocked) { onClick() }
         ) {
             //쪽지 아이콘 배경 영역
             Box(
@@ -192,21 +197,30 @@ fun NoteCard(item: NoteItem, onClick: () -> Unit = {}){
                     .background(BgDark),
                 contentAlignment = Alignment.Center
             ) {
-                // 쪽지 아이콘
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_mail_24),
-                    contentDescription = null,
-                    tint = OrangePrimary,
-                    modifier = Modifier.size(48.dp)
-                )
+                if (isLocked) {
+                    // 잠금 상태일 때 잠금 아이콘
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_lock),
+                        contentDescription = null,
+                        tint = TextTertiary,
+                        modifier = Modifier.size(40.dp)
+                    )
+                } else {
+                    // 열린 상태일 때 (기존 메일 아이콘 혹은 사진)
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_mail_24),
+                        contentDescription = null,
+                        tint = OrangePrimary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
             // 내용 - 본문 일부 노출(한줄만, 넘어가면 ... 처리)
             Text(
-                text = item.content,
-                color = TextPrimary,
+                text = if (isLocked) "가까이 이동해서 확인하세요" else item.content,                color = TextPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -214,19 +228,13 @@ fun NoteCard(item: NoteItem, onClick: () -> Unit = {}){
                 lineHeight = 16.sp,
             )
 
-//            Spacer(modifier = Modifier.height(4.dp))
-
             // 거리 정보 표시 영역(아이콘 + 텍스트)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-//                modifier = Modifier.padding(top = 4.dp)
-            ) {
-                //나침반 화살표 아이콘(45도 회전, 수평 맞추기 위해 윗쪽으로 미세 조정)
+            Row(verticalAlignment = Alignment.CenterVertically,
+            ) {//나침반 화살표 아이콘(45도 회전, 수평 맞추기 위해 윗쪽으로 미세 조정)
                 Icon(
                     painter = painterResource(id = R.drawable.baseline_navigation_24),
                     contentDescription = null,
-                    tint = OrangePrimary,
-                    modifier = Modifier
+                    tint = if (isLocked) TextTertiary else OrangePrimary,                    modifier = Modifier
                         .size(14.dp)
                         .rotate(45f) // 회전
                         .offset(y = (-2).dp) // 미세조정
@@ -285,57 +293,59 @@ fun ListBottomBar(navController: NavController) {
                 )
             }
 
-                // WRITE 탭
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { selectedTab = "WRITE"
-                            navController.navigate("writeNote")},
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.outline_edit_square_24),
-                        contentDescription = null,
-                        tint = if (selectedTab == "WRITE") selectedColor else unselectedColor,
+            // WRITE 탭
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable {
+                        selectedTab = "WRITE"
+                        navController.navigate("writeNote")
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.outline_edit_square_24),
+                    contentDescription = null,
+                    tint = if (selectedTab == "WRITE") selectedColor else unselectedColor,
 
-                        )
-                    Text(
-                        text = "WRITE",
-                        color = if (selectedTab == "WRITE") selectedColor else unselectedColor,
-                        fontSize = 8.sp,
-                        textAlign = TextAlign.Center
                     )
-                }
-
-                // MY PAGE 탭
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable{ selectedTab = "MY PAGE"},
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_person_24),
-                        contentDescription = null,
-                        tint = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
-                    )
-                    Text(
-                        text = "MY PAGE",
-                        color = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
-                        fontSize = 8.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
+                Text(
+                    text = "WRITE",
+                    color = if (selectedTab == "WRITE") selectedColor else unselectedColor,
+                    fontSize = 8.sp,
+                    textAlign = TextAlign.Center
+                )
             }
+
+            // MY PAGE 탭
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { selectedTab = "MY PAGE" },
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.baseline_person_24),
+                    contentDescription = null,
+                    tint = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
+                )
+                Text(
+                    text = "MY PAGE",
+                    color = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
+                    fontSize = 8.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+
         }
     }
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun GreetingPreview() {
-    JoopJoopTheme {
-        NoteListScreen(navController = rememberNavController())
-    }
 }
+
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun GreetingPreview() {
+////    JoopJoopTheme {
+////        NoteListScreen(navController = rememberNavController())
+////    }
+//}
 

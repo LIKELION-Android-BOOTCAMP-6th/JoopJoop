@@ -1,13 +1,20 @@
 package com.example.joopjoop.feature.note.data.model
 
 data class NoteRequest(
-    val authorId: String = "",      // 작성자 ID
-    val authorName: String = "김철수 디자이너",    // 작성자 이름
-    val location: String = "강남구 역삼동",      // 주소
-    val content: String = "",       // 쪽지 내용
-    val category: String = "",      // 카테고리 (예: "일상")
-    val storageHours: Int = 12,     // 보관 시간
-    val imageUri: String? = null,   // 첨부 이미지 (없으면 null)
-    val latitude: Double = 0.0,     // 쪽지 위치 위도
-    val longitude: Double = 0.0,    // 쪽지 위치 경도
+    val authorId: String = "",
+    val authorName: String = "익명",
+    val content: String = "",
+    val category: String = "",
+    val storageHours: Int = 12,
+    val imageUri: String? = null,
+
+    // 위치 관련
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val geohash: String = "",      // 30m 반경 검색
+    val location: String = "",     //주소: "OO구 OO동" 형태로
+
+    // 시간 관련
+    val createdAt: Long = System.currentTimeMillis(), // 작성 시간
+    val expiresAt: Long = 0L       // 만료 시간 (createdAt + storageHours)
 )

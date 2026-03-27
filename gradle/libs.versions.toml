@@ -12,6 +12,7 @@ playServicesLocation = "21.3.0"
 firebaseFirestoreKtx = "24.10.3"
 firebaseCommonKtx = "22.0.1"
 navigationCompose = "2.9.7"
+lifecycleViewmodelKtx = "2.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,6 +33,7 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
 firebase-common-ktx = { group = "com.google.firebase", name = "firebase-common-ktx", version.ref = "firebaseCommonKtx" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 
 
 [plugins]

@@ -1,7 +1,7 @@
 package com.example.joopjoop.feature.note.data.repository
 
+import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.repository.NoteRepository
-import com.example.joopjoop.feature.note.data.model.NoteDTO
 import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 
@@ -9,11 +9,11 @@ class NoteRepositoryImpl(
     private val source: FirestoreNoteSource
 ) : NoteRepository {
 
-    override suspend fun getNotes(): List<NoteDTO> {
+    override suspend fun getNotes(): List<Note> {
         return source.getNotes()
     }
 
-    override suspend fun getNoteDetail(noteId: String): NoteDTO {
+    override suspend fun getNoteDetail(noteId: String): Note {
         return source.getNoteDetail(noteId)
     }
 
@@ -39,6 +39,7 @@ class NoteRepositoryImpl(
     override suspend fun updateLikeCount(noteId: String, increment: Int) {
         source.updateLikeCount(noteId, increment)
     }
+
 }
 
 

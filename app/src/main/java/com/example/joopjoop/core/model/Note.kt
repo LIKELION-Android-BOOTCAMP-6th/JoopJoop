@@ -23,5 +23,6 @@ data class NoteLocation(
     val geohash: String = "",
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
-    val address: String = ""
+    val address: String = "",
+    val distance: String = ""       // 쪽지 목록에서 사용 - 해당 쪽지와 사용자의 거리 표시 데이터 ("0m")
 )
