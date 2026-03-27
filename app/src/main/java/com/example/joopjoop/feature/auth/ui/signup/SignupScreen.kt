@@ -50,11 +50,15 @@ fun SignupRoute(
 ) {
     // 1. AppContainer에서 Repository 가져오기
     val context = androidx.compose.ui.platform.LocalContext.current
-    val appContainer = (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
+    val appContainer = (
+            context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
 
-    // 2. 팩토리를 사용하여 ViewModel 생성 (중요!)
     val viewModel: SignupViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(appContainer.authRepository)
+        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(
+            authRepository = appContainer.authRepository,
+            // NotificationViewModel을 생성
+            notificationViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+        )
     )
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
