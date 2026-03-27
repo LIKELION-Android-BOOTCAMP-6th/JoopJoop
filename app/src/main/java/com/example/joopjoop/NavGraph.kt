@@ -19,6 +19,7 @@ import androidx.navigation.navigation
 import com.example.joopjoop.feature.auth.ui.intro.IntroScreen
 import com.example.joopjoop.feature.auth.ui.login.LoginRoute
 import com.example.joopjoop.feature.auth.ui.signup.SignupRoute
+import com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory
 import com.example.joopjoop.feature.auth.viewmodel.LoginViewModel
 import com.example.joopjoop.feature.auth.viewmodel.SignupViewModel
 import com.example.joopjoop.feature.map.ui.MapScreen
@@ -27,6 +28,7 @@ import com.example.joopjoop.feature.mypage.ui.main.MyPageScreen
 import com.example.joopjoop.feature.mypage.ui.post.MyPostListContent
 import com.example.joopjoop.feature.mypage.ui.scrap.MyScrapListContent
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModel
+import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 
 // Routes 정의
 object Routes {
@@ -74,7 +76,6 @@ fun RootNavHost() {
         // [개발 단계 전용] 구글 로그인 연동 전까지는 바로 메인으로 진입.
         startDestination = Routes.AUTH
     ) {
-
         // 1. 인증 그래프 (Auth Graph)
         // Intro, Login, Signup 등을 포함하며 로그인 완료 시 스택에서 제거됩니다.
         navigation(startDestination = Routes.INTRO, route = Routes.AUTH) {
@@ -85,13 +86,22 @@ fun RootNavHost() {
                     onSignupClick = { rootNavController.navigate(Routes.SIGNUP) }
                 )
             }
+
             composable(Routes.LOGIN) {
+                val notificationViewModel: NotificationViewModel = viewModel()
+
                 val loginViewModel: LoginViewModel = viewModel(
-                    factory = appContainer.authViewModelFactory
+                    // notification 기능을 추가하면서 LoginViewModel 생성 시 NotificationViewModel 사용이 필요한 로직이라서 주석처리함
+//                    factory = appContainer.authViewModelFactory
+                    factory = AuthViewModelFactory(
+                        authRepository = appContainer.authRepository,
+                        notificationViewModel = notificationViewModel
+                    )
                 )
 
                 LoginRoute(
                     viewModel = loginViewModel,
+                    notificationViewModel = notificationViewModel,  // 권한 요청 및 알림 시작 로직을 위해 직접 전달
                     onLoginSuccess = {
                         rootNavController.navigate(Routes.MAIN) {
                             popUpTo(Routes.AUTH) { inclusive = true }
@@ -101,6 +111,7 @@ fun RootNavHost() {
                     onCreateAccountClick = { rootNavController.navigate(Routes.SIGNUP) }
                 )
             }
+
             composable(Routes.SIGNUP) {
                 // 마찬가지로 상단의 appContainer를 사용합니다.
                 val signupViewModel: SignupViewModel = viewModel(
@@ -160,7 +171,6 @@ fun MainNavHost(
     rootNavController: NavController,
     modifier: Modifier = Modifier
 ) {
-
     // Context와 AppContainer를 미리 가져옵니다.
     val context = LocalContext.current
     val appContainer = (context.applicationContext as JoopJoopApplication).container

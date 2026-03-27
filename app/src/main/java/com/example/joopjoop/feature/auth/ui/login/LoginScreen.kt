@@ -33,27 +33,28 @@ import com.example.joopjoop.ui.theme.JoopJoopTheme
 @Composable
 fun LoginRoute(
     viewModel: LoginViewModel, // NavGraph에서 주입받은 뷰모델
+    notificationViewModel: NotificationViewModel,
     onLoginSuccess: () -> Unit,
     onBackClick: () -> Unit,
     onCreateAccountClick: () -> Unit
 ) {
+    // 아래 로직 NavGraph에서 생성하도록 수정함 추후에 코드 참고할 필요 없으면 삭제
     // AppContainer에서 Repository 가져오기
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val appContainer =
-        (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
-
-    // 팩토리를 사용해서 ViewModel 생성
-    val notificationViewModel: NotificationViewModel =
-        androidx.lifecycle.viewmodel.compose.viewModel()
-    val viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
-        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(
-            appContainer.authRepository, notificationViewModel = notificationViewModel
-        )
-    )
+//    val context = androidx.compose.ui.platform.LocalContext.current
+//    val appContainer =
+//        (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
+//
+//    // 팩토리를 사용해서 ViewModel 생성
+//    val notificationViewModel: NotificationViewModel =
+//        androidx.lifecycle.viewmodel.compose.viewModel()
+//    val viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+//        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(
+//            appContainer.authRepository, notificationViewModel = notificationViewModel
+//        )
+//    )
 
     // 매개변수에 viewModel추가해서 NavGraph에서 생성하도록 수정했음 - 원화
-    // 아래는 주석처리 해둠
-
+    // 그러므로 아래는 주석처리 해둠
 //    // AppContainer에서 Repository 가져오기
 //    val context = androidx.compose.ui.platform.LocalContext.current
 //    val appContainer = (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
@@ -61,6 +62,7 @@ fun LoginRoute(
 //    val viewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
 //        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(appContainer.authRepository)
 //    )
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // 권한 요청용 런처
