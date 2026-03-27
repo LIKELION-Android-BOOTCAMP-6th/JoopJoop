@@ -7,12 +7,13 @@ import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.auth.data.repository.AuthRepositoryImpl
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
+import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.example.joopjoop.feature.mypage.data.repository.MyPageRepositoryImpl
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModelFactory
 import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
-import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.example.joopjoop.feature.note.viewmodel.NoteViewModelFactory
 import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModelFactory
+import kotlin.getValue
 
 // 앱 전체의 의존성을 관리하는 중앙 컨테이너
 
@@ -48,7 +49,11 @@ class AppContainer(context: Context) {
 
     // note (noteList, noteDetail 관련 Viewmodel Factory)
     val noteViewModelFactory: NoteViewModelFactory by lazy {
-        NoteViewModelFactory(noteRepository)
+        // 구글 위치 서비스 클라이언트 생성
+        val fusedLocationClient = com.google.android.gms.location.LocationServices
+            .getFusedLocationProviderClient(context)
+
+        NoteViewModelFactory(noteRepository, fusedLocationClient)
     }
 
     // writeNote

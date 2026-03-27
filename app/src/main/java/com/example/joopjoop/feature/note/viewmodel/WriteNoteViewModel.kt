@@ -195,7 +195,7 @@ class WriteNoteViewModel(
         var gu = ""
         var dong = ""
 
-        // 뒤에서부터 검색하여 가장 먼저 나오는 동과 구를 찾음
+        // 뒤에서부터 검색하여 가장 먼저 나오는 동과 구 글자를 찾음
         for (i in parts.lastIndex downTo 0) {
             val part = parts[i]
             if (dong.isEmpty() && (part.endsWith("동") || part.endsWith("가") || part.endsWith("로"))) {
