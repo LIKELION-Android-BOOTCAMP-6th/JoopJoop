@@ -15,6 +15,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
+import com.example.joopjoop.feature.map.ui.MapScreen
+import com.example.joopjoop.feature.map.viewmodel.MapViewModel
 import com.example.joopjoop.feature.mypage.ui.main.MyPageScreen
 import com.example.joopjoop.feature.mypage.ui.post.MyPostListContent
 import com.example.joopjoop.feature.mypage.ui.scrap.MyScrapListContent
@@ -48,6 +50,10 @@ object Routes {
 @Composable
 fun RootNavHost() {
     val rootNavController = rememberNavController()
+
+    // 공통 재료 가져오기
+    val context = LocalContext.current
+    val appContainer = (context.applicationContext as JoopJoopApplication).container
 
     NavHost(
         navController = rootNavController,
@@ -104,22 +110,28 @@ fun MainNavHost(
     rootNavController: NavController,
     modifier: Modifier = Modifier
 ) {
+
+    // Context와 AppContainer를 미리 가져옵니다.
+    val context = LocalContext.current
+    val appContainer = (context.applicationContext as JoopJoopApplication).container
+
     NavHost(
         navController = mainNavController,
         startDestination = Routes.MAP,
         modifier = modifier
     ) {
         composable(Routes.MAP) {
-            PlaceholderScreen("지도 화면")
+            // 팩토리를 사용하여 MapViewModel 생성
+            val mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+                factory = appContainer.mapViewModelFactory
+            )
+
+            // 실제 제작한 MapScreen으로 교체
+            MapScreen(viewModel = mapViewModel)
         }
         // [수정] 마이페이지 경로에 실제 뷰모델과 화면을 연결
         composable(Routes.MYPAGE) {
-            // Context를 통해 Application에 접근하여 AppContainer를 가져옴.
-            val context = LocalContext.current
-            val appContainer = (context.applicationContext as JoopJoopApplication).container
 
-            // 창고의 팩토리를 사용하여 뷰모델을 생성.
-            // (이미 MyPageRepositoryImpl이 주입된 상태)
             val myPageViewModel: MyPageViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
                 factory = appContainer.myPageViewModelFactory
             )
@@ -132,7 +144,8 @@ fun MainNavHost(
                     MyPostListContent(
                         viewModel = myPageViewModel,
                         onNoteClick = { noteId ->
-                            mainNavController.navigate("note_detail/$noteId")
+                            // 상세 화면은 BottomNav가 없는 RootNavHost 영역이므로 rootNavController 사용
+                            rootNavController.navigate("note_detail/$noteId")
                         }
                     )
                 },
@@ -140,7 +153,7 @@ fun MainNavHost(
                     MyScrapListContent(
                         viewModel = myPageViewModel,
                         onNoteClick = { noteId ->
-                            mainNavController.navigate("note_detail/$noteId")
+                            rootNavController.navigate("note_detail/$noteId")
                         }
                     )
                 }

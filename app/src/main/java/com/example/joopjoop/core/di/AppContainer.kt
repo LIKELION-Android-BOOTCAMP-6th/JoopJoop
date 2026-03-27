@@ -2,12 +2,15 @@ package com.example.joopjoop.core.di
 
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.MyPageRepository
+import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.auth.data.repository.AuthRepositoryImpl
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
+import com.example.joopjoop.feature.map.viewmodel.MapViewModelFactory
 import com.example.joopjoop.feature.mypage.data.repository.MyPageRepositoryImpl
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModelFactory
-import kotlin.getValue
+import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
+import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 
 // 앱 전체의 의존성을 관리하는 중앙 컨테이너
 
@@ -39,5 +42,10 @@ class AppContainer {
     // 여기서 팩토리까지 관리하면 NavGraph 코드가 더 짧아짐
     val myPageViewModelFactory: MyPageViewModelFactory by lazy {
         MyPageViewModelFactory(myPageRepository)
+    }
+
+    // Map 화면을 위한 팩토리
+    val mapViewModelFactory: MapViewModelFactory by lazy {
+        MapViewModelFactory(noteRepository)
     }
 }

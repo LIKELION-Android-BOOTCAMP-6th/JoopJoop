@@ -1,6 +1,7 @@
 package com.example.joopjoop.feature.map.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.map.ui.MapUiState
 import com.example.joopjoop.feature.map.ui.NoteDTO // MapUiState에 있는 DTO를 가져옴
 import com.google.android.gms.maps.model.LatLng
@@ -9,12 +10,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// [임시 Repository 인터페이스] 팀원이 작업하기 전까지의 '약속'
-interface NoteRepository {
-    suspend fun fetchNearbyNotes(center: LatLng): List<NoteDTO>
-}
 
-class MapViewModel : ViewModel() {
+class MapViewModel(
+    private val noteRepository: NoteRepository
+): ViewModel() {
 
     // 관찰 가능한 상태 (Screen에서 이 state를 구독)
     private val _uiState = MutableStateFlow(MapUiState())

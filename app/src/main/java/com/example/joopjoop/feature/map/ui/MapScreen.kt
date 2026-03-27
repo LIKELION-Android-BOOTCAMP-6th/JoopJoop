@@ -1,20 +1,33 @@
 package com.example.joopjoop.feature.map.ui
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.common.util.PermissionManager
-import com.example.joopjoop.feature.map.ui.components.*
+import com.example.joopjoop.feature.map.ui.components.CurrentLocationButton
+import com.example.joopjoop.feature.map.ui.components.NearbyNoteCard
+import com.example.joopjoop.feature.map.ui.components.NoteMarker
+import com.example.joopjoop.feature.map.ui.components.SearchNoteButton
 import com.example.joopjoop.feature.map.viewmodel.MapViewModel
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.*
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.rememberCameraPositionState
 
 /**
  * 메인 지도 화면 컴포넌트
@@ -22,7 +35,7 @@ import com.google.maps.android.compose.*
  */
 @Composable
 fun MapScreen(
-    viewModel: MapViewModel = viewModel()
+    viewModel: MapViewModel
 ) {
     val context = LocalContext.current
     // 뷰모델의 UI 상태 구독
