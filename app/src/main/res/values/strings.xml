@@ -36,4 +36,10 @@
     <string name="storage_period_desc">지도에 노출되는 시간</string>
     <string name="hours_unit">시간</string>
     <string name="leave_note_button">쪽지 남기기</string>
+
+    <!-- 설정관련 -->
+    <string name="setting_title">계정 설정</string>
+    <string name="setting_section_title">설정</string>
+    <string name="notification_setting">알림 설정</string>
+    <string name="logout">로그아웃</string>
 </resources>
