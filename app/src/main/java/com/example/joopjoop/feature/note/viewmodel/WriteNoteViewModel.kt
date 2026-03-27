@@ -48,21 +48,37 @@ class WriteNoteViewModel(
 
     private fun fetchCurrentLocation() {
         try {
+            // 사용자 마지막 위치
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                location?.let {
-                    val hash = GeoFireUtils.getGeoHashForLocation(
-                        GeoLocation(it.latitude, it.longitude)
-                    )
-                    _uiState.update { state ->
-                        state.copy(
-                            latitude = it.latitude,
-                            longitude = it.longitude,
-                            geohash = hash
-                        )
+                if (location != null) {
+                    updateLocationState(location)
+                } else {
+                    // 마지막 위치가 없으면 새로 요청 (빠른 화면전환이거나 외부 상황으로 위치 값이 못가져온 상태일 수도 있기에)
+                    fusedLocationClient.getCurrentLocation(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        CancellationTokenSource().token
+                    ).addOnSuccessListener { newLocation ->
+                        newLocation?.let { updateLocationState(it) }
                     }
                 }
+            }.addOnFailureListener {
+                Log.e("WriteNoteViewModel", "위치 가져오기 실패: ${it.message}")
             }
         } catch (e: SecurityException) {
+        }
+    }
+
+    // GeoHash 기반 위치 검색 및 uiState 저장
+    private fun updateLocationState(location: Location) {
+        val hash = GeoFireUtils.getGeoHashForLocation(
+            GeoLocation(location.latitude, location.longitude)
+        )
+        _uiState.update { state ->
+            state.copy(
+                latitude = location.latitude,
+                longitude = location.longitude,
+                geohash = hash
+            )
         }
     }
 

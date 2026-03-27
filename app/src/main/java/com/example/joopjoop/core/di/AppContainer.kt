@@ -12,7 +12,6 @@ import com.example.joopjoop.feature.mypage.data.repository.MyPageRepositoryImpl
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModelFactory
 import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
 import com.example.joopjoop.feature.note.viewmodel.NoteViewModelFactory
-import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModelFactory
 import kotlin.getValue
 
 // 앱 전체의 의존성을 관리하는 중앙 컨테이너
@@ -47,7 +46,7 @@ class AppContainer(context: Context) {
         MyPageViewModelFactory(myPageRepository)
     }
 
-    // note (noteList, noteDetail 관련 Viewmodel Factory)
+    // note (noteList, noteDetail, writeNote)
     val noteViewModelFactory: NoteViewModelFactory by lazy {
         // 구글 위치 서비스 클라이언트 생성
         val fusedLocationClient = com.google.android.gms.location.LocationServices
@@ -56,12 +55,14 @@ class AppContainer(context: Context) {
         NoteViewModelFactory(noteRepository, fusedLocationClient)
     }
 
+    // 상단 noteViewModelFactory로 아래 write부분 병합됐기에 아래 코드 주석 처리함
+    // WriteNoteViewModelFactory 파일은 삭제됨
     // writeNote
-    val writeNoteViewModelFactory: WriteNoteViewModelFactory by lazy {
-        // 구글 위치 서비스 클라이언트 생성
-        val fusedLocationClient = com.google.android.gms.location.LocationServices
-            .getFusedLocationProviderClient(context)
-
-        WriteNoteViewModelFactory(noteRepository, fusedLocationClient)
-    }
+//    val writeNoteViewModelFactory: WriteNoteViewModelFactory by lazy {
+//        // 구글 위치 서비스 클라이언트 생성
+//        val fusedLocationClient = com.google.android.gms.location.LocationServices
+//            .getFusedLocationProviderClient(context)
+//
+//        WriteNoteViewModelFactory(noteRepository, fusedLocationClient)
+//    }
 }
