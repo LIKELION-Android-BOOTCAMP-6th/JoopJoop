@@ -21,9 +21,9 @@ class NoteViewModelFactory(
                 NoteListViewModel(repository) as T
             }
             // WriteNoteViewModel 생성
-            modelClass.isAssignableFrom(WriteNoteViewModel::class.java) -> {
-                WriteNoteViewModel(repository) as T
-            }
+//            modelClass.isAssignableFrom(WriteNoteViewModel::class.java) -> {
+//                WriteNoteViewModel(repository) as T
+//            }
 
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
