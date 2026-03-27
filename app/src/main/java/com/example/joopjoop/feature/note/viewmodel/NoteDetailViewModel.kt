@@ -2,6 +2,7 @@ package com.example.joopjoop.feature.note.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.joopjoop.core.common.util.Util
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.ui.detail.NoteDetailUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,15 +24,15 @@ class NoteDetailViewModel(
             // 조회수 +1 요청
             repository.incrementViewCount(noteId)
             // 조회수 반영된 최신 데이터 가져오기
-            val dto = repository.getNoteDetail(noteId)
+            val noteData = repository.getNoteDetail(noteId)
             _uiState.update {
                 it.copy(
-                    authorName = dto.authorName,
-                    createdAt = dto.createdAt,
-                    viewCount = dto.viewCount,
-                    likeCount = dto.likeCount,
-                    content = dto.content,
-                    location = dto.location
+                    authorName = noteData.userNickname,
+                    createdAt = Util.formatDate(noteData.createdAt),
+                    viewCount = noteData.viewCount,
+                    likeCount = noteData.likeCount,
+                    content = noteData.contentText,
+                    location = noteData.location.address
                 )
             }
         }

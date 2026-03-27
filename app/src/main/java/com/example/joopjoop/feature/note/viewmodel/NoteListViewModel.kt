@@ -26,11 +26,11 @@ class NoteListViewModel(
     fun loadNotes() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val notes = repository.getNotes().map { dto ->
+            val notes = repository.getNotes().map { note ->
                 NoteItem(
-                    id = dto.id,
-                    content = dto.content,
-                    distance = dto.distance
+                    id = note.noteId,
+                    content = note.contentText,
+                    distance = note.location.distance
                 )
             }
             _uiState.update { it.copy(notes = notes, isLoading = false) }
