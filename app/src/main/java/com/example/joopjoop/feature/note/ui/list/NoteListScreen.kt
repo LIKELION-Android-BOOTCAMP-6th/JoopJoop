@@ -201,23 +201,25 @@ fun NoteCard(item: NoteItem, onClick: () -> Unit = {}){
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-            // 쪽지 본문 일부 노출(한줄만, 넘어가면 ... 처리)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 내용 - 본문 일부 노출(한줄만, 넘어가면 ... 처리)
             Text(
                 text = item.content,
                 color = TextPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 16.sp,
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+//            Spacer(modifier = Modifier.height(4.dp))
 
             // 거리 정보 표시 영역(아이콘 + 텍스트)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(top = 4.dp)
+//                modifier = Modifier.padding(top = 4.dp)
             ) {
                 //나침반 화살표 아이콘(45도 회전, 수평 맞추기 위해 윗쪽으로 미세 조정)
                 Icon(
@@ -225,7 +227,7 @@ fun NoteCard(item: NoteItem, onClick: () -> Unit = {}){
                     contentDescription = null,
                     tint = OrangePrimary,
                     modifier = Modifier
-                        .size(16.dp)
+                        .size(14.dp)
                         .rotate(45f) // 회전
                         .offset(y = (-2).dp) // 미세조정
                 )

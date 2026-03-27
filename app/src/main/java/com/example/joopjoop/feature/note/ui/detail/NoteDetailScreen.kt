@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.note.ui.detail
 
+import android.R.attr.contentDescription
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -44,6 +45,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.joopjoop.R
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Brush
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.joopjoop.feature.note.viewmodel.NoteDetailViewModel
 import com.example.joopjoop.ui.theme.BgDark
@@ -126,7 +129,6 @@ fun NoteDetail(
             //이름
             Spacer(modifier = Modifier.width(12.dp))
             Column(
-                modifier = Modifier.padding(start = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(1.dp))
             {
 
@@ -155,7 +157,8 @@ fun NoteDetail(
 
             }
         }
-
+        val isImageAdded = uiState.imageUri != null
+        val blurRadius = if (isImageAdded) 0.dp else 16.dp
         // 메인 이미지 카드
         Box(
             modifier = Modifier
@@ -164,14 +167,33 @@ fun NoteDetail(
                 .clip(RoundedCornerShape(12.dp))
                 .background(BgDark) // 이미지 로딩 전 배경색
         ) {
-            Image(
-                painterResource(R.drawable.note_detail_image),
-                contentDescription = "이미지 영역",
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxSize())
+            if (isImageAdded) {
+                Image(
+                    painter = painterResource(id = R.drawable.note_detail_image),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(OrangePrimary.copy(alpha = 0.2f), BgDarkest)
+                            )
+                        )
+                        .blur(20.dp)
+                )
+                Icon(
+                    painter = painterResource(id = R.drawable.outline_edit_square_24),
+                    contentDescription = null,
+                    tint = TextTertiary.copy(alpha = 0.4f),
+                    modifier = Modifier
+                        .size(64.dp)
+                        .align(Alignment.Center)
+                )
+            }
         }
-
         Spacer(modifier = Modifier.height(20.dp))
 
         // 본문 텍스트 영역
@@ -213,7 +235,7 @@ fun DetailTopBar(navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp)
+            .padding(vertical = 12.dp)
             .statusBarsPadding()
             .background(BgDarkest),
         verticalAlignment = Alignment.CenterVertically
@@ -226,7 +248,6 @@ fun DetailTopBar(navController: NavController) {
                 .size(24.dp)
                 .clickable { navController.popBackStack() }
         )
-        Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = "쪽지 상세",
             color = TextPrimary,

@@ -9,5 +9,5 @@ data class NoteDTO(
     val location: String = "",
     val imageUri: String? = null,
     val content: String = "",
-    val distance: String = "",
+    val distance: String = "100m",
 )
