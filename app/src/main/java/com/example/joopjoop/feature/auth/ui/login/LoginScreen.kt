@@ -55,7 +55,7 @@ fun LoginRoute(
 
     // 매개변수에 viewModel추가해서 NavGraph에서 생성하도록 수정했음 - 원화
     // 그러므로 아래는 주석처리 해둠
-//    // AppContainer에서 Repository 가져오기
+    // AppContainer에서 Repository 가져오기
 //    val context = androidx.compose.ui.platform.LocalContext.current
 //    val appContainer = (context.applicationContext as com.example.joopjoop.JoopJoopApplication).container
 //    // 팩토리를 사용해서 ViewModel 생성

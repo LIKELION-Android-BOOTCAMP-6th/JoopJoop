@@ -7,6 +7,7 @@ import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.auth.data.repository.AuthRepositoryImpl
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
+import com.example.joopjoop.feature.map.viewmodel.MapViewModelFactory
 import com.example.joopjoop.feature.mypage.data.repository.MyPageRepositoryImpl
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModelFactory
 import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
@@ -42,6 +43,11 @@ class AppContainer(context: Context) {
     // 여기서 팩토리까지 관리하면 NavGraph 코드가 더 짧아짐
     val myPageViewModelFactory: MyPageViewModelFactory by lazy {
         MyPageViewModelFactory(myPageRepository)
+    }
+
+    // Map 화면을 위한 팩토리
+    val mapViewModelFactory: MapViewModelFactory by lazy {
+        MapViewModelFactory(noteRepository)
     }
 
     // note (noteList, noteDetail, writeNote)

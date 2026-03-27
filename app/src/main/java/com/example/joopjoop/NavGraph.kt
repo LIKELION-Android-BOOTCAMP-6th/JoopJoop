@@ -22,6 +22,7 @@ import com.example.joopjoop.feature.auth.ui.signup.SignupRoute
 import com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory
 import com.example.joopjoop.feature.auth.viewmodel.LoginViewModel
 import com.example.joopjoop.feature.auth.viewmodel.SignupViewModel
+import com.example.joopjoop.feature.auth.viewmodel.SignupViewModelFactory
 import com.example.joopjoop.feature.map.ui.MapScreen
 import com.example.joopjoop.feature.map.viewmodel.MapViewModel
 import com.example.joopjoop.feature.mypage.ui.main.MyPageScreen
@@ -115,7 +116,9 @@ fun RootNavHost() {
             composable(Routes.SIGNUP) {
                 // 마찬가지로 상단의 appContainer를 사용합니다.
                 val signupViewModel: SignupViewModel = viewModel(
-                    factory = appContainer.authViewModelFactory
+                    factory = SignupViewModelFactory(
+                        authRepository = appContainer.authRepository
+                    )
                 )
 
                 SignupRoute(
@@ -182,17 +185,17 @@ fun MainNavHost(
     ) {
         composable(Routes.MAP) {
             // 팩토리를 사용하여 MapViewModel 생성
-            val mapViewModel: MapViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+            val mapViewModel: MapViewModel = viewModel(
                 factory = appContainer.mapViewModelFactory
             )
 
             // 실제 제작한 MapScreen으로 교체
             MapScreen(viewModel = mapViewModel)
         }
+
         // [수정] 마이페이지 경로에 실제 뷰모델과 화면을 연결
         composable(Routes.MYPAGE) {
-
-            val myPageViewModel: MyPageViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+            val myPageViewModel: MyPageViewModel = viewModel(
                 factory = appContainer.myPageViewModelFactory
             )
 

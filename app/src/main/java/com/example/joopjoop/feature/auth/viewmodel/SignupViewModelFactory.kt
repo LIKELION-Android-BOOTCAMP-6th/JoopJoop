@@ -3,21 +3,14 @@ package com.example.joopjoop.feature.auth.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.joopjoop.core.repository.AuthRepository
-import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 
-class AuthViewModelFactory(
-    private val authRepository: AuthRepository,
-    private val notificationViewModel: NotificationViewModel // 알림 viewmodel
+class SignupViewModelFactory(
+    private val authRepository: AuthRepository
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
-            // LoginViewModel 생성 요청이 들어오면
-            modelClass.isAssignableFrom(LoginViewModel::class.java) -> {
-                LoginViewModel(authRepository, notificationViewModel) as T
-            }
-
             // SignupViewModel 생성 요청이 들어오면
             modelClass.isAssignableFrom(SignupViewModel::class.java) -> {
                 SignupViewModel(authRepository) as T
