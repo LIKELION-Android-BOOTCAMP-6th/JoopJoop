@@ -1,6 +1,7 @@
 package com.example.joopjoop.core.di
 
 import android.content.Context
+import com.example.joopjoop.MainViewModel
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.FakeNoteRepository
 import com.example.joopjoop.core.repository.MyPageRepository
@@ -23,6 +24,8 @@ class AppContainer(context: Context) {
     private val firebaseAuthSource by lazy { FirebaseAuthSource() }
     private val firestoreUserSource by lazy { FirestoreUserSource() }
     private val firestoreNoteSource by lazy { FirestoreNoteSource() }
+
+    val mainViewModelFactory by lazy { MainViewModelFactory(authRepository) }
 
     //여러 ViewModelFactory에서 동일한 인스턴스를 공유할 수 있게 함
     private val locationProvider by lazy { LocationProvider(context) }
@@ -74,4 +77,15 @@ class AppContainer(context: Context) {
 //
 //        WriteNoteViewModelFactory(noteRepository, fusedLocationClient)
 //    }
+
+    class MainViewModelFactory(private val authRepository: AuthRepository) :
+        androidx.lifecycle.ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return MainViewModel(authRepository) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
+    }
 }

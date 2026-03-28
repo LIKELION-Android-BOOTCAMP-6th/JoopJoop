@@ -1,15 +1,39 @@
 package com.example.joopjoop.feature.auth.data.repository
 
+import com.example.joopjoop.core.model.User
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.auth.data.model.AuthResult
 import com.example.joopjoop.feature.auth.data.model.UserResponse
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-class AuthRepositoryImpl (
+class AuthRepositoryImpl(
     private val authSource: FirebaseAuthSource, // 사용자 인증 데이터
     private val userSource: FirestoreUserSource, // 사용자 데이터
+    // 필요 시 외부 스코프를 주입받거나 내부에서 정의 (여기서는 단순화를 위해 GlobalScope 대신 내부 스코프 활용)
+    externalScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : AuthRepository {
+
+    // 유저 정보 캐시 (StateFlow)
+    private val _currentUser = MutableStateFlow<User?>(null)
+    override val currentUser: Flow<User?> = _currentUser.asStateFlow()
+
+    init {
+        // [자동 로그인] 앱 시작 시 로그인 상태 확인
+        val savedUid = authSource.getCurrentUserId()
+        if (savedUid != null) {
+            externalScope.launch {
+                val user = userSource.getUser(savedUid)
+                _currentUser.value = user
+            }
+        }
+    }
 
     override suspend fun isNicknameAvailable(nickname: String): Boolean {
         return userSource.isNicknameAvailable(nickname)
@@ -26,6 +50,10 @@ class AuthRepositoryImpl (
 
             // 계정 생성 성공 시 Firestore에 사용자 정보 저장
             userSource.saveUser(uid, email, nickname)
+
+            // [추가] 가입 성공 후 Firestore에서 유저 정보를 가져와 캐시 업데이트
+            val fullUserInfo = userSource.getUser(uid)
+            _currentUser.value = fullUserInfo
 
             // 성공 시
             val user = UserResponse(
@@ -49,6 +77,10 @@ class AuthRepositoryImpl (
             // FirebaseAuthSource를 통해 실제 로그인을 시도합니다.
             val uid = authSource.login(email, password)
 
+            // [추가] 로그인 성공 시 Firestore에서 유저 정보를 가져와 캐시 업데이트
+            val fullUserInfo = userSource.getUser(uid)
+            _currentUser.value = fullUserInfo
+
             // 성공하면 Result.success를 반환합니다.
             AuthResult.Success(UserResponse(uid = uid, email = email))
         } catch (e: Exception) {
@@ -56,13 +88,16 @@ class AuthRepositoryImpl (
             AuthResult.Failure(e)
         }
     }
-    override suspend fun logout(): Result<Unit> {
+
+    override suspend fun logout(): AuthResult<Unit> {
         return try {
             // Firebase 로그아웃 수행
             authSource.logout()
-            Result.success(Unit)
+            // [추가] 로그아웃 시 캐시 비우기
+            _currentUser.value = null
+            AuthResult.Success(Unit)
         } catch (e: Exception) {
-            Result.failure(e)
+            AuthResult.Failure(e)
         }
     }
 }

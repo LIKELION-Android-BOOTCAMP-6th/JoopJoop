@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -73,18 +75,20 @@ fun RootNavHost() {
     val context = LocalContext.current
     val appContainer = (context.applicationContext as JoopJoopApplication).container
 
-// 로그인 여부에 따라 화면분기를 위해서는 아래의 authRepository.currentUserUid 필요
+    // MainViewModel을 통해 로그인 상태 구독
+    val mainViewModel: MainViewModel = viewModel(
+        factory = appContainer.mainViewModelFactory
+    )
+    val isLoggedIn by mainViewModel.isLoggedIn.collectAsState()
 
-//    // 리포지토리를 통해 현재 로그인 상태 확인
-//    val isLoggedIn = appContainer.authRepository.currentUserUid != null
-//
-//    // 로그인 상태면 메인(지도), 아니면 인증(인트로) 화면으로!
-//    val startDest = if (isLoggedIn) Routes.MAIN else Routes.AUTH
+    // 로그인 상태 확인 전까지는 아무것도 그리지 않음 (혹은 빈 화면)
+    // isLoggedIn이 null이면 아직 Firebase나 캐시에서 정보를 가져오는 중입니다.
+    if (isLoggedIn == null) return
 
     NavHost(
         navController = rootNavController,
-        // [개발 단계 전용] 구글 로그인 연동 전까지는 바로 메인으로 진입.
-        startDestination = Routes.MAIN
+        // 로그인 여부에 따라 시작점 결정
+        startDestination = if (isLoggedIn == true) Routes.MAIN else Routes.AUTH
     ) {
         // 1. 인증 그래프 (Auth Graph)
         // Intro, Login, Signup 등을 포함하며 로그인 완료 시 스택에서 제거됩니다.

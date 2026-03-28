@@ -10,7 +10,7 @@ import com.example.joopjoop.core.designsystem.components.BottomNavigation
 
 @Composable
 fun MainScreen(rootNavController: NavController) {
-    // 2층(Main) 내부에서만 사용할 네비게이션 컨트롤러를 만듭니다.
+    // Main 내부에서만 사용할 네비게이션 컨트롤러
     val mainNavController = rememberNavController()
 
     Scaffold(
