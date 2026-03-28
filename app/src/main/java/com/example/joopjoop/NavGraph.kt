@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -12,9 +13,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.example.joopjoop.feature.auth.ui.intro.IntroScreen
 import com.example.joopjoop.feature.auth.ui.login.LoginRoute
@@ -29,6 +32,12 @@ import com.example.joopjoop.feature.mypage.ui.main.MyPageScreen
 import com.example.joopjoop.feature.mypage.ui.post.MyPostListContent
 import com.example.joopjoop.feature.mypage.ui.scrap.MyScrapListContent
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModel
+import com.example.joopjoop.feature.note.ui.detail.NoteDetailScreen
+import com.example.joopjoop.feature.note.ui.list.NoteListScreen
+import com.example.joopjoop.feature.note.ui.write.WriteNoteScreen
+import com.example.joopjoop.feature.note.viewmodel.NoteDetailViewModel
+import com.example.joopjoop.feature.note.viewmodel.NoteListViewModel
+import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 
 // Routes 정의
@@ -47,7 +56,7 @@ object Routes {
     // 3. 서브/상세 화면 (Sub Graph - BottomNav 없음)
     const val WRITE = "write"           // 새로운 쪽지 작성 화면
     const val NOTE_LIST = "noteList"    // 주변 쪽지들을 리스트로 보는 화면
-    const val NOTE_DETAIL = "noteDetail" // 특정 쪽지의 상세 내용을 보는 화면
+    const val NOTE_DETAIL = "noteDetail/{noteId}" // 특정 쪽지의 상세 내용을 보는 화면
     const val SETTINGS = "settings"      // 알림 설정, 계정 관리 등 설정 화면
 }
 
@@ -142,19 +151,47 @@ fun RootNavHost() {
         // 3. 서브 그래프 (Sub Graph / 상세 화면)
         // 바텀바가 보이지 않아야 하는 독립적인 상세 페이지
 
-        // [연결 완료] 팀원이 작성한 주변 쪽지 목록 화면
         composable(Routes.NOTE_LIST) {
-            // Placeholder를 지우고 실제 파일(NoteListScreen.kt)을 연결.
-            PlaceholderScreen("주변 쪽지 목록 화면")
+            val viewModel: NoteListViewModel = viewModel(
+                factory = appContainer.noteViewModelFactory
+            )
+            NoteListScreen(
+                navController = rootNavController,
+                viewModel = viewModel
+            )
         }
 
         composable(Routes.WRITE) {
-            PlaceholderScreen("쪽지 작성 화면")
+            // AppContainer 내부에서 이미 FusedLocationClient를 주입한 팩토리를 가져옵니다.
+            val viewModel: WriteNoteViewModel = viewModel(
+                factory = appContainer.noteViewModelFactory
+            )
+
+            WriteNoteScreen(
+                navController = rootNavController,
+                viewModel = viewModel
+            )
         }
 
-        composable("${Routes.NOTE_DETAIL}/{noteId}") { backStackEntry ->
-            val noteId = backStackEntry.arguments?.getString("noteId")
-            PlaceholderScreen("쪽지 상세 (전달받은 ID: $noteId)")
+        composable(
+            route = Routes.NOTE_DETAIL,
+            arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
+            val viewModel: NoteDetailViewModel = viewModel(
+                factory = appContainer.noteViewModelFactory
+            )
+
+            // 화면이 처음 뜰 때 데이터를 로드하도록 설정
+            LaunchedEffect(noteId) {
+                viewModel.loadNoteDetail(noteId)
+            }
+
+            NoteDetailScreen(
+                navController = rootNavController,
+                noteId = noteId,
+                viewModel = viewModel
+            )
         }
 
         // [추가] 설정 화면 주소 등록

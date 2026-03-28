@@ -26,23 +26,24 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.joopjoop.R
+import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.BgSurface
-import com.example.joopjoop.ui.theme.JoopJoopTheme
 import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextTertiary
@@ -50,15 +51,21 @@ import com.example.joopjoop.ui.theme.TextTertiary
 @Composable
 fun WriteNoteScreen(
     navController: NavController,
-    uiState: WriteNoteUiState, // 상태 추가
+    viewModel: WriteNoteViewModel, // 여러 람다 대신 뷰모델을 주입 받음
+//    uiState: WriteNoteUiState, // 상태 추가
     modifier: Modifier = Modifier, // 유지
-    onCategorySelected: (String) -> Unit = {},
-    onContentChange: (String) -> Unit = {},
-    onIncreaseHours: () -> Unit = {},
-    onDecreaseHours: () -> Unit = {},
-    onBackClick: () -> Unit = {},
-    onLeaveNoteClick: () -> Unit = {}
+//    onCategorySelected: (String) -> Unit = {},
+//    onContentChange: (String) -> Unit = {},
+//    onIncreaseHours: () -> Unit = {},
+//    onDecreaseHours: () -> Unit = {},
+//    onBackClick: () -> Unit = {},
+//    onLeaveNoteClick: () -> Unit = {}
 ) {
+    // 뷰모델로부터 현재 UI 상태(글 내용, 선택된 카테고리 등)를 가져옴
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val context = LocalContext.current
+
     val categories = listOf(
         stringResource(R.string.category_daily),
         stringResource(R.string.category_emotion),
@@ -78,7 +85,8 @@ fun WriteNoteScreen(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable { onBackClick() }
+                        // 람다 대신 navController를 직접 사용하여 뒤로가기 실행
+                        .clickable { navController.popBackStack() }
                         .padding(8.dp)) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_arrow_back_24),
@@ -118,7 +126,7 @@ fun WriteNoteScreen(
                     CategorySelection(
                         text = category,
                         isSelected = uiState.selectedCategory == category,
-                        onClick = { onCategorySelected(category) })
+                        onClick = { viewModel.onCategorySelected(category) }) // 뷰모델 함수 호출
                 }
             }
 
@@ -134,7 +142,7 @@ fun WriteNoteScreen(
             ) {
                 OutlinedTextField(
                     value = uiState.noteContent, // state 사용
-                    onValueChange = onContentChange, // 콜백 사용
+                    onValueChange = {viewModel.onContentChange(it)}, // 뷰모델 콜백 사용
                     modifier = Modifier.fillMaxSize(), placeholder = {
                         Text(
                             text = stringResource(R.string.note_placeholder),
@@ -235,7 +243,7 @@ fun WriteNoteScreen(
                     Text(
                         "-",
                         color = TextTertiary,
-                        modifier = Modifier.clickable { onDecreaseHours() })
+                        modifier = Modifier.clickable { viewModel.decreaseHours() }) // viewModel 함수로 호출
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
                         "${uiState.storageHours}h",
@@ -246,7 +254,7 @@ fun WriteNoteScreen(
                     Text(
                         "+",
                         color = TextTertiary,
-                        modifier = Modifier.clickable { onIncreaseHours() })
+                        modifier = Modifier.clickable { viewModel.increaseHours() }) // viewModel 함수로 호출
                 }
             }
 
@@ -254,7 +262,8 @@ fun WriteNoteScreen(
 
             // 4. 쪽지 남기기 버튼
             Button(
-                onClick = onLeaveNoteClick, // 이제 인자 없이 깔끔하게!
+
+                onClick = {viewModel.submitNote(context)}, // 이제 인자 없이 깔끔하게!
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp),
@@ -296,14 +305,14 @@ fun CategorySelection(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun WriteNoteScreenPreview() { // 더미데이터
-    JoopJoopTheme {
-        WriteNoteScreen(
-            navController = rememberNavController(), uiState = WriteNoteUiState(
-                selectedCategory = "감성", noteContent = "오늘 날씨가 너무 좋네요~!", storageHours = 12
-            )
-        )
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun WriteNoteScreenPreview() { // 더미데이터
+//    JoopJoopTheme {
+//        WriteNoteScreen(
+//            navController = rememberNavController(), uiState = WriteNoteUiState(
+//                selectedCategory = "감성", noteContent = "오늘 날씨가 너무 좋네요~!", storageHours = 12
+//            )
+//        )
+//    }
+//}

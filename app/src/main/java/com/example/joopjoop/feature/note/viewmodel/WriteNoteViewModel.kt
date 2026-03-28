@@ -7,10 +7,8 @@ import android.location.Geocoder
 import android.location.Location
 import android.os.Build
 import android.util.Log
-import androidx.core.location.LocationManagerCompat.getCurrentLocation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil.util.CoilUtils.result
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.data.model.NoteRequest
@@ -18,7 +16,6 @@ import com.example.joopjoop.feature.note.ui.write.WriteNoteUiState
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +24,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.tasks.await
 import java.util.Locale
 import kotlin.coroutines.resume
 
