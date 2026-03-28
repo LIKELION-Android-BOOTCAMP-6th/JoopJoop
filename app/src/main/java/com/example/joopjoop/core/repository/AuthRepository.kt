@@ -29,5 +29,5 @@ interface AuthRepository{
     ): AuthResult<UserResponse>
 
     //로그아웃
-    suspend fun logout(): Result<Unit>
+    suspend fun logout(): AuthResult<Unit>
 }
