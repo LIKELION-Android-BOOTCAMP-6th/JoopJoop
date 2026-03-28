@@ -6,12 +6,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -21,43 +26,84 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.joopjoop.core.model.User
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.DividerColor
+import com.example.joopjoop.ui.theme.JoopJoopTheme
 import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextPrimary
 
 @Composable
 fun MyPageScreen(
-    viewModel: MyPageViewModel, // 수동 DI로 주입받음
-    postContent: @Composable () -> Unit, // post/ 폴더의 부품
-    scrapContent: @Composable () -> Unit  // scrap/ 폴더의 부품
+    viewModel: MyPageViewModel,
+    onSettingClick: () -> Unit = {},
+    postContent: @Composable () -> Unit,
+    scrapContent: @Composable () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    MyPageContent(
+        uiState = uiState,
+        onSettingClick = onSettingClick,
+        onTabSelected = { viewModel.onTabSelected(it) },
+        postContent = postContent,
+        scrapContent = scrapContent
+    )
+}
+
+@Composable
+fun MyPageContent(
+    uiState: MyPageUiState,
+    onSettingClick: () -> Unit,
+    onTabSelected: (MyPageTab) -> Unit,
+    postContent: @Composable () -> Unit,
+    scrapContent: @Composable () -> Unit
+) {
     Scaffold(
         containerColor = BgDarkest,
-        topBar = { /* MyPageTopAppBar 구현 */ }
+        topBar = {
+            MyPageTopAppBar(onSettingClick = onSettingClick)
+        }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             // [F-MY-01] 프로필 (AuthRepository 기반 데이터)
-            // 1. 프로필 헤더 (직접 구현 필요)
             ProfileHeader(user = uiState.user)
 
-            // 2. 탭 선택 바 (직접 구현 필요)
+            // 2. 탭 선택 바
             MyPageTabRow(
                 selectedTab = uiState.selectedTab,
-                onTabSelected = { viewModel.onTabSelected(it) }
+                onTabSelected = onTabSelected
             )
 
-            // 3. 컨텐츠 영역 (주입받은 부품 사용)
-            when (uiState.selectedTab) {
-                MyPageTab.POSTS -> postContent()
-                MyPageTab.SCRAPS -> scrapContent()
+            // 3. 컨텐츠 영역
+            Box(modifier = Modifier.fillMaxSize()) {
+                when (uiState.selectedTab) {
+                    MyPageTab.POSTS -> postContent()
+                    MyPageTab.SCRAPS -> scrapContent()
+                }
             }
+        }
+    }
+}
+
+@Composable
+fun MyPageTopAppBar(onSettingClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.CenterEnd
+    ) {
+        IconButton(onClick = onSettingClick) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Settings",
+                tint = OrangePrimary
+            )
         }
     }
 }
@@ -70,12 +116,12 @@ fun ProfileHeader(user: User?) {
             .padding(24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 프로필 이미지 영역 (일단 원형 박스로 배치)
+        // 프로필 이미지 영역
         Box(
             modifier = Modifier
                 .size(80.dp)
                 .background(BgDark, CircleShape)
-                .border(2.dp, OrangePrimary, CircleShape) // 주황색 포인트
+                .border(2.dp, OrangePrimary, CircleShape)
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -115,6 +161,16 @@ fun MyPageTabRow(
                     )
                 }
             )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MyPageTopAppBarPreview() {
+    JoopJoopTheme {
+        Box(modifier = Modifier.background(BgDarkest)) {
+            MyPageTopAppBar(onSettingClick = {})
         }
     }
 }
