@@ -1,4 +1,5 @@
 package com.example.joopjoop.feature.map.viewmodel
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.repository.NoteRepository
@@ -14,7 +15,7 @@ import kotlinx.coroutines.launch
 class MapViewModel(
     private val noteRepository: NoteRepository,
     private val locationProvider: LocationProvider
-): ViewModel() {
+) : ViewModel() {
 
     // 관찰 가능한 상태 (Screen에서 이 state를 구독)
     private val _uiState = MutableStateFlow(MapUiState())

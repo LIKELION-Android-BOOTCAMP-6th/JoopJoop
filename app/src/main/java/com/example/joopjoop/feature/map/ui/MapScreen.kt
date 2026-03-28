@@ -10,12 +10,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.common.util.PermissionManager
 import com.example.joopjoop.feature.map.ui.components.CurrentLocationButton
 import com.example.joopjoop.feature.map.ui.components.NearbyNoteCard
@@ -40,33 +42,48 @@ fun MapScreen(
     onNavigateToNoteDetail: (String) -> Unit // 상세 이동 콜백
 ) {
     val context = LocalContext.current
-    // 뷰모델의 UI 상태 구독
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // 권한 요청을 위한 런처 선언
+    val permissionLauncher = PermissionManager.rememberLocationPermissionLauncher { isGranted ->
+        viewModel.onPermissionResult(isGranted)
+        if (isGranted) {
+            // 권한 허용 시 즉시 위치 업데이트 시도
+            viewModel.fetchCurrentLocation()
+        }
+    }
+
+    // [추가] 카메라가 이미 사용자를 찾았는지 기억하는 상태 (화면 재생성 시에도 유지하려면 rememberSaveable 사용)
+    var hasMovedToUserLocation by rememberSaveable { mutableStateOf(false) }
 
     // 지도 카메라 상태 관리 (초기값은 서울시청이나 LaunchedEffect에서 사용자 위치로 업데이트됨)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(37.5665, 126.9780), 16f)
     }
 
+    // [카메라 제어] 위치 업데이트 시 최초 1회만 이동
+    LaunchedEffect(uiState.currentUserLocation) {
+        val userPos = uiState.currentUserLocation
+        if (userPos != null && !hasMovedToUserLocation) {
+            // 앱 실행 후 '딱 한 번'만 내 위치로 카메라를 옮깁니다.
+            // animate 대신 직접 position을 대입하면 화면 전환 시 날아가는 현상을 방지할 수 있음
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(userPos, 16f)
+            hasMovedToUserLocation = true
+        }
+    }
+
     // --- [권한 및 초기 위치 설정 로직] ---
     LaunchedEffect(Unit) {
-        // 1. 위치 권한 확인
+        // 권한 확인
         if (PermissionManager.hasLocationPermission(context)) {
             viewModel.onPermissionResult(true)
-
-            // 2. [기능 수정] 사용자의 실제 현재 위치를 가져와 초기화
-            LocationUtil.getLastLocation(context) { location ->
-                val userLatLng = LatLng(location.latitude, location.longitude)
-
-                // 카메라를 사용자 현재 위치로 즉시 이동
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(userLatLng, 16f)
-
-                // 뷰모델에 내 위치를 전달하여 30m 이내 '줍기 가능' 쪽지 계산 시작
-                viewModel.onLocationUpdated(userLatLng)
-
-                // 초기 진입 시 내 위치 주변의 쪽지 데이터 로드
-                viewModel.loadNotes(userLatLng)
+            // 이미 위치 정보가 있다면(뒤로가기로 돌아온 경우) 다시 요청하지 않음
+            if (uiState.currentUserLocation == null) {
+                viewModel.fetchCurrentLocation()
             }
+        } else {
+            // [추가] 권한이 없다면 팝업 요청
+            permissionLauncher.launch(PermissionManager.locationPermissions)
         }
     }
 

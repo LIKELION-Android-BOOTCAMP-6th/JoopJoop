@@ -3,6 +3,7 @@ package com.example.joopjoop.feature.note.ui.write
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,12 +27,15 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -72,9 +76,24 @@ fun WriteNoteScreen(
         stringResource(R.string.category_memory),
         stringResource(R.string.category_restaurant)
     )
+    // 1. 포커스 매니저 가져오기
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(uiState.isSubmitSuccess) {
+        if (uiState.isSubmitSuccess) {
+            // 저장이 성공했다면 지도가 있는 이전 화면으로 돌아갑니다.
+            navController.popBackStack()
+        }
+    }
 
     Scaffold(
-        modifier = modifier.fillMaxSize(), containerColor = BgDarkest, topBar = {
+        modifier = modifier
+            .fillMaxSize()
+            .pointerInput(Unit) { // 2. 터치 이벤트 감지 추가
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus() // 배경 터치 시 키보드 내림
+                })
+            }, containerColor = BgDarkest, topBar = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
