@@ -305,6 +305,9 @@ fun CategorySelection(
     }
 }
 
+
+//프리뷰 사용하시려면 수정이 필요합니다.
+
 //@Preview(showBackground = true)
 //@Composable
 //fun WriteNoteScreenPreview() { // 더미데이터

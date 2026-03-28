@@ -3,6 +3,7 @@ package com.example.joopjoop.feature.note.data.source
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.feature.note.data.model.NoteRequest
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -25,13 +26,18 @@ class FirestoreNoteSource(
     suspend fun getNotes(): List<Note> {
         val snapshot = db.collection(collectionPath).get().await()
         return snapshot.documents.mapNotNull { doc ->
+            val lat = doc.getDouble("latitude") ?: 0.0
+            val lng = doc.getDouble("longitude") ?: 0.0
             val timestamp = doc.getTimestamp("createdAt")
             Note(
                 noteId = doc.id,
                 userNickname = doc.getString("authorName") ?: "",
                 createdAt = timestamp?.toDate() ?: Date(),
                 contentText = doc.getString("content") ?: "",
-//                distance = "0m"
+                location = NoteLocation(
+                    latitude = lat,
+                    longitude = lng
+                )
             )
         }
     }
@@ -69,7 +75,7 @@ class FirestoreNoteSource(
             "category" to request.category,
             "storageHours" to request.storageHours,
             "imageUri" to request.imageUri,
-            "createdAt" to com.google.firebase.Timestamp.now(),
+            "createdAt" to Timestamp.now(),
             "latitude" to request.latitude,
             "longitude" to request.longitude
         )
