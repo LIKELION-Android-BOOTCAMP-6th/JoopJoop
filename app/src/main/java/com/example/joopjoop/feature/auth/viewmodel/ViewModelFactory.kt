@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
+import com.example.joopjoop.feature.setting.SettingViewModel
 
 class AuthViewModelFactory(
     private val authRepository: AuthRepository,
@@ -21,6 +22,10 @@ class AuthViewModelFactory(
             // SignupViewModel 생성 요청이 들어오면
             modelClass.isAssignableFrom(SignupViewModel::class.java) -> {
                 SignupViewModel(authRepository) as T
+            }
+            // Logout
+            modelClass.isAssignableFrom(SettingViewModel::class.java) -> {
+                SettingViewModel(authRepository) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

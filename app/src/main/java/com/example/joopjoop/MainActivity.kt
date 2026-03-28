@@ -11,6 +11,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val authRepository: AuthRepository = AuthRepositoryImpl(
+            FirebaseAuthSource(),
+            FirestoreUserSource()
+        )
+
         // 1. Edge-to-Edge 설정 (상태바까지 화면 확장 - 선택 사항)
         // WindowCompat.setDecorFitsSystemWindows(window, false)
 //        enableEdgeToEdge()

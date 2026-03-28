@@ -56,4 +56,13 @@ class AuthRepositoryImpl (
             AuthResult.Failure(e)
         }
     }
+    override suspend fun logout(): Result<Unit> {
+        return try {
+            // Firebase 로그아웃 수행
+            authSource.logout()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
