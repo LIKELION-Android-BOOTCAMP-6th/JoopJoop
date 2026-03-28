@@ -142,7 +142,7 @@ fun WriteNoteScreen(
             ) {
                 OutlinedTextField(
                     value = uiState.noteContent, // state 사용
-                    onValueChange = {viewModel.onContentChange(it)}, // 뷰모델 콜백 사용
+                    onValueChange = { viewModel.onContentChange(it) }, // 뷰모델 콜백 사용
                     modifier = Modifier.fillMaxSize(), placeholder = {
                         Text(
                             text = stringResource(R.string.note_placeholder),
@@ -263,7 +263,7 @@ fun WriteNoteScreen(
             // 4. 쪽지 남기기 버튼
             Button(
 
-                onClick = {viewModel.submitNote(context)}, // 이제 인자 없이 깔끔하게!
+                onClick = { viewModel.submitNote(context) }, // 이제 인자 없이 깔끔하게!
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp),

@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.joopjoop.feature.map.ui.NoteDTO
+import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextTertiary
 import com.google.android.gms.maps.model.LatLng
@@ -27,13 +27,13 @@ import com.google.maps.android.compose.MarkerState
  */
 @Composable
 fun NoteMarker(
-    note: NoteDTO, isPickable: Boolean, onClick: () -> Unit = {}
+    note: Note, isPickable: Boolean, onClick: () -> Unit = {}
 ) {
     // 마커의 고유 아이디를 키로 설정하여 성능 최적화
-    key(note.id) {
+    key(note.noteId) {
         MarkerComposable(
-            state = MarkerState(position = LatLng(note.latitude, note.longitude)),
-            title = note.id,
+            state = MarkerState(position = LatLng(note.location.latitude, note.location.longitude)),
+            title = note.noteId,
             onClick = {
                 onClick()
                 true // true를 반환해야 지도의 기본 동작(카메라 중앙 이동 등)을 제어할 수 있다.

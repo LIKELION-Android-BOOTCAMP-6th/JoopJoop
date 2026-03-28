@@ -23,6 +23,8 @@ class FirestoreNoteSource(
         return formatter.format(date)
     }
 
+
+    // 현재 이 함수는 모든 쪽지를 쿼리
     suspend fun getNotes(): List<Note> {
         val snapshot = db.collection(collectionPath).get().await()
         return snapshot.documents.mapNotNull { doc ->
@@ -38,6 +40,36 @@ class FirestoreNoteSource(
                     latitude = lat,
                     longitude = lng
                 )
+            )
+        }
+    }
+
+
+    // 위치를 기반으로 쿼리
+    suspend fun getNotesByLocation(centerGeohash: String): List<Note> {
+        // 5자리 Geohash 접두사로 시작하는 문서들만 쿼리
+        val snapshot = db.collection(collectionPath)
+            .orderBy("geohash")
+            .startAt(centerGeohash)
+            .endAt(centerGeohash + "\uf8ff")
+            .get()
+            .await()
+
+        return snapshot.documents.mapNotNull { doc ->
+            val timestamp = doc.getTimestamp("createdAt")
+            Note(
+                noteId = doc.id,
+                userNickname = doc.getString("authorName") ?: "익명",
+                contentText = doc.getString("content") ?: "",
+                category = doc.getString("category") ?: "일상",
+                imageUrl = doc.getString("imageUri"),
+                location = NoteLocation(
+                    geohash = doc.getString("geohash") ?: "",
+                    latitude = doc.getDouble("latitude") ?: 0.0,
+                    longitude = doc.getDouble("longitude") ?: 0.0,
+                    address = doc.getString("location") ?: "" // DB의 'location' 필드가 주소 문자열임
+                ),
+                createdAt = timestamp?.toDate() ?: Date()
             )
         }
     }

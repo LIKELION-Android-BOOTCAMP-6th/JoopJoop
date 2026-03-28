@@ -1,6 +1,5 @@
 package com.example.joopjoop.feature.note.viewmodel
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Address
 import android.location.Geocoder
@@ -11,13 +10,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.repository.NoteRepository
+import com.example.joopjoop.data.location.LocationProvider
 import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.ui.write.WriteNoteUiState
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,7 +26,8 @@ import kotlin.coroutines.resume
 
 class WriteNoteViewModel(
     private val repository: NoteRepository,
-    private val fusedLocationClient: FusedLocationProviderClient
+//    private val fusedLocationClient: FusedLocationProviderClient
+    private val locationProvider: LocationProvider // [변경] 공통 Provider 주입
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WriteNoteUiState())
@@ -42,25 +40,42 @@ class WriteNoteViewModel(
         fetchCurrentLocation()
     }
 
+//    private fun fetchCurrentLocation() {
+//        try {
+//            // 사용자 마지막 위치
+//            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+//                if (location != null) {
+//                    updateLocationState(location)
+//                } else {
+//                    // 마지막 위치가 없으면 새로 요청 (빠른 화면전환이거나 외부 상황으로 위치 값이 못가져온 상태일 수도 있기에)
+//                    fusedLocationClient.getCurrentLocation(
+//                        Priority.PRIORITY_HIGH_ACCURACY,
+//                        CancellationTokenSource().token
+//                    ).addOnSuccessListener { newLocation ->
+//                        newLocation?.let { updateLocationState(it) }
+//                    }
+//                }
+//            }.addOnFailureListener {
+//                Log.e("WriteNoteViewModel", "위치 가져오기 실패: ${it.message}")
+//            }
+//        } catch (e: SecurityException) {
+//        }
+//    }
+
+    /**
+     * [이전 작업자 참고]
+     * 기존의 fusedLocationClient 콜백 방식 대신, 공통 유틸인 LocationProvider를 사용
+     * 초기 진입 시 현재 위치를 한 번 가져와서 상태를 업데이트
+     */
     private fun fetchCurrentLocation() {
-        try {
-            // 사용자 마지막 위치
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                if (location != null) {
-                    updateLocationState(location)
-                } else {
-                    // 마지막 위치가 없으면 새로 요청 (빠른 화면전환이거나 외부 상황으로 위치 값이 못가져온 상태일 수도 있기에)
-                    fusedLocationClient.getCurrentLocation(
-                        Priority.PRIORITY_HIGH_ACCURACY,
-                        CancellationTokenSource().token
-                    ).addOnSuccessListener { newLocation ->
-                        newLocation?.let { updateLocationState(it) }
-                    }
-                }
-            }.addOnFailureListener {
-                Log.e("WriteNoteViewModel", "위치 가져오기 실패: ${it.message}")
+        viewModelScope.launch {
+            try {
+                // LocationProvider 내부에서 getCurrentLocation(Priority_HIGH) 로직이 처리됨
+                val location = locationProvider.getCurrentLocation()
+                location?.let { updateLocationState(it) }
+            } catch (e: Exception) {
+                Log.e("WriteNoteViewModel", "초기 위치 가져오기 실패: ${e.message}")
             }
-        } catch (e: SecurityException) {
         }
     }
 
@@ -109,31 +124,73 @@ class WriteNoteViewModel(
     val isSubmitEnabled: Boolean
         get() = _uiState.value.noteContent.isNotBlank() && !_uiState.value.isSubmitting
 
-    @SuppressLint("MissingPermission")
+//    @SuppressLint("MissingPermission")
+//    fun submitNote(context: Context) {
+//        val currentState = _uiState.value
+//        if (currentState.noteContent.isBlank() || currentState.isSubmitting) return
+//
+//        _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
+//
+//        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+//            if (location != null && location.latitude != 0.0) {
+//                performSubmit(context, location.latitude, location.longitude)
+//            } else {
+//                // 위치를 못 잡았다면 실시간 위치 요청
+//                val priority = Priority.PRIORITY_HIGH_ACCURACY
+//                fusedLocationClient.getCurrentLocation(priority, null)
+//                    .addOnSuccessListener { curLoc ->
+//                        if (curLoc != null) {
+//                            performSubmit(context, curLoc.latitude, curLoc.longitude)
+//                        } else {
+//                            _uiState.update {
+//                                it.copy(
+//                                    isSubmitting = false,
+//                                    errorMessage = "위치 정보를 가져올 수 없습니다. GPS를 켜주세요."
+//                                )
+//                            }
+//                        }
+//                    }
+//            }
+//        }.addOnFailureListener {
+//            _uiState.update { it.copy(isSubmitting = false, errorMessage = "위치 획득 실패") }
+//        }
+//    }
+
+    /**
+     * [이전 작업자 참고]
+     * 제출 시점에 최신 위치를 확인하기 위해 locationProvider를 활용합니다.
+     * 기존의 중첩된 addOnSuccessListener(콜백) 구조를 제거하고 순차적인 코루틴 흐름으로 변경했습니다.
+     */
     fun submitNote(context: Context) {
         val currentState = _uiState.value
         if (currentState.noteContent.isBlank() || currentState.isSubmitting) return
 
         _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            if (location != null && location.latitude != 0.0) {
-                performSubmit(context, location.latitude, location.longitude)
-            } else {
-                // 위치를 못 잡았다면 실시간 위치 요청
-                val priority = Priority.PRIORITY_HIGH_ACCURACY
-                fusedLocationClient.getCurrentLocation(priority, null).addOnSuccessListener { curLoc ->
-                    if (curLoc != null) {
-                        performSubmit(context, curLoc.latitude, curLoc.longitude)
-                    } else {
-                        _uiState.update { it.copy(isSubmitting = false, errorMessage = "위치 정보를 가져올 수 없습니다. GPS를 켜주세요.") }
+        viewModelScope.launch {
+            try {
+                // 1. 최신 위치 정보 획득 (콜백 대신 suspend 함수 사용)
+                val location = locationProvider.getCurrentLocation()
+
+                if (location != null && location.latitude != 0.0) {
+                    // 2. 위치 획득 성공 시 기존 제출 로직(performSubmit) 실행
+                    performSubmit(context, location.latitude, location.longitude)
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            isSubmitting = false,
+                            errorMessage = "위치 정보를 가져올 수 없습니다. GPS를 확인해주세요."
+                        )
                     }
                 }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isSubmitting = false, errorMessage = "위치 획득 실패: ${e.message}")
+                }
             }
-        }.addOnFailureListener {
-            _uiState.update { it.copy(isSubmitting = false, errorMessage = "위치 획득 실패") }
         }
     }
+
     fun performSubmit(context: Context, lat: Double, lng: Double) {
         if (lat == 0.0 || lng == 0.0) {
             return

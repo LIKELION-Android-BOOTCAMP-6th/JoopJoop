@@ -89,18 +89,18 @@ fun MapScreen(
             // 줍기 가능 쪽지 (주황색 마커)
             uiState.pickableNotes.forEach { note ->
                 // key(note.id)를 사용하여 마커 렌더링 최적화 유지
-                key(note.id) {
+                key(note.noteId) {
                     NoteMarker(
                         note = note,
                         isPickable = true,
-                        onClick = { onNavigateToNoteDetail(note.id) } // 클릭 시 ID 전달
+                        onClick = { onNavigateToNoteDetail(note.noteId) } // 클릭 시 ID 전달
                     )
                 }
             }
 
             // 거리가 먼 쪽지 (회색 마커)
             uiState.distantNotes.forEach { note ->
-                key(note.id) {
+                key(note.noteId) {
                     NoteMarker(
                         note = note,
                         isPickable = false,

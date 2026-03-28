@@ -255,7 +255,7 @@ fun MainNavHost(
                         viewModel = myPageViewModel,
                         onNoteClick = { noteId ->
                             // 상세 화면은 BottomNav가 없는 RootNavHost 영역이므로 rootNavController 사용
-                            rootNavController.navigate("note_detail/$noteId")
+                            rootNavController.navigate("noteDetail/$noteId")
                         }
                     )
                 },
@@ -263,7 +263,7 @@ fun MainNavHost(
                     MyScrapListContent(
                         viewModel = myPageViewModel,
                         onNoteClick = { noteId ->
-                            rootNavController.navigate("note_detail/$noteId")
+                            rootNavController.navigate("noteDetail/$noteId")
                         }
                     )
                 }
