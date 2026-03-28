@@ -26,12 +26,18 @@ import com.google.maps.android.compose.MarkerState
  * @param isPickable 내 위치 기준 30m 이내 여부에 따라 색상 변경
  */
 @Composable
-fun NoteMarker(note: NoteDTO, isPickable: Boolean) {
+fun NoteMarker(
+    note: NoteDTO, isPickable: Boolean, onClick: () -> Unit = {}
+) {
     // 마커의 고유 아이디를 키로 설정하여 성능 최적화
     key(note.id) {
         MarkerComposable(
-            state = MarkerState(position = LatLng(note.latitude, note.longitude))
-        ) {
+            state = MarkerState(position = LatLng(note.latitude, note.longitude)),
+            title = note.id,
+            onClick = {
+                onClick()
+                true // true를 반환해야 지도의 기본 동작(카메라 중앙 이동 등)을 제어할 수 있다.
+            }) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -39,8 +45,7 @@ fun NoteMarker(note: NoteDTO, isPickable: Boolean) {
                         color = if (isPickable) OrangePrimary else TextTertiary, // 주황(줍기 가능) vs 회색(멂)
                         shape = CircleShape
                     )
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
+                    .padding(8.dp), contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Default.Email, null, tint = Color.White)
             }

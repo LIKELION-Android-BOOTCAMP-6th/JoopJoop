@@ -84,7 +84,7 @@ fun RootNavHost() {
     NavHost(
         navController = rootNavController,
         // [개발 단계 전용] 구글 로그인 연동 전까지는 바로 메인으로 진입.
-        startDestination = Routes.AUTH
+        startDestination = Routes.MAIN
     ) {
         // 1. 인증 그래프 (Auth Graph)
         // Intro, Login, Signup 등을 포함하며 로그인 완료 시 스택에서 제거됩니다.
@@ -227,7 +227,17 @@ fun MainNavHost(
             )
 
             // 실제 제작한 MapScreen으로 교체
-            MapScreen(viewModel = mapViewModel)
+            MapScreen(
+                viewModel = mapViewModel,
+                onNavigateToNoteList = {
+                    // 쪽지 리스트 화면
+                    rootNavController.navigate(Routes.NOTE_LIST)
+                },
+                onNavigateToNoteDetail = { noteId ->
+                    // 쪽지 상세 화면으로 이동 (Routes.NOTE_DETAIL 형태에 맞춰 argument 전달)
+                    rootNavController.navigate("noteDetail/$noteId")
+                }
+            )
         }
 
         // [수정] 마이페이지 경로에 실제 뷰모델과 화면을 연결

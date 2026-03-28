@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,16 +28,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -72,7 +67,7 @@ fun NoteListScreen(
             modifier = Modifier.fillMaxSize(),
             containerColor = BgDarkest,
             topBar = { ListTopBar(navController) },
-            bottomBar = { ListBottomBar(navController) }
+//            bottomBar = { ListBottomBar(navController) } // 바텀네비게이션바 삭제
         ) { innerPadding ->
             NoteList(
                 uiState = uiState,
@@ -250,95 +245,97 @@ fun NoteCard(item: NoteItem, onClick: () -> Unit = {}) {
     }
 }
 
-// 화면 하단 네비게이션 바
-@Composable
-fun ListBottomBar(navController: NavController) {
+// 공통네비게이션바가 적용되므로 주석으로 막음 (추후 삭제해도 됨)
 
-    var selectedTab by remember { mutableStateOf("MAP") }
-
-    val selectedColor = OrangePrimary
-    val unselectedColor = TextTertiary
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(BgDarkest)
-            .navigationBarsPadding()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            // MAP 탭
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { selectedTab = "MAP" },
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_map_24),
-                    contentDescription = null,
-                    tint = if (selectedTab == "MAP") selectedColor else unselectedColor,
-                )
-                Text(
-                    text = "MAP",
-                    color = if (selectedTab == "MAP") selectedColor else unselectedColor,
-                    fontSize = 8.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            // WRITE 탭
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable {
-                        selectedTab = "WRITE"
-                        navController.navigate("writeNote")
-                    },
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.outline_edit_square_24),
-                    contentDescription = null,
-                    tint = if (selectedTab == "WRITE") selectedColor else unselectedColor,
-
-                    )
-                Text(
-                    text = "WRITE",
-                    color = if (selectedTab == "WRITE") selectedColor else unselectedColor,
-                    fontSize = 8.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            // MY PAGE 탭
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { selectedTab = "MY PAGE" },
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_person_24),
-                    contentDescription = null,
-                    tint = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
-                )
-                Text(
-                    text = "MY PAGE",
-                    color = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
-                    fontSize = 8.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-        }
-    }
-}
+//// 화면 하단 네비게이션 바
+//@Composable
+//fun ListBottomBar(navController: NavController) {
+//
+//    var selectedTab by remember { mutableStateOf("MAP") }
+//
+//    val selectedColor = OrangePrimary
+//    val unselectedColor = TextTertiary
+//
+//    Box(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .background(BgDarkest)
+//            .navigationBarsPadding()
+//    ) {
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(vertical = 8.dp),
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.SpaceEvenly
+//        ) {
+//            // MAP 탭
+//            Column(
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .clickable { selectedTab = "MAP" },
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.baseline_map_24),
+//                    contentDescription = null,
+//                    tint = if (selectedTab == "MAP") selectedColor else unselectedColor,
+//                )
+//                Text(
+//                    text = "MAP",
+//                    color = if (selectedTab == "MAP") selectedColor else unselectedColor,
+//                    fontSize = 8.sp,
+//                    textAlign = TextAlign.Center
+//                )
+//            }
+//
+//            // WRITE 탭
+//            Column(
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .clickable {
+//                        selectedTab = "WRITE"
+//                        navController.navigate("writeNote")
+//                    },
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.outline_edit_square_24),
+//                    contentDescription = null,
+//                    tint = if (selectedTab == "WRITE") selectedColor else unselectedColor,
+//
+//                    )
+//                Text(
+//                    text = "WRITE",
+//                    color = if (selectedTab == "WRITE") selectedColor else unselectedColor,
+//                    fontSize = 8.sp,
+//                    textAlign = TextAlign.Center
+//                )
+//            }
+//
+//            // MY PAGE 탭
+//            Column(
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .clickable { selectedTab = "MY PAGE" },
+//                horizontalAlignment = Alignment.CenterHorizontally,
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.baseline_person_24),
+//                    contentDescription = null,
+//                    tint = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
+//                )
+//                Text(
+//                    text = "MY PAGE",
+//                    color = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
+//                    fontSize = 8.sp,
+//                    textAlign = TextAlign.Center
+//                )
+//            }
+//
+//        }
+//    }
+//}
 
 //@Preview(showBackground = true, showSystemUi = true)
 //@Composable

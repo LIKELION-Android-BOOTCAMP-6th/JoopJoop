@@ -35,7 +35,9 @@ import com.google.maps.android.compose.rememberCameraPositionState
  */
 @Composable
 fun MapScreen(
-    viewModel: MapViewModel
+    viewModel: MapViewModel,
+    onNavigateToNoteList: () -> Unit, // ← 리스트 화면 이동을 위한 콜백
+    onNavigateToNoteDetail: (String) -> Unit // 상세 이동 콜백
 ) {
     val context = LocalContext.current
     // 뷰모델의 UI 상태 구독
@@ -88,14 +90,22 @@ fun MapScreen(
             uiState.pickableNotes.forEach { note ->
                 // key(note.id)를 사용하여 마커 렌더링 최적화 유지
                 key(note.id) {
-                    NoteMarker(note = note, isPickable = true)
+                    NoteMarker(
+                        note = note,
+                        isPickable = true,
+                        onClick = { onNavigateToNoteDetail(note.id) } // 클릭 시 ID 전달
+                    )
                 }
             }
 
             // 거리가 먼 쪽지 (회색 마커)
             uiState.distantNotes.forEach { note ->
                 key(note.id) {
-                    NoteMarker(note = note, isPickable = false)
+                    NoteMarker(
+                        note = note,
+                        isPickable = false,
+                        onClick = { /* 거리가 멀면 클릭 안되게 하거나 안내 메시지 */ }
+                    )
                 }
             }
         }
@@ -132,7 +142,7 @@ fun MapScreen(
                 NearbyNoteCard(
                     noteCountText = uiState.noteCountText, // "주변에 n개의 쪽지가 있어요"
                     onViewListClick = {
-                        /* TODO: 쪽지 목록 화면 이동 내비게이션 로직 */
+                        onNavigateToNoteList() // 버튼 클릭 콜백 호출
                     }
                 )
             }
