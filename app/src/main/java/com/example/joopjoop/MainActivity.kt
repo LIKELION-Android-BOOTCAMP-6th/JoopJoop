@@ -16,13 +16,24 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.navigation.compose.composable
+import com.example.joopjoop.core.repository.AuthRepository
+import com.example.joopjoop.feature.auth.data.repository.AuthRepositoryImpl
+import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
+import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
 import com.example.joopjoop.feature.auth.ui.login.LoginRoute
 import com.example.joopjoop.feature.auth.ui.signup.SignupRoute
+import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
+import com.example.joopjoop.feature.setting.ui.SettingRoute
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val authRepository: AuthRepository = AuthRepositoryImpl(
+            FirebaseAuthSource(),
+            FirestoreUserSource()
+        )
 
         // 1. Edge-to-Edge 설정 (상태바까지 화면 확장 - 선택 사항)
         // WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -32,6 +43,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             JoopJoopTheme {
                 // 1. 네비게이션의 핸들(Controller)을 만듭니다.
+                val notificationViewModel: NotificationViewModel = viewModel()
+
                 val navController = androidx.navigation.compose.rememberNavController()
 
                 // 2. 어떤 화면들이 있는지 지도를 그립니다(NavHost).
@@ -45,6 +58,7 @@ class MainActivity : ComponentActivity() {
                             onLoginSuccess = {
                                 Log.d("MainActivity", "로그인 성공 -> 지도로 이동")
                                 // navController.navigate("main_map") // 나중에 추가!
+//                                navController.navigate("setting") // 테스트용으로 설정 화면으로 이동
                             },
                             onBackClick = { finish() },
                             onCreateAccountClick = {
@@ -66,6 +80,19 @@ class MainActivity : ComponentActivity() {
                                 android.util.Log.d("MainActivity", "회원가입 성공! 이제 로그인 해주세요.")
                                 navController.popBackStack()
                             }
+                        )
+                    }
+                    // 설정 화면 경로 설정
+                    composable("setting") {
+                        SettingRoute(
+                            authRepository = authRepository, // 미리 생성된 repository 주입
+                            notificationViewModel = notificationViewModel, // 사용 중인 notificationViewModel 주입
+                            onNavigateToLogin = {
+                                navController.navigate("login") {
+                                    popUpTo(0) // 전체 스택 비우고 로그인으로
+                                }
+                            },
+                            onBackClick = { navController.popBackStack() }
                         )
                     }
                 }

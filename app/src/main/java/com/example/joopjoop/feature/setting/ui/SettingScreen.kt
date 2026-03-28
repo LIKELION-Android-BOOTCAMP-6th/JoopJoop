@@ -24,6 +24,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,7 +39,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.joopjoop.R
+import com.example.joopjoop.core.repository.AuthRepository
+import com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory
+import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
+import com.example.joopjoop.feature.setting.SettingViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.JoopJoopTheme
@@ -47,6 +53,30 @@ import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextSecondary
 import com.example.joopjoop.ui.theme.TextTertiary
 
+@Composable
+fun SettingRoute(
+    authRepository: AuthRepository,
+    notificationViewModel: NotificationViewModel,
+    onNavigateToLogin: () -> Unit,
+    onBackClick: () -> Unit
+) {
+    val viewModel: SettingViewModel = viewModel(
+        factory = AuthViewModelFactory(authRepository, notificationViewModel)
+    )
+    // 로그아웃 성공 시 이벤트 처리
+    LaunchedEffect(Unit) {
+        viewModel.logoutSuccess.collect {
+            onNavigateToLogin()
+        }
+    }
+
+    // UI 레이아웃 호출
+    SettingScreen(
+        onBackClick = onBackClick,
+        onProfileEditClick = { /* 프로필 수정 로직 */ },
+        onLogoutClick = { viewModel.logout() } // ViewModel의 로그아웃 함수 호출
+    )
+}
 @Composable
 fun SettingScreen(
     modifier: Modifier = Modifier,
