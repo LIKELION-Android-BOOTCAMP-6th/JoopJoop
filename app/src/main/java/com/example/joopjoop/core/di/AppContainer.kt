@@ -2,6 +2,7 @@ package com.example.joopjoop.core.di
 
 import android.content.Context
 import com.example.joopjoop.MainViewModel
+import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.FakeNoteRepository
 import com.example.joopjoop.core.repository.MyPageRepository
@@ -66,6 +67,9 @@ class AppContainer(context: Context) {
     val noteViewModelFactory: NoteViewModelFactory by lazy {
         NoteViewModelFactory(noteRepository, locationProvider)
     }
+
+    // 저장용 유틸 등록
+    val imageProcessor by lazy { ImageProcessor(context) }
 
     // 상단 noteViewModelFactory로 아래 write부분 병합됐기에 아래 코드 주석 처리함
     // WriteNoteViewModelFactory 파일은 삭제됨
