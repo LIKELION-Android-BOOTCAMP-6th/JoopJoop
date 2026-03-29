@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.note.data.source
 
+import android.util.Log
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
@@ -29,6 +30,8 @@ class FirestoreNoteSource(
                 noteId = doc.id,
                 userNickname = doc.getString("authorName") ?: "",
                 createdAt = timestamp?.toDate() ?: Date(),
+                likeCount = doc.getLong("likeCount")?.toInt() ?: 0, // 삭제할 것
+                viewCount = doc.getLong("viewCount")?.toInt() ?: 0, // 삭제할 것
                 contentText = doc.getString("content") ?: "",
                 location = NoteLocation(
                     latitude = lat,
@@ -103,7 +106,9 @@ class FirestoreNoteSource(
             "imageUri" to request.imageUri,
             "createdAt" to Timestamp.now(),
             "latitude" to request.latitude,
-            "longitude" to request.longitude
+            "longitude" to request.longitude,
+            "likeCount" to 0,
+            "viewCount" to 0
         )
 
 
@@ -122,6 +127,59 @@ class FirestoreNoteSource(
         val docRef = db.collection(collectionPath).document(noteId)
         // increment가 1이면 +1, -1이면 -1
         docRef.update("likeCount", FieldValue.increment(increment.toLong())).await()
+    }
+
+    suspend fun addLike(noteId: String, userId: String) {
+        val userLikeRef = db.collection("users")
+            .document(userId)
+            .collection("likes")
+            .document(noteId)
+
+        val noteRef = db.collection("notes").document(noteId)
+        userLikeRef.set(hashMapOf("noteId" to noteId, "timestamp" to FieldValue.serverTimestamp())).await()
+
+        val noteDoc = noteRef.get().await()
+        if (noteDoc.exists()) {
+            noteRef.update("likeCount", FieldValue.increment(1)).await()
+        }
+    }
+
+    suspend fun removeLike(noteId: String, userId: String) {
+        val userLikeRef =
+            db.collection("users").document(userId).collection("likes").document(noteId)
+        val noteRef = db.collection("notes").document(noteId)
+
+        db.runTransaction { transaction ->
+            val likeDoc = transaction.get(userLikeRef)
+            if (!likeDoc.exists()) return@runTransaction // 이미 없으면 중단
+
+            val noteDoc = transaction.get(noteRef)
+
+            // 1. 좋아요 기록 삭제
+            transaction.delete(userLikeRef)
+
+            // 2. 노트 문서가 있을 때만 카운트 감소
+            if (noteDoc.exists()) {
+                val currentCount = noteDoc.getLong("likeCount") ?: 0
+                if (currentCount > 0) {
+                    transaction.update(noteRef, "likeCount", currentCount - 1)
+                }
+            }
+        }.await()
+    }
+
+    suspend fun checkLikeExists(noteId: String, userId: String): Boolean {
+        return try {
+            val document = db.collection("users")
+                .document(userId)
+                .collection("likes")
+                .document(noteId)
+                .get()
+                .await()
+            document.exists()
+        } catch (e: Exception) {
+            false
+        }
     }
 
     suspend fun saveScrapNote(scrap: Scrap, userId: String) {

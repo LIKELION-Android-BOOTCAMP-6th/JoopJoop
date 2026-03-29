@@ -60,7 +60,22 @@ class NoteRepositoryImpl(
         source.updateLikeCount(noteId, increment)
     }
 
-    // 스크랩 하기
+    // 좋아요 추가
+    override suspend fun addLike(noteId: String, userId: String){
+        source.addLike(noteId, userId)
+    }
+
+    // 좋아요 취소
+    override suspend fun removeLike(noteId: String, userId: String){
+        source.removeLike(noteId, userId)
+    }
+
+    override suspend fun checkLikeExists(noteId: String, userId: String): Boolean {
+        return source.checkLikeExists(noteId, userId)
+    }
+
+
+        // 스크랩 하기
     override suspend fun saveScrapNote(scrap: Scrap, userId: String) {
         source.saveScrapNote(scrap, userId)
     }
@@ -74,6 +89,8 @@ class NoteRepositoryImpl(
         // 소스의 함수를 호출 (아래 2번에서 구현)
         return source.checkBookmarkExists(noteId, userId)
     }
+
+
 }
 
 
