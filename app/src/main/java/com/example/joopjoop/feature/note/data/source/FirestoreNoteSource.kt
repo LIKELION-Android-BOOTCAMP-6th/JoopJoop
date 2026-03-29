@@ -95,6 +95,7 @@ class FirestoreNoteSource(
         // 2. 서버에 저장할 데이터 구성
         val noteData = hashMapOf(
             "id" to generatedId,
+            "authorId" to request.authorId,
             "authorName" to request.authorName,
             "location" to request.location,
             "content" to request.content,
@@ -103,7 +104,8 @@ class FirestoreNoteSource(
             "imageUri" to request.imageUri,
             "createdAt" to Timestamp.now(),
             "latitude" to request.latitude,
-            "longitude" to request.longitude
+            "longitude" to request.longitude,
+            "geohash" to request.geohash
         )
 
 

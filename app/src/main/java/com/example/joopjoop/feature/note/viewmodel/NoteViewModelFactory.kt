@@ -29,7 +29,7 @@ class NoteViewModelFactory(
 
             // WriteNoteViewModel 생성 (작성 시 현재 위치 Geohash 생성)
             modelClass.isAssignableFrom(WriteNoteViewModel::class.java) -> {
-                WriteNoteViewModel(repository, locationProvider) as T
+                WriteNoteViewModel(repository, authRepository, locationProvider) as T
             }
 
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

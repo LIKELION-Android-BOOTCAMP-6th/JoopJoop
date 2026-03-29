@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.common.util.LocationUtil
+import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.data.location.LocationProvider
 import com.example.joopjoop.feature.note.data.model.NoteRequest
@@ -27,6 +28,7 @@ import kotlin.coroutines.resume
 class WriteNoteViewModel(
     private val repository: NoteRepository,
 //    private val fusedLocationClient: FusedLocationProviderClient
+    private val authRepository: AuthRepository,
     private val locationProvider: LocationProvider // [변경] 공통 Provider 주입
 ) : ViewModel() {
 
@@ -38,6 +40,7 @@ class WriteNoteViewModel(
 
     init {
         fetchCurrentLocation()
+        initUserInfo()
     }
 
 //    private fun fetchCurrentLocation() {
@@ -67,6 +70,8 @@ class WriteNoteViewModel(
      * 기존의 fusedLocationClient 콜백 방식 대신, 공통 유틸인 LocationProvider를 사용
      * 초기 진입 시 현재 위치를 한 번 가져와서 상태를 업데이트
      */
+
+    // 위치 가져오기
     private fun fetchCurrentLocation() {
         viewModelScope.launch {
             try {
@@ -76,6 +81,23 @@ class WriteNoteViewModel(
             } catch (e: Exception) {
                 Log.e("WriteNoteViewModel", "초기 위치 가져오기 실패: ${e.message}")
             }
+        }
+    }
+
+    // 유저 정보 업데이트
+    private fun initUserInfo() {
+        viewModelScope.launch {
+            authRepository.currentUser
+                .collect { user ->
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            user = currentState.user.copy(
+                                uid = user?.uid ?: "",
+                                nickname = user?.nickname ?: "익명사용자"
+                            )
+                        )
+                    }
+                }
         }
     }
 
@@ -204,12 +226,18 @@ class WriteNoteViewModel(
 
                 // Geohash 생성
                 val hash = LocationUtil.getGeohash(lat, lng)
+                Log.d("jay", "=====================hash: $hash")
+                Log.d(
+                    "jay",
+                    "=====================currentState.user.nickname: ${currentState.user.nickname}"
+                )
 
                 val currentTime = System.currentTimeMillis()
                 val expiresTime = currentTime + (currentState.storageHours * 3600000L)
 
                 val request = NoteRequest(
-                    authorName = "사용자",
+                    authorId = currentState.user.uid,
+                    authorName = currentState.user.nickname,
                     content = currentState.noteContent,
                     category = currentState.selectedCategory,
                     storageHours = currentState.storageHours,

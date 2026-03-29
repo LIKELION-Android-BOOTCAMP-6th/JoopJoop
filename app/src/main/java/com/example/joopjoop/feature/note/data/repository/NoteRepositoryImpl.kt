@@ -44,8 +44,10 @@ class NoteRepositoryImpl(
             "latitude" to request.latitude,
             "longitude" to request.longitude,
             "createdAt" to System.currentTimeMillis(),
+            "authorId" to request.authorId,
             "authorName" to request.authorName,
-            "location" to request.location
+            "location" to request.location,
+            "geohash" to request.geohash
         )
         return source.createNote(request)
     }
