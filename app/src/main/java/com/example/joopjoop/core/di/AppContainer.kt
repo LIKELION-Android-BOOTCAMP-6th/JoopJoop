@@ -41,10 +41,10 @@ class AppContainer(context: Context) {
     val noteRepository: NoteRepository by lazy {
         // 필요한 데이터에 따라 둘중 하나의 주석을 해제해서 사용하세요
         // 1. 실제 서버 데이터가 필요할 때
-//        NoteRepositoryImpl(firestoreNoteSource)
+        NoteRepositoryImpl(firestoreNoteSource)
 
         // 2. 가짜 데이터가 필요할 때
-        FakeNoteRepository()
+//        FakeNoteRepository()
     }
 
     // MyPage 리포지토리

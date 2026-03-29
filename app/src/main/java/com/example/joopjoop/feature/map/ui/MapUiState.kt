@@ -1,6 +1,7 @@
 package com.example.joopjoop.feature.map.ui
 
 import com.example.joopjoop.core.common.util.LocationUtil
+import com.example.joopjoop.core.model.DialogState
 import com.example.joopjoop.core.model.Note
 import com.google.android.gms.maps.model.LatLng
 
@@ -12,7 +13,8 @@ data class MapUiState(
     val notes: List<Note> = emptyList(),   // F-MAP-03: 탐색된 전체 쪽지 리스트 (최대 5km)
     val isLoading: Boolean = false,           // 로딩 상태
     val errorMessage: String? = null,         // 예외 처리 메시지
-    val isPermissionGranted: Boolean = false  // F-MAP-01: 권한 허용 여부
+    val isPermissionGranted: Boolean = false,  // F-MAP-01: 권한 허용 여부
+    val dialogState: DialogState? = null // 다이얼로그 상태를 관리. null이면 화면에 아무것도 뜨지 않음.
 ) {
     /**
      * [F-MAP-05 관련] 내 위치에서 30m 이내에 있어 '줍기'가 가능한 쪽지들
