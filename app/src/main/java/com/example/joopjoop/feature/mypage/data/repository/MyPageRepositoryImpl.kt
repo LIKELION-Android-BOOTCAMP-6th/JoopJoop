@@ -14,7 +14,7 @@ class MyPageRepositoryImpl(
         // TODO: 실제로는 firestoreUserSource에서 가져와야 함
         return Result.success(
             User(
-                userId = userId,
+                uid = userId,
                 nickname = "줍줍마스터",
                 profileImageUrl = "",
                 noteCount = 12

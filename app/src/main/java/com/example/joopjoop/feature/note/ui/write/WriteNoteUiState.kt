@@ -5,7 +5,7 @@ import java.util.Date
 
 data class WriteNoteUiState(
     val user: User = User(
-        userId = "",
+        uid = "",
         email = "",
         nickname = "",
         profileImageUrl = "",

@@ -97,7 +97,7 @@ fun NoteDetailScreen(
                 modifier = Modifier.padding(innerPadding),
                 // 버튼 클릭 이벤트 ViewModel로 연결
                 onLikeClick = { viewModel.toggleLike(noteId) },
-                onBookmarkClick = { viewModel.toggleBookmark() }
+                onBookmarkClick = { viewModel.toggleBookmark(noteId) }
             )
         }
     }
@@ -142,11 +142,9 @@ fun NoteDetail(
             Spacer(modifier = Modifier.width(12.dp))
             Column(
                 verticalArrangement = Arrangement.spacedBy(1.dp)
-            )
-            {
-
+            ) {
                 Text(
-                    text = uiState.authorName,
+                    text = uiState.userNickName,
                     color = TextPrimary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,

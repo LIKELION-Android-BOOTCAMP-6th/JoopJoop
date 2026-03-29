@@ -2,6 +2,7 @@ package com.example.joopjoop.feature.note.data.source
 
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
+import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
@@ -16,13 +17,6 @@ class FirestoreNoteSource(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
     private val collectionPath = "notes"
-
-    fun formatDate(date: Date?): String {
-        if (date == null) return ""
-        val formatter = SimpleDateFormat("M월 dd일", Locale.getDefault())
-        return formatter.format(date)
-    }
-
 
     // 현재 이 함수는 모든 쪽지를 쿼리
     suspend fun getNotes(): List<Note> {
@@ -128,5 +122,37 @@ class FirestoreNoteSource(
         val docRef = db.collection(collectionPath).document(noteId)
         // increment가 1이면 +1, -1이면 -1
         docRef.update("likeCount", FieldValue.increment(increment.toLong())).await()
+    }
+
+    suspend fun saveScrapNote(scrap: Scrap, userId: String) {
+        db.collection("users")
+            .document(userId)
+            .collection("scraps")
+            .document(scrap.noteId) // 중복 스크랩 방지
+            .set(scrap)
+            .await()
+    }
+
+    suspend fun removeBookmark(noteId: String, userId: String) {
+        db.collection("users")
+            .document(userId)
+            .collection("scraps")
+            .document(noteId)
+            .delete()
+            .await()
+    }
+
+    suspend fun checkBookmarkExists(noteId: String, userId: String): Boolean {
+        return try {
+            val document = db.collection("users")
+                .document(userId)
+                .collection("scraps")
+                .document(noteId)
+                .get()
+                .await()
+            document.exists() // 문서있으면 true, 없으면 false
+        } catch (e: Exception) {
+            false
+        }
     }
 }

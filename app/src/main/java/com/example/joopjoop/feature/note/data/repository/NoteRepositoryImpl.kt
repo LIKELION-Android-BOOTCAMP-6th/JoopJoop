@@ -2,6 +2,7 @@ package com.example.joopjoop.feature.note.data.repository
 
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.Note
+import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
@@ -28,10 +29,12 @@ class NoteRepositoryImpl(
         return source.getNotesByLocation(centerGeohash)
     }
 
+    // 쪽지 상세 데이터 가져오기
     override suspend fun getNoteDetail(noteId: String): Note {
         return source.getNoteDetail(noteId)
     }
 
+    // 쪽지 만들기
     override suspend fun createNote(request: NoteRequest): String {
         val noteData = hashMapOf(
             "content" to request.content,
@@ -47,14 +50,30 @@ class NoteRepositoryImpl(
         return source.createNote(request)
     }
 
+    // 조회수 증가
     override suspend fun incrementViewCount(noteId: String) {
         source.incrementViewCount(noteId)
     }
 
+    // 좋아요 업데이트
     override suspend fun updateLikeCount(noteId: String, increment: Int) {
         source.updateLikeCount(noteId, increment)
     }
 
+    // 스크랩 하기
+    override suspend fun saveScrapNote(scrap: Scrap, userId: String) {
+        source.saveScrapNote(scrap, userId)
+    }
+
+    // 스크랩 취소
+    override suspend fun removeBookmark(noteId: String, userId: String) {
+        source.removeBookmark(noteId, userId)
+    }
+
+    override suspend fun isNoteBookmarked(noteId: String, userId: String): Boolean {
+        // 소스의 함수를 호출 (아래 2번에서 구현)
+        return source.checkBookmarkExists(noteId, userId)
+    }
 }
 
 

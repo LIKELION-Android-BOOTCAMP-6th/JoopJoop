@@ -3,8 +3,11 @@ package com.example.joopjoop.core.repository
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
+import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.feature.note.data.model.NoteRequest
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.tasks.await
 import java.util.Date
 
 class FakeNoteRepository : NoteRepository {
@@ -75,6 +78,41 @@ class FakeNoteRepository : NoteRepository {
         if (index != -1) {
             _allFakeNotes[index] =
                 _allFakeNotes[index].copy(likeCount = _allFakeNotes[index].likeCount + increment)
+        }
+    }
+
+    override suspend fun saveScrapNote(scrap: Scrap, userId: String) {
+        val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+        db.collection("users")
+            .document(userId)
+            .collection("scraps")
+            .document(scrap.noteId) // 중복 스크랩 방지
+            .set(scrap)
+            .await()
+    }
+
+    override suspend fun removeBookmark(noteId: String, userId: String) {
+        val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+        db.collection("users")
+            .document(userId)
+            .collection("scraps")
+            .document(noteId)
+            .delete()
+            .await()
+    }
+
+    override suspend fun isNoteBookmarked(noteId: String, userId: String): Boolean {
+        return try {
+            val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+            val document = db.collection("users")
+                .document(userId)
+                .collection("scraps")
+                .document(noteId)
+                .get()
+                .await()
+            document.exists() // 문서가 있으면 true, 없으면 false
+        } catch (e: Exception) {
+            false
         }
     }
 }
