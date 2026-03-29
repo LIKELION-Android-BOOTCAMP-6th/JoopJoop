@@ -11,6 +11,14 @@ interface AuthRepository {
     // 실시간 유저 상태 관찰 (캐시)
     val currentUser: Flow<User?>
 
+    /**
+     * 사용자 프로필 정보 업데이트
+     * [F-MY-04] 닉네임 변경 대응
+     */
+    suspend fun updateProfile(
+        newNickname: String,
+        newImageUrl: String? = null
+    ): AuthResult<Unit>
 
     // 닉네임 중복 확인
     // nickname 은 검사할 닉네임

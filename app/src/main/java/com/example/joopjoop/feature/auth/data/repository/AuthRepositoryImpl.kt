@@ -35,6 +35,24 @@ class AuthRepositoryImpl(
         }
     }
 
+    // 프로필 업데이트 (닉네임, 프로필 이미지)
+    override suspend fun updateProfile(newNickname: String, newImageUrl: String?): AuthResult<Unit> {
+        return try {
+            val uid = authSource.getCurrentUserId() ?: throw Exception("로그인 정보 없음")
+
+            // 1. Firestore 유저 문서의 nickname 필드 업데이트
+            userSource.updateUser(uid, newNickname)
+
+            // 2. [핵심] 캐시(StateFlow) 업데이트
+            // 현재 캐시된 유저 정보를 복사해서 닉네임만 갈아끼움
+            _currentUser.value = _currentUser.value?.copy(nickname = newNickname)
+
+            AuthResult.Success(Unit)
+        } catch (e: Exception) {
+            AuthResult.Failure(e)
+        }
+    }
+
     override suspend fun isNicknameAvailable(nickname: String): Boolean {
         return userSource.isNicknameAvailable(nickname)
     }

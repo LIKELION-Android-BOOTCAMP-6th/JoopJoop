@@ -28,7 +28,7 @@ class SettingViewModel(
             try {
                 // Repository의 로그아웃 호출
                 authRepository.logout()
-                Log.d("SettingViewModel","로그아웃 성공")
+                Log.d("SettingViewModel", "로그아웃 성공")
 
                 // 성공 신호 전송
                 _logoutSuccess.emit(Unit)

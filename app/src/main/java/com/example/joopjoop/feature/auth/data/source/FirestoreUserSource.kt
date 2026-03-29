@@ -51,4 +51,27 @@ class FirestoreUserSource(
             null
         }
     }
+
+    //유저 정보 업데이트 (닉네임, 프로필 이미지 등)
+    suspend fun updateUser(uid: String, newNickname: String, newProfileImageUrl: String? = null) {
+        // 업데이트할 필드들을 Map으로 구성
+        val updates = mutableMapOf<String, Any>(
+            "nickname" to newNickname
+        )
+
+        // 이미지 URL이 있는 경우에만 필드 추가
+        newProfileImageUrl?.let {
+            updates["profileImageUrl"] = it
+        }
+
+        try {
+            // 해당 UID 문서의 특정 필드들만 업데이트
+            userCollection.document(uid)
+                .update(updates)
+                .await()
+        } catch (e: Exception) {
+            // 실패 시 에러를 던져서 Repository에서 Failure 처리를 할 수 있게 함
+            throw e
+        }
+    }
 }

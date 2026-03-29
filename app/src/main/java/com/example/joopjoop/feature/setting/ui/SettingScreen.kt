@@ -77,6 +77,7 @@ fun SettingRoute(
         onLogoutClick = { viewModel.logout() } // ViewModel의 로그아웃 함수 호출
     )
 }
+
 @Composable
 fun SettingScreen(
     modifier: Modifier = Modifier,

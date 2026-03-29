@@ -41,6 +41,7 @@ import com.example.joopjoop.feature.note.viewmodel.NoteDetailViewModel
 import com.example.joopjoop.feature.note.viewmodel.NoteListViewModel
 import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
+import com.example.joopjoop.feature.setting.ui.SettingRoute
 
 // Routes 정의
 object Routes {
@@ -198,9 +199,22 @@ fun RootNavHost() {
             )
         }
 
-        // [추가] 설정 화면 주소 등록
+        // 설정 화면 주소 등록
         composable(Routes.SETTINGS) {
-            PlaceholderScreen("설정 화면")
+            // SettingRoute를 호출하여 의존성(Repository, ViewModel)을 주입합니다.
+            SettingRoute(
+                authRepository = appContainer.authRepository,
+                notificationViewModel = viewModel(), // 필요 시 appContainer에서 가져올 수도 있음.
+                onNavigateToLogin = {
+                    // 로그아웃 성공 시 AUTH 화면으로 이동하며 스택 정리
+                    rootNavController.navigate(Routes.AUTH) {
+                        popUpTo(Routes.MAIN) { inclusive = true }
+                    }
+                },
+                onBackClick = {
+                    rootNavController.popBackStack()
+                }
+            )
         }
     }
 }
@@ -253,6 +267,10 @@ fun MainNavHost(
             // 실제 마이페이지 화면으로 교체
             MyPageScreen(
                 viewModel = myPageViewModel,
+                // 설정화면 진입 버튼 연결
+                onSettingClick = {
+                    rootNavController.navigate(Routes.SETTINGS)
+                },
                 // [F-MY-02] 내가 쓴 쪽지 리스트 부품 주입
                 postContent = {
                     MyPostListContent(
