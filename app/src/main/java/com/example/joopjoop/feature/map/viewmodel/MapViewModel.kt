@@ -2,6 +2,7 @@ package com.example.joopjoop.feature.map.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.joopjoop.core.model.DialogState
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.data.location.LocationProvider
 import com.example.joopjoop.feature.map.ui.MapUiState
@@ -83,11 +84,60 @@ class MapViewModel(
         _uiState.update { it.copy(currentUserLocation = location) }
     }
 
-    fun onPermissionResult(isGranted: Boolean) {
+    fun askPermissionWithGuide(onConfirmRequest: () -> Unit) {
+        _uiState.update {
+            it.copy(
+                dialogState = DialogState(
+                    title = "위치 권한이 필요해요",
+                    description = "주변의 쪽지를 탐색하기 위해 위치 권한이 필요합니다.\n동의하시겠습니까?",
+                    confirmText = "동의하기",
+                    dismissText = "나중에",
+                    onConfirm = {
+                        onConfirmRequest() // 여기서 실제 시스템 팝업을 띄움
+                        dismissDialog()
+                    },
+                    onDismiss = { dismissDialog() }
+                )
+            )
+        }
+    }
+
+    /**
+     * 다이얼로그를 화면에서 제거합니다.
+     */
+    fun dismissDialog() {
+        _uiState.update { it.copy(dialogState = null) }
+    }
+
+    fun onPermissionResult(isGranted: Boolean, onDenied: () -> Unit = {}) {
         _uiState.update { it.copy(isPermissionGranted = isGranted) }
-        // 권한이 허용되면 즉시 현재 위치를 가져옴
+
         if (isGranted) {
             fetchCurrentLocation()
+        } else {
+            // [수정] 시스템 팝업에서 거절당했을 때, 설정을 유도하는 다이얼로그를 띄웁니다.
+            showSettingsDialog(onDenied)
+        }
+    }
+
+    /**
+     * 권한 거부 후, 사용자를 앱 설정 화면으로 안내하는 다이얼로그
+     */
+    private fun showSettingsDialog(onOpenSettings: () -> Unit) {
+        _uiState.update {
+            it.copy(
+                dialogState = DialogState(
+                    title = "권한 설정 안내",
+                    description = "위치 권한이 거부되었습니다.\n원활한 서비스 이용을 위해 설정에서 권한을 허용해주세요.",
+                    confirmText = "설정으로 이동",
+                    dismissText = "나중에",
+                    onConfirm = {
+                        onOpenSettings()
+                        dismissDialog()
+                    },
+                    onDismiss = { dismissDialog() }
+                )
+            )
         }
     }
 }

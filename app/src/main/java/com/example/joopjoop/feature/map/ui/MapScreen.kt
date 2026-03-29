@@ -1,9 +1,13 @@
 package com.example.joopjoop.feature.map.ui
 
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -19,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.joopjoop.core.common.util.PermissionManager
+import com.example.joopjoop.core.designsystem.components.JoopJoopDialog
 import com.example.joopjoop.feature.map.ui.components.CurrentLocationButton
 import com.example.joopjoop.feature.map.ui.components.NearbyNoteCard
 import com.example.joopjoop.feature.map.ui.components.NoteMarker
@@ -44,12 +49,14 @@ fun MapScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // 권한 요청을 위한 런처 선언
+    // 1. 권한 요청 런처 (시스템 팝업용)
     val permissionLauncher = PermissionManager.rememberLocationPermissionLauncher { isGranted ->
-        viewModel.onPermissionResult(isGranted)
-        if (isGranted) {
-            // 권한 허용 시 즉시 위치 업데이트 시도
-            viewModel.fetchCurrentLocation()
+        // 결과가 나오면 viewModel에 전달 (시스템 설정 이동 로직 포함)
+        viewModel.onPermissionResult(isGranted) {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", context.packageName, null)
+            }
+            context.startActivity(intent)
         }
     }
 
@@ -82,8 +89,11 @@ fun MapScreen(
                 viewModel.fetchCurrentLocation()
             }
         } else {
-            // [추가] 권한이 없다면 팝업 요청
-            permissionLauncher.launch(PermissionManager.locationPermissions)
+            // [변경 포인트] 팝업을 바로 띄우지 않고, '사전 안내 다이얼로그'
+            viewModel.askPermissionWithGuide {
+                // 사용자가 다이얼로그에서 '동의하기'를 눌렀을 때만 실제 시스템 팝업을 호출
+                permissionLauncher.launch(PermissionManager.locationPermissions)
+            }
         }
     }
 
@@ -133,22 +143,39 @@ fun MapScreen(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 48.dp),
-            onClick = { viewModel.loadNotes(cameraPositionState.position.target) }
+            onClick = {
+                // [권한 체크 추가]
+                if (PermissionManager.hasLocationPermission(context)) {
+                    viewModel.loadNotes(cameraPositionState.position.target)
+                } else {
+                    // 권한이 없으면 안내 다이얼로그 노출 -> 승인 시 시스템 팝업
+                    viewModel.askPermissionWithGuide {
+                        permissionLauncher.launch(PermissionManager.locationPermissions)
+                    }
+                }
+            }
         )
 
         // [레이어 3] 하단 영역: 내 위치 버튼 및 안내 카드
         Column(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
+                .align(Alignment.BottomEnd) // 컬럼 자체를 '우측 하단'에 고정 (버튼 위치 사수)
+                .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 40.dp),
             horizontalAlignment = Alignment.End
         ) {
             // 커스텀 내 위치 FAB 버튼
             CurrentLocationButton(
                 onClick = {
-                    // 클릭 시 현재 사용자 위치(uiState.currentUserLocation)로 카메라 이동
-                    uiState.currentUserLocation?.let { userPos ->
-                        cameraPositionState.position = CameraPosition.fromLatLngZoom(userPos, 16f)
+                    if (PermissionManager.hasLocationPermission(context)) {
+                        uiState.currentUserLocation?.let { userPos ->
+                            cameraPositionState.position =
+                                CameraPosition.fromLatLngZoom(userPos, 16f)
+                        } ?: viewModel.fetchCurrentLocation()
+                    } else {
+                        viewModel.askPermissionWithGuide {
+                            permissionLauncher.launch(PermissionManager.locationPermissions)
+                        }
                     }
                 }
             )
@@ -157,12 +184,25 @@ fun MapScreen(
             if (uiState.isNoteListButtonVisible) {
                 Spacer(modifier = Modifier.height(16.dp))
                 NearbyNoteCard(
-                    noteCountText = uiState.noteCountText, // "주변에 n개의 쪽지가 있어요"
+                    noteCountText = uiState.noteCountText,
                     onViewListClick = {
-                        onNavigateToNoteList() // 버튼 클릭 콜백 호출
+                        onNavigateToNoteList()
                     }
                 )
             }
+        }
+
+        // uiState.dialogState가 null이 아닐 때(값이 있을 때)만 다이얼로그를 띄움
+        uiState.dialogState?.let { config ->
+            JoopJoopDialog(
+                onDismissRequest = { viewModel.dismissDialog() },
+                title = config.title,
+                description = config.description,
+                confirmText = config.confirmText,
+                dismissText = config.dismissText,
+                onConfirm = config.onConfirm,
+                onDismiss = config.onDismiss
+            )
         }
     }
 }

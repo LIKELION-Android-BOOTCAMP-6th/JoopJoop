@@ -13,20 +13,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.joopjoop.ui.theme.*
+
 /**
  * 하단 주변 쪽지 정보 카드 (F-MAP-08)
  */
 @Composable
-fun NearbyNoteCard(noteCountText: String, onViewListClick: () -> Unit) {
+fun NearbyNoteCard(
+    noteCountText: String,
+    onViewListClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = BgDark), // 카드 배경색
         shape = RoundedCornerShape(20.dp)
     ) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             // 왼쪽 아이콘 영역
             Box(
-                modifier = Modifier.size(48.dp).background(OrangePrimary.copy(alpha = 0.1f), CircleShape),
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(OrangePrimary.copy(alpha = 0.1f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.Default.Email, null, tint = OrangePrimary)
@@ -35,7 +42,11 @@ fun NearbyNoteCard(noteCountText: String, onViewListClick: () -> Unit) {
             // 텍스트 및 버튼 영역
             Column(modifier = Modifier.weight(1f)) {
                 Text(noteCountText, color = TextPrimary, fontWeight = FontWeight.Bold) //
-                Text("Someone left a message here", color = TextSecondary, style = MaterialTheme.typography.bodySmall) //
+                Text(
+                    "Someone left a message here",
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.bodySmall
+                ) //
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = onViewListClick,
