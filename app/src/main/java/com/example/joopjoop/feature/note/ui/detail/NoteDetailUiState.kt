@@ -10,4 +10,6 @@ data class NoteDetailUiState(
     val content: String = "",           // 쪽지 본문
     val isLiked: Boolean = false,       // 좋아요 눌렀는지
     val isBookmarked: Boolean = false,  // 스크랩 눌렀는지
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 )

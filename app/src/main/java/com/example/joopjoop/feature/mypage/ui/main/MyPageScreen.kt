@@ -26,8 +26,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.joopjoop.core.common.util.JoopJoopImage
 import com.example.joopjoop.core.model.User
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModel
 import com.example.joopjoop.ui.theme.BgDark
@@ -116,13 +118,22 @@ fun ProfileHeader(user: User?) {
             .padding(24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 프로필 이미지 영역
-        Box(
+        // 프로필 이미지 영역 (JoopJoopImage 적용)
+        JoopJoopImage(
+            // 테스트 1: 실제 이미지를 보고 싶다면 아래 주석 해제
+            model = "https://picsum.photos/200",
+
+            // 테스트 2: 에러/로딩 상황 테스트 (user?.profileImageUrl이 비어있을 때)
+//            model = user?.profileImageUrl,
+
+            contentDescription = "프로필 이미지",
             modifier = Modifier
                 .size(80.dp)
                 .background(BgDark, CircleShape)
                 .border(2.dp, OrangePrimary, CircleShape)
+                .clip(CircleShape) // 이미지를 동그랗게 깎음
         )
+
 
         Spacer(modifier = Modifier.width(16.dp))
 

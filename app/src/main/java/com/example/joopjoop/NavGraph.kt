@@ -4,21 +4,44 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.example.joopjoop.feature.auth.ui.intro.IntroScreen
+import com.example.joopjoop.feature.auth.ui.login.LoginRoute
+import com.example.joopjoop.feature.auth.ui.signup.SignupRoute
+import com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory
+import com.example.joopjoop.feature.auth.viewmodel.LoginViewModel
+import com.example.joopjoop.feature.auth.viewmodel.SignupViewModel
+import com.example.joopjoop.feature.auth.viewmodel.SignupViewModelFactory
+import com.example.joopjoop.feature.map.ui.MapScreen
+import com.example.joopjoop.feature.map.viewmodel.MapViewModel
 import com.example.joopjoop.feature.mypage.ui.main.MyPageScreen
 import com.example.joopjoop.feature.mypage.ui.post.MyPostListContent
 import com.example.joopjoop.feature.mypage.ui.scrap.MyScrapListContent
 import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModel
+import com.example.joopjoop.feature.note.ui.detail.NoteDetailScreen
+import com.example.joopjoop.feature.note.ui.list.NoteListScreen
+import com.example.joopjoop.feature.note.ui.write.WriteNoteScreen
+import com.example.joopjoop.feature.note.viewmodel.NoteDetailViewModel
+import com.example.joopjoop.feature.note.viewmodel.NoteListViewModel
+import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
+import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
+import com.example.joopjoop.feature.setting.ui.SettingRoute
 
 // Routes 정의
 object Routes {
@@ -36,7 +59,7 @@ object Routes {
     // 3. 서브/상세 화면 (Sub Graph - BottomNav 없음)
     const val WRITE = "write"           // 새로운 쪽지 작성 화면
     const val NOTE_LIST = "noteList"    // 주변 쪽지들을 리스트로 보는 화면
-    const val NOTE_DETAIL = "noteDetail" // 특정 쪽지의 상세 내용을 보는 화면
+    const val NOTE_DETAIL = "noteDetail/{noteId}" // 특정 쪽지의 상세 내용을 보는 화면
     const val SETTINGS = "settings"      // 알림 설정, 계정 관리 등 설정 화면
 }
 
@@ -49,18 +72,79 @@ object Routes {
 fun RootNavHost() {
     val rootNavController = rememberNavController()
 
+    // 공통 재료 가져오기
+    val context = LocalContext.current
+    val appContainer = (context.applicationContext as JoopJoopApplication).container
+
+    // MainViewModel을 통해 로그인 상태 구독
+    val mainViewModel: MainViewModel = viewModel(
+        factory = appContainer.mainViewModelFactory
+    )
+    val isLoggedIn by mainViewModel.isLoggedIn.collectAsState()
+
+    // 로그인 상태 확인 전까지는 아무것도 그리지 않음 (혹은 빈 화면)
+    // isLoggedIn이 null이면 아직 Firebase나 캐시에서 정보를 가져오는 중입니다.
+    if (isLoggedIn == null) return
+
     NavHost(
         navController = rootNavController,
-        // [개발 단계 전용] 구글 로그인 연동 전까지는 바로 메인으로 진입.
-        startDestination = Routes.MAIN
+        // 로그인 여부에 따라 시작점 결정
+        startDestination = if (isLoggedIn == true) Routes.MAIN else Routes.AUTH
     ) {
-
         // 1. 인증 그래프 (Auth Graph)
         // Intro, Login, Signup 등을 포함하며 로그인 완료 시 스택에서 제거됩니다.
         navigation(startDestination = Routes.INTRO, route = Routes.AUTH) {
-            composable(Routes.INTRO) { PlaceholderScreen("인트로 화면") }
-            composable(Routes.LOGIN) { PlaceholderScreen("로그인 화면") }
-            composable(Routes.SIGNUP) { PlaceholderScreen("회원가입 화면") }
+            composable(Routes.INTRO) {
+                // 인트로 화면 (필요 시 뷰모델 주입)
+                IntroScreen(
+                    onLoginClick = { rootNavController.navigate(Routes.LOGIN) },
+                    onSignupClick = { rootNavController.navigate(Routes.SIGNUP) }
+                )
+            }
+
+            composable(Routes.LOGIN) {
+                val notificationViewModel: NotificationViewModel = viewModel()
+
+                val loginViewModel: LoginViewModel = viewModel(
+                    // notification 기능을 추가하면서 LoginViewModel 생성 시 NotificationViewModel 사용이 필요한 로직이라서 주석처리함
+//                    factory = appContainer.authViewModelFactory
+                    factory = AuthViewModelFactory(
+                        authRepository = appContainer.authRepository,
+                        notificationViewModel = notificationViewModel
+                    )
+                )
+
+                LoginRoute(
+                    viewModel = loginViewModel,
+                    notificationViewModel = notificationViewModel,  // 권한 요청 및 알림 시작 로직을 위해 직접 전달
+                    onLoginSuccess = {
+                        rootNavController.navigate(Routes.MAIN) {
+                            popUpTo(Routes.AUTH) { inclusive = true }
+                        }
+                    },
+                    onBackClick = { rootNavController.popBackStack() },
+                    onCreateAccountClick = { rootNavController.navigate(Routes.SIGNUP) }
+                )
+            }
+
+            composable(Routes.SIGNUP) {
+                // 마찬가지로 상단의 appContainer를 사용합니다.
+                val signupViewModel: SignupViewModel = viewModel(
+                    factory = SignupViewModelFactory(
+                        authRepository = appContainer.authRepository
+                    )
+                )
+
+                SignupRoute(
+                    viewModel = signupViewModel,
+                    onSignupSuccess = {
+                        rootNavController.popBackStack()
+                    },
+                    onBackClick = {
+                        rootNavController.popBackStack()
+                    }
+                )
+            }
         }
 
         // 2. 메인 그래프 (Main Graph)
@@ -72,24 +156,65 @@ fun RootNavHost() {
         // 3. 서브 그래프 (Sub Graph / 상세 화면)
         // 바텀바가 보이지 않아야 하는 독립적인 상세 페이지
 
-        // [연결 완료] 팀원이 작성한 주변 쪽지 목록 화면
         composable(Routes.NOTE_LIST) {
-            // Placeholder를 지우고 실제 파일(NoteListScreen.kt)을 연결.
-            PlaceholderScreen("주변 쪽지 목록 화면")
+            val viewModel: NoteListViewModel = viewModel(
+                factory = appContainer.noteViewModelFactory
+            )
+            NoteListScreen(
+                navController = rootNavController,
+                viewModel = viewModel
+            )
         }
 
         composable(Routes.WRITE) {
-            PlaceholderScreen("쪽지 작성 화면")
+            // AppContainer 내부에서 이미 FusedLocationClient를 주입한 팩토리를 가져옵니다.
+            val viewModel: WriteNoteViewModel = viewModel(
+                factory = appContainer.noteViewModelFactory
+            )
+
+            WriteNoteScreen(
+                navController = rootNavController,
+                viewModel = viewModel
+            )
         }
 
-        composable("${Routes.NOTE_DETAIL}/{noteId}") { backStackEntry ->
-            val noteId = backStackEntry.arguments?.getString("noteId")
-            PlaceholderScreen("쪽지 상세 (전달받은 ID: $noteId)")
+        composable(
+            route = Routes.NOTE_DETAIL,
+            arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
+            val viewModel: NoteDetailViewModel = viewModel(
+                factory = appContainer.noteViewModelFactory
+            )
+
+            // 화면이 처음 뜰 때 데이터를 로드하도록 설정
+            LaunchedEffect(noteId) {
+                viewModel.loadNoteDetail(noteId)
+            }
+
+            NoteDetailScreen(
+                navController = rootNavController,
+                noteId = noteId,
+                viewModel = viewModel
+            )
         }
 
-        // [추가] 설정 화면 주소 등록
+        // 설정 화면 주소 등록
         composable(Routes.SETTINGS) {
-            PlaceholderScreen("설정 화면")
+            // SettingRoute를 호출하여 의존성(Repository, ViewModel)을 주입합니다.
+            SettingRoute(
+                authRepository = appContainer.authRepository,
+                notificationViewModel = viewModel(), // 필요 시 appContainer에서 가져올 수도 있음.
+                onNavigateToLogin = {
+                    // 로그아웃 성공 시 AUTH 화면으로 이동하며 스택 정리
+                    rootNavController.navigate(Routes.AUTH) {
+                        popUpTo(Routes.MAIN) { inclusive = true }
+                    }
+                },
+                onBackClick = {
+                    rootNavController.popBackStack()
+                }
+            )
         }
     }
 }
@@ -104,35 +229,55 @@ fun MainNavHost(
     rootNavController: NavController,
     modifier: Modifier = Modifier
 ) {
+    // Context와 AppContainer를 미리 가져옵니다.
+    val context = LocalContext.current
+    val appContainer = (context.applicationContext as JoopJoopApplication).container
+
     NavHost(
         navController = mainNavController,
         startDestination = Routes.MAP,
         modifier = modifier
     ) {
         composable(Routes.MAP) {
-            PlaceholderScreen("지도 화면")
+            // 팩토리를 사용하여 MapViewModel 생성
+            val mapViewModel: MapViewModel = viewModel(
+                factory = appContainer.mapViewModelFactory
+            )
+
+            // 실제 제작한 MapScreen으로 교체
+            MapScreen(
+                viewModel = mapViewModel,
+                onNavigateToNoteList = {
+                    // 쪽지 리스트 화면
+                    rootNavController.navigate(Routes.NOTE_LIST)
+                },
+                onNavigateToNoteDetail = { noteId ->
+                    // 쪽지 상세 화면으로 이동 (Routes.NOTE_DETAIL 형태에 맞춰 argument 전달)
+                    rootNavController.navigate("noteDetail/$noteId")
+                }
+            )
         }
+
         // [수정] 마이페이지 경로에 실제 뷰모델과 화면을 연결
         composable(Routes.MYPAGE) {
-            // Context를 통해 Application에 접근하여 AppContainer를 가져옴.
-            val context = LocalContext.current
-            val appContainer = (context.applicationContext as JoopJoopApplication).container
-
-            // 창고의 팩토리를 사용하여 뷰모델을 생성.
-            // (이미 MyPageRepositoryImpl이 주입된 상태)
-            val myPageViewModel: MyPageViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+            val myPageViewModel: MyPageViewModel = viewModel(
                 factory = appContainer.myPageViewModelFactory
             )
 
             // 실제 마이페이지 화면으로 교체
             MyPageScreen(
                 viewModel = myPageViewModel,
+                // 설정화면 진입 버튼 연결
+                onSettingClick = {
+                    rootNavController.navigate(Routes.SETTINGS)
+                },
                 // [F-MY-02] 내가 쓴 쪽지 리스트 부품 주입
                 postContent = {
                     MyPostListContent(
                         viewModel = myPageViewModel,
                         onNoteClick = { noteId ->
-                            mainNavController.navigate("note_detail/$noteId")
+                            // 상세 화면은 BottomNav가 없는 RootNavHost 영역이므로 rootNavController 사용
+                            rootNavController.navigate("noteDetail/$noteId")
                         }
                     )
                 },
@@ -140,7 +285,7 @@ fun MainNavHost(
                     MyScrapListContent(
                         viewModel = myPageViewModel,
                         onNoteClick = { noteId ->
-                            mainNavController.navigate("note_detail/$noteId")
+                            rootNavController.navigate("noteDetail/$noteId")
                         }
                     )
                 }

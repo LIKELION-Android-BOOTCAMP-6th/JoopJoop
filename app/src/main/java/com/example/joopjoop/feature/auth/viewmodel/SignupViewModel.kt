@@ -49,16 +49,18 @@ class SignupViewModel(
     fun togglePasswordVisibility() {
         _uiState.update { it.copy(passwordVisible = !it.passwordVisible) }
     }
+
     fun consumeErrorEvent() {
         _uiState.update { it.copy(errorMessage = null) }
     }
+
     // 닉네임 체크
-    fun checkNickname(){
+    fun checkNickname() {
         val nickname = _uiState.value.nickname
 
         // 비어있지 않은지 (공백)
-        if (nickname.isBlank()){
-            _uiState.update { it.copy(nicknameHelperMessage = "닉네임을 입력해주세요")}
+        if (nickname.isBlank()) {
+            _uiState.update { it.copy(nicknameHelperMessage = "닉네임을 입력해주세요") }
             return
         }
 
@@ -69,7 +71,7 @@ class SignupViewModel(
             _uiState.update {
                 it.copy(
                     isNicknameAvailable = isAvailable,
-                    nicknameHelperMessage = if(isAvailable) "사용 가능한 닉네임입니다." else "이미 사용 중인 닉네임입니다."
+                    nicknameHelperMessage = if (isAvailable) "사용 가능한 닉네임입니다." else "이미 사용 중인 닉네임입니다."
                 )
             }
             // 중복 결과가 나왔으므로 버튼 활성화 여부 다시 계산
@@ -91,6 +93,7 @@ class SignupViewModel(
             )
         }
     }
+
     // 계정만들기
     fun signUp() {
         val state = _uiState.value
@@ -111,8 +114,14 @@ class SignupViewModel(
                 is com.example.joopjoop.feature.auth.data.model.AuthResult.Success -> {
                     // 성공 시
                     Log.d("SignUp", "회원가입 성공, 가입된 유저 : ${result.data.nickname}")
-                    _uiState.update { it.copy(errorMessage = "회원가입에 성공했습니다!") }
+                    _uiState.update {
+                        it.copy(
+                            isSignupSuccess = true,
+                            errorMessage = "회원가입에 성공했습니다!"
+                        )
+                    }
                 }
+
                 is com.example.joopjoop.feature.auth.data.model.AuthResult.Failure -> {
                     // 실패 시
                     Log.e("SignUp", "실패: ${result.exception.message}")
@@ -136,6 +145,7 @@ class SignupViewModel(
                         it.copy(errorMessage = friendlyMessage)
                     }
                 }
+
                 is com.example.joopjoop.feature.auth.data.model.AuthResult.Loading -> {
                     // 필요시 로딩 상태 UI 반영할 것
                 }

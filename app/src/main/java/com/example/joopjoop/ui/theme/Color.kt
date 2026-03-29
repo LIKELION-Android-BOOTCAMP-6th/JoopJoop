@@ -16,7 +16,7 @@ val BgElevated       = Color(0xFF4A3520)  // 선택된 상태, 구분선
 // ── Text ─────────────────────────────────
 val TextPrimary      = Color(0xFFFFFFFF)  // 제목, 주요 텍스트
 val TextSecondary    = Color(0xFFC8B49A)  // 부제목, 설명 텍스트
-val TextTertiary     = Color(0xFF7A6552)  // 힌트, 비활성, 날짜
+val TextTertiary     = Color(0xFF5D6B7E)  // 힌트, 비활성, 날짜
 
 // ── Divider ──────────────────────────────
 val DividerColor     = Color(0xFF2A2A2A)  // 구분선 (Divider는 기본 컴포넌트 이름과 겹칠 수 있어 Color 접미사 추가)

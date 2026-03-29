@@ -1,6 +1,5 @@
 package com.example.joopjoop.feature.note.ui.detail
 
-import android.R.attr.contentDescription
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -27,27 +25,23 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.joopjoop.R
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.graphics.Brush
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import com.example.joopjoop.R
+import com.example.joopjoop.core.common.util.showToast
 import com.example.joopjoop.feature.note.viewmodel.NoteDetailViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
@@ -62,14 +56,30 @@ import com.example.joopjoop.ui.theme.TextTertiary
 fun NoteDetailScreen(
     navController: NavController,
     noteId: String = "1", // 나중에 NavArgs에서 받아올 ID
-    viewModel: NoteDetailViewModel = viewModel()
-){
+    viewModel: NoteDetailViewModel // NavGraph에서 뷰모델 주입
+) {
+//    val viewModel: NoteDetailViewModel = viewModel()
+//    val viewModel: NoteDetailViewModel = viewModel(factory = factory)
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // 화면 진입 시 데이터 불러오기
     LaunchedEffect(noteId) {
         viewModel.loadNoteDetail(noteId)
     }
+
+    // 에러 메시지 감시 및 토스트 출력
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            context.showToast(message) // 공통 유틸리티 호출!
+
+            // 데이터가 없으면 상세 화면에 있을 이유가 없으므로 이전 화면으로 이동
+            if (message == "쪽지를 찾을 수 없습니다.") {
+                navController.popBackStack()
+            }
+        }
+    }
+
     JoopJoopTheme {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -77,9 +87,11 @@ fun NoteDetailScreen(
             topBar = {
                 DetailTopBar(navController)
             },
-            bottomBar = {
-                DetailBottomBar(navController)
-            }) { innerPadding ->
+            // 바텀네비게이션바 삭제
+//            bottomBar = {
+//                DetailBottomBar(navController)
+//            }
+        ) { innerPadding ->
             NoteDetail(
                 uiState = uiState,
                 modifier = Modifier.padding(innerPadding),
@@ -98,7 +110,7 @@ fun NoteDetail(
     uiState: NoteDetailUiState = NoteDetailUiState(),
     onLikeClick: () -> Unit = {}, // 좋아요 클릭
     onBookmarkClick: () -> Unit = {} // 스크랩 클릭
-){
+) {
 
     val scrollState = rememberScrollState()
 
@@ -129,7 +141,8 @@ fun NoteDetail(
             //이름
             Spacer(modifier = Modifier.width(12.dp))
             Column(
-                verticalArrangement = Arrangement.spacedBy(1.dp))
+                verticalArrangement = Arrangement.spacedBy(1.dp)
+            )
             {
 
                 Text(
@@ -275,112 +288,120 @@ fun DetailActionButton(
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(painterResource(id = icon),
+            Icon(
+                painterResource(id = icon),
                 contentDescription = null,
                 tint = if (isActive) OrangePrimary else TextPrimary,
-                modifier = Modifier.size(18.dp))
+                modifier = Modifier.size(18.dp)
+            )
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Text(text = label,
+            Text(
+                text = label,
                 color = if (isActive) OrangePrimary else TextPrimary,
-                fontSize = 14.sp)
+                fontSize = 14.sp
+            )
         }
     }
 }
 
+// 임시로 사용하던 네비게이션 바 (추후 삭제 해도 됨)
 
-// 화면 하단 네비게이션 바
-@Composable
-fun DetailBottomBar(navController: NavController) {
-
-    var selectedTab by remember { mutableStateOf("MAP") }
-
-    val selectedColor = OrangePrimary
-    val unselectedColor = TextTertiary
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(BgDarkest)
-            .navigationBarsPadding()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            // MAP 탭
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { selectedTab = "MAP" },
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_map_24),
-                    contentDescription = null,
-                    tint = if (selectedTab == "MAP") selectedColor else unselectedColor,
-                )
-                Text(
-                    text = "MAP",
-                    color = if (selectedTab == "MAP") selectedColor else unselectedColor,
-                    fontSize = 8.sp,
-                    textAlign = TextAlign.Center
-                )}
-
-            // WRITE 탭
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { selectedTab = "WRITE"
-                        navController.navigate("writeNote")},
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.outline_edit_square_24),
-                    contentDescription = null,
-                    tint = if (selectedTab == "WRITE") selectedColor else unselectedColor,
-
-                    )
-                Text(
-                    text = "WRITE",
-                    color = if (selectedTab == "WRITE") selectedColor else unselectedColor,
-                    fontSize = 8.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            // MY PAGE 탭
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable{ selectedTab = "MY PAGE"},
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.baseline_person_24),
-                    contentDescription = null,
-                    tint = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
-                )
-                Text(
-                    text = "MY PAGE",
-                    color = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
-                    fontSize = 8.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-        }
-    }
-}
+//// 화면 하단 네비게이션 바
+//@Composable
+//fun DetailBottomBar(navController: NavController) {
+//
+//    var selectedTab by remember { mutableStateOf("MAP") }
+//
+//    val selectedColor = OrangePrimary
+//    val unselectedColor = TextTertiary
+//
+//    Box(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .background(BgDarkest)
+//            .navigationBarsPadding()
+//    ) {
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(vertical = 8.dp),
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.SpaceEvenly
+//        ) {
+//            // MAP 탭
+//            Column(
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .clickable { selectedTab = "MAP" },
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.baseline_map_24),
+//                    contentDescription = null,
+//                    tint = if (selectedTab == "MAP") selectedColor else unselectedColor,
+//                )
+//                Text(
+//                    text = "MAP",
+//                    color = if (selectedTab == "MAP") selectedColor else unselectedColor,
+//                    fontSize = 8.sp,
+//                    textAlign = TextAlign.Center
+//                )
+//            }
+//
+//            // WRITE 탭
+//            Column(
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .clickable {
+//                        selectedTab = "WRITE"
+//                        navController.navigate("writeNote")
+//                    },
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.outline_edit_square_24),
+//                    contentDescription = null,
+//                    tint = if (selectedTab == "WRITE") selectedColor else unselectedColor,
+//
+//                    )
+//                Text(
+//                    text = "WRITE",
+//                    color = if (selectedTab == "WRITE") selectedColor else unselectedColor,
+//                    fontSize = 8.sp,
+//                    textAlign = TextAlign.Center
+//                )
+//            }
+//
+//            // MY PAGE 탭
+//            Column(
+//                modifier = Modifier
+//                    .weight(1f)
+//                    .clickable { selectedTab = "MY PAGE" },
+//                horizontalAlignment = Alignment.CenterHorizontally,
+//            ) {
+//                Icon(
+//                    painter = painterResource(id = R.drawable.baseline_person_24),
+//                    contentDescription = null,
+//                    tint = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
+//                )
+//                Text(
+//                    text = "MY PAGE",
+//                    color = if (selectedTab == "MY PAGE") selectedColor else unselectedColor,
+//                    fontSize = 8.sp,
+//                    textAlign = TextAlign.Center
+//                )
+//            }
+//
+//        }
+//    }
+//}
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview2() {
-    JoopJoopTheme {
-        NoteDetailScreen(navController = rememberNavController())
-    }
+//    JoopJoopTheme {
+//        NoteDetailScreen(navController = rememberNavController())
+//    }
 }

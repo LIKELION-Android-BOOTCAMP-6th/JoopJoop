@@ -1,7 +1,9 @@
 package com.example.joopjoop.feature.note.data.source
 
-import com.example.joopjoop.feature.note.data.model.NoteDTO
+import com.example.joopjoop.core.model.Note
+import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.feature.note.data.model.NoteRequest
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -21,32 +23,73 @@ class FirestoreNoteSource(
         return formatter.format(date)
     }
 
-    suspend fun getNotes(): List<NoteDTO> {
+
+    // 현재 이 함수는 모든 쪽지를 쿼리
+    suspend fun getNotes(): List<Note> {
         val snapshot = db.collection(collectionPath).get().await()
         return snapshot.documents.mapNotNull { doc ->
+            val lat = doc.getDouble("latitude") ?: 0.0
+            val lng = doc.getDouble("longitude") ?: 0.0
             val timestamp = doc.getTimestamp("createdAt")
-            NoteDTO(
-                id = doc.id,
-                authorName = doc.getString("authorName") ?: "",
-                createdAt = formatDate(timestamp?.toDate()),
-                content = doc.getString("content") ?: "",
-                distance = "0m"
+            Note(
+                noteId = doc.id,
+                userNickname = doc.getString("authorName") ?: "",
+                createdAt = timestamp?.toDate() ?: Date(),
+                contentText = doc.getString("content") ?: "",
+                location = NoteLocation(
+                    latitude = lat,
+                    longitude = lng
+                )
             )
         }
     }
 
-    suspend fun getNoteDetail(noteId: String): NoteDTO {
+
+    // 위치를 기반으로 쿼리
+    suspend fun getNotesByLocation(centerGeohash: String): List<Note> {
+        // 5자리 Geohash 접두사로 시작하는 문서들만 쿼리
+        val snapshot = db.collection(collectionPath)
+            .orderBy("geohash")
+            .startAt(centerGeohash)
+            .endAt(centerGeohash + "\uf8ff")
+            .get()
+            .await()
+
+        return snapshot.documents.mapNotNull { doc ->
+            val timestamp = doc.getTimestamp("createdAt")
+            Note(
+                noteId = doc.id,
+                userNickname = doc.getString("authorName") ?: "익명",
+                contentText = doc.getString("content") ?: "",
+                category = doc.getString("category") ?: "일상",
+                imageUrl = doc.getString("imageUri"),
+                location = NoteLocation(
+                    geohash = doc.getString("geohash") ?: "",
+                    latitude = doc.getDouble("latitude") ?: 0.0,
+                    longitude = doc.getDouble("longitude") ?: 0.0,
+                    address = doc.getString("location") ?: "" // DB의 'location' 필드가 주소 문자열임
+                ),
+                createdAt = timestamp?.toDate() ?: Date()
+            )
+        }
+    }
+
+    suspend fun getNoteDetail(noteId: String): Note {
         val doc = db.collection(collectionPath).document(noteId).get().await()
         val timestamp = doc.getTimestamp("createdAt")
-        return NoteDTO(
-            id = doc.id,
-            authorName = doc.getString("authorName") ?: "익명 사용자",
-            createdAt = formatDate(timestamp?.toDate()),
+        return Note(
+            noteId = doc.id,
+            userNickname = doc.getString("authorName") ?: "익명 사용자",
+            createdAt = timestamp?.toDate() ?: Date(),
             viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
             likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
-            content = doc.getString("content") ?: "내용 없음",
-            location = doc.getString("location") ?: "위치 정보 없음",
-            distance = "0m"
+            contentText = doc.getString("content") ?: "내용 없음",
+            location = NoteLocation(
+                geohash = doc.getString("geohash") ?: "",
+                latitude = doc.getDouble("latitude") ?: 0.0,
+                longitude = doc.getDouble("longitude") ?: 0.0,
+                address = doc.getString("location") ?: "위치 정보 없음"
+            )
         )
     }
 
@@ -64,9 +107,9 @@ class FirestoreNoteSource(
             "category" to request.category,
             "storageHours" to request.storageHours,
             "imageUri" to request.imageUri,
-            "createdAt" to com.google.firebase.Timestamp.now(),
-            "latitude" to 0.0,
-            "longitude" to 0.0
+            "createdAt" to Timestamp.now(),
+            "latitude" to request.latitude,
+            "longitude" to request.longitude
         )
 
 
