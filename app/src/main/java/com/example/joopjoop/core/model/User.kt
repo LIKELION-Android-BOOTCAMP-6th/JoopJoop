@@ -3,7 +3,7 @@ package com.example.joopjoop.core.model
 import java.util.Date
 
 data class User(
-    val userId: String = "",
+    val uid: String = "",
     val email: String = "",
     val nickname: String = "",
     val profileImageUrl: String = "",
