@@ -55,7 +55,7 @@ class AppContainer(context: Context) {
     // ViewModel Factory
     // 여기서 팩토리까지 관리하면 NavGraph 코드가 더 짧아짐
     val myPageViewModelFactory: MyPageViewModelFactory by lazy {
-        MyPageViewModelFactory(myPageRepository)
+        MyPageViewModelFactory(myPageRepository, authRepository)
     }
 
     // Map 화면을 위한 팩토리

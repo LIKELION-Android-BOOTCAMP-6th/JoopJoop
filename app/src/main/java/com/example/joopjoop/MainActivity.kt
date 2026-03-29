@@ -20,10 +20,12 @@ class MainActivity : ComponentActivity() {
                 RootNavHost()
             }
         }
+    }
 
-        // 쪽지(note) 목록, 쪽지 상세, 쪽지 작성 환경만 테스트 하기 위한 코드
-        // 추후에 화면 연결 완료시 삭제 필요
-        // 해당 코드 사용하고 싶으면 상단 appContainer 변수 주석 해제 후 필요한 파일 import 하면됨
+
+    // 쪽지(note) 목록, 쪽지 상세, 쪽지 작성 환경만 테스트 하기 위한 코드
+    // 추후에 화면 연결 완료시 삭제 필요
+    // 해당 코드 사용하고 싶으면 상단 appContainer 변수 주석 해제 후 필요한 파일 import 하면됨
 //        setContent {
 //            val navController = rememberNavController()
 //            NavHost(navController = navController, startDestination = "noteList") {
@@ -90,5 +92,4 @@ class MainActivity : ComponentActivity() {
 //                }
 //            }
 //        }
-    }
 }

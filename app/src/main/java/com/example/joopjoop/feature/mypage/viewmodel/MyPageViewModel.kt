@@ -3,6 +3,7 @@ package com.example.joopjoop.feature.mypage.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.repository.MyPageRepository
+import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.mypage.ui.main.MyPageTab
 import com.example.joopjoop.feature.mypage.ui.main.MyPageUiState
 import com.example.joopjoop.feature.mypage.ui.post.MyPostUiState
@@ -14,7 +15,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MyPageViewModel(
-    private val myPageRepository: MyPageRepository
+    private val myPageRepository: MyPageRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     // 1. 메인 상태 (유저 정보, 탭 등)
@@ -30,12 +32,20 @@ class MyPageViewModel(
     val scrapUiState = _scrapUiState.asStateFlow()
 
     // 현재 세션의 유저 ID (실제로는 Auth에서 가져와야 함)
-    private var currentUserId: String = "test_user_id"
+    // 2. 현재 로그인된 실제 유저 ID 저장 변수
+    private var currentUserId: String = ""
 
     init {
-        // 초기 진입 시: 유저 프로필과 첫 번째 탭(POSTS) 데이터만 로드
-        loadUserProfile(currentUserId)
-        loadMyPosts(currentUserId)
+        // 3. 초기화 시점에 실제 UID를 가져옴
+        currentUserId = authRepository.getCurrentUid() ?: ""
+
+        if (currentUserId.isNotEmpty()) {
+            loadUserProfile(currentUserId)
+            loadMyPosts(currentUserId)
+        } else {
+            // 로그인 정보가 없을 경우의 처리 (예: 로그인 화면 이동 등)
+            android.util.Log.e("MyPageViewModel", "로그인된 유저 UID를 찾을 수 없습니다.")
+        }
     }
 
     // 1. 유저 프로필 로드
