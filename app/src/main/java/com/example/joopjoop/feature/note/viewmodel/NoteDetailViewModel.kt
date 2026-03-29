@@ -38,6 +38,7 @@ class NoteDetailViewModel(
                         it.copy(
                             authorName = noteData.userNickname,
                             createdAt = Util.formatDate(noteData.createdAt),
+                            createdAt = formatDate(noteData.createdAt),
                             viewCount = noteData.viewCount,
                             likeCount = noteData.likeCount,
                             content = noteData.contentText,

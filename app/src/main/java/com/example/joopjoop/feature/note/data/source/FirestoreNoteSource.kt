@@ -17,13 +17,6 @@ class FirestoreNoteSource(
 ) {
     private val collectionPath = "notes"
 
-    fun formatDate(date: Date?): String {
-        if (date == null) return ""
-        val formatter = SimpleDateFormat("M월 dd일", Locale.getDefault())
-        return formatter.format(date)
-    }
-
-
     // 현재 이 함수는 모든 쪽지를 쿼리
     suspend fun getNotes(): List<Note> {
         val snapshot = db.collection(collectionPath).get().await()
