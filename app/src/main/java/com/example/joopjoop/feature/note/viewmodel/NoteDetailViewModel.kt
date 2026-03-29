@@ -11,6 +11,7 @@ import com.example.joopjoop.feature.note.ui.detail.NoteDetailUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -38,8 +39,6 @@ class NoteDetailViewModel(
 
     // 특정 쪽지의 상세 데이터를 가져옴
     fun loadNoteDetail(noteId: String) {
-        val myId = authRepository.currentUser
-
         viewModelScope.launch {
             try {
                 // 로딩 시작
@@ -52,6 +51,16 @@ class NoteDetailViewModel(
                 val isBookmarked = currentUserId?.let { currentUserId ->
                     repository.isNoteBookmarked(noteId, currentUserId)
                 } ?: false
+
+                // 현재 로그인한 유저가 작성한 쪽지인지
+                val currentUser = authRepository.currentUser.first()
+                val myUid = currentUser?.uid
+
+                _uiState.update {
+                    it.copy(
+                        isAuthor = noteData?.userId == myUid.toString()
+                    )
+                }
 
                 if (noteData != null) {
                     // 데이터가 있을 때만 조회수를 증가
@@ -103,7 +112,7 @@ class NoteDetailViewModel(
 
     // 스크랩 버튼 클릭 처리
     fun toggleBookmark(noteId: String) {
-        val myId = currentUserId ?: return // 추후에 변경
+        val myId = currentUserId ?: return
 
         val isCurrentlyBookmarked = _uiState.value.isBookmarked
         val nextState = !isCurrentlyBookmarked
@@ -125,6 +134,24 @@ class NoteDetailViewModel(
                 _uiState.update { it.copy(isBookmarked = nextState) }
             } catch (e: Exception) {
                 Log.e("jay", "스크랩 작업 중 오류 발생: ${e.message}")
+            }
+        }
+    }
+
+    // 수정 버튼 클릭 처리
+    fun editNote(noteId: String) {
+        // todo :: 수정 로직 추가
+    }
+
+    // 삭제 버튼 클릭 처리
+    fun deleteNote(noteId: String, onSuccess: () -> Unit) {
+        val myId = currentUserId ?: return
+        viewModelScope.launch {
+            try {
+                repository.deleteNote(noteId)
+                onSuccess() // 삭제 성공 시 실행할 콜백 (화면 닫기 등)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "삭제에 실패했습니다.") }
             }
         }
     }

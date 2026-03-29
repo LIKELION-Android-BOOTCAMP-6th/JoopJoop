@@ -115,6 +115,17 @@ class FakeNoteRepository : NoteRepository {
             false
         }
     }
+
+    // 쪽지 수정
+    override suspend fun editNote(noteId: String, request: NoteRequest) {
+        // todo :: 수정 로직 추가
+    }
+
+    // 쪽지 삭제
+    override suspend fun deleteNote(noteId: String) {
+        val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+        db.collection("notes").document(noteId).delete().await()
+    }
 }
 
 
