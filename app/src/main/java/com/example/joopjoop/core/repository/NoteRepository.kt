@@ -33,4 +33,10 @@ interface NoteRepository {
 
     // 쪽지 스크랩 조회
     suspend fun isNoteBookmarked(noteId: String, userId: String): Boolean
+
+    // 쪽지 수정
+    suspend fun editNote(noteId: String, request: NoteRequest)
+
+    // 쪽지 삭제
+    suspend fun deleteNote(noteId: String)
 }

@@ -21,12 +21,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -94,10 +99,10 @@ fun NoteDetailScreen(
         ) { innerPadding ->
             NoteDetail(
                 uiState = uiState,
+                navController = navController,
                 modifier = Modifier.padding(innerPadding),
-                // 버튼 클릭 이벤트 ViewModel로 연결
-                onLikeClick = { viewModel.toggleLike(noteId) },
-                onBookmarkClick = { viewModel.toggleBookmark(noteId) }
+                viewModel = viewModel,
+                noteId = noteId
             )
         }
     }
@@ -107,12 +112,13 @@ fun NoteDetailScreen(
 @Composable
 fun NoteDetail(
     modifier: Modifier = Modifier,
+    navController: NavController,
     uiState: NoteDetailUiState = NoteDetailUiState(),
-    onLikeClick: () -> Unit = {}, // 좋아요 클릭
-    onBookmarkClick: () -> Unit = {} // 스크랩 클릭
+    viewModel: NoteDetailViewModel,
+    noteId: String = "1"
 ) {
-
     val scrollState = rememberScrollState()
+    var showDeleteDialog by remember { mutableStateOf(false) }  // 쪽지 삭제시 다이얼로그
 
     Column(
         modifier = modifier
@@ -217,11 +223,87 @@ fun NoteDetail(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 좋아요 & 스크랩 버튼
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        // 수정&삭제 / 좋아요&스크랩
+        NoteDetailBottomButton(
+            uiState = uiState,
+            onEdit = { viewModel.editNote(noteId) },
+            onDelete = { showDeleteDialog = true },
+            onLikeClick = { viewModel.toggleLike(noteId) },
+            onBookmarkClick = { viewModel.toggleBookmark(noteId) }
+        )
+    }
+
+    if (showDeleteDialog) {
+        DeleteNoteDialog(
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                viewModel.deleteNote(noteId) {
+                    showDeleteDialog = false
+                    navController.popBackStack()
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun DeleteNoteDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "쪽지 삭제", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        text = {
+            Text(
+                text = "정말 이 쪽지를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.",
+                color = TextSecondary,
+                fontSize = 15.sp
+            )
+        },
+        containerColor = BgDark,
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = "삭제", color = OrangePrimary)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = "취소", color = TextTertiary)
+            }
+        }
+    )
+}
+
+
+@Composable
+fun NoteDetailBottomButton(
+    uiState: NoteDetailUiState,
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {},
+    onLikeClick: () -> Unit = {},
+    onBookmarkClick: () -> Unit = {}
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        if (uiState.isAuthor) {
+            DetailActionButton(
+                icon = R.drawable.ic_edit,
+                label = "수정하기",
+                isActive = uiState.isLiked,
+                onClick = onEdit,
+                modifier = Modifier.weight(1f)
+            )
+            DetailActionButton(
+                icon = R.drawable.ic_delete,
+                label = "삭제하기",
+                isActive = uiState.isBookmarked,
+                onClick = onDelete,
+                modifier = Modifier.weight(1f)
+            )
+        } else {
             DetailActionButton(
                 icon = R.drawable.outline_thumb_up_24,
                 label = "좋아요",
@@ -277,7 +359,6 @@ fun DetailActionButton(
     isActive: Boolean = false,
     onClick: () -> Unit = {}
 ) {
-
     Box(
         modifier = modifier
             .height(48.dp)

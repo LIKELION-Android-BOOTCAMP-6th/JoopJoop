@@ -69,12 +69,22 @@ class NoteRepositoryImpl(
 
     // 스크랩 취소
     override suspend fun removeBookmark(noteId: String, userId: String) {
-        source.removeBookmark(noteId, userId)
+        source.cancelScrapNote(noteId, userId)
     }
 
+    // 스크랩 상태 조회
     override suspend fun isNoteBookmarked(noteId: String, userId: String): Boolean {
-        // 소스의 함수를 호출 (아래 2번에서 구현)
         return source.checkBookmarkExists(noteId, userId)
+    }
+
+    // 쪽지 수정
+    override suspend fun editNote(noteId: String, request: NoteRequest) {
+        // todo :: 쪽지 수정 로직 추가
+    }
+
+    // 쪽지 삭제
+    override suspend fun deleteNote(noteId: String) {
+        source.deleteNote(noteId)
     }
 }
 

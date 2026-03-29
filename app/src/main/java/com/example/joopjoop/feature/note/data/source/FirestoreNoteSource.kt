@@ -8,9 +8,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 
 class FirestoreNoteSource(
@@ -68,11 +66,13 @@ class FirestoreNoteSource(
         }
     }
 
+    // 쪽지 상세 데이터 조회
     suspend fun getNoteDetail(noteId: String): Note {
         val doc = db.collection(collectionPath).document(noteId).get().await()
         val timestamp = doc.getTimestamp("createdAt")
         return Note(
             noteId = doc.id,
+            userId = doc.getString("authorId") ?: "",
             userNickname = doc.getString("authorName") ?: "익명 사용자",
             createdAt = timestamp?.toDate() ?: Date(),
             viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
@@ -87,6 +87,7 @@ class FirestoreNoteSource(
         )
     }
 
+    // 쪽지 생성
     suspend fun createNote(request: NoteRequest): String {
         // 1. ID 자동 생성
         val documentRef = db.collection(collectionPath).document()
@@ -115,17 +116,20 @@ class FirestoreNoteSource(
         return generatedId // 생성된 ID 반환
     }
 
+    // 조회수 증가
     suspend fun incrementViewCount(noteId: String) {
         val docRef = db.collection(collectionPath).document(noteId)
         docRef.update("viewCount", FieldValue.increment(1)).await()
     }
 
+    // 좋아요 증가
     suspend fun updateLikeCount(noteId: String, increment: Int) {
         val docRef = db.collection(collectionPath).document(noteId)
         // increment가 1이면 +1, -1이면 -1
         docRef.update("likeCount", FieldValue.increment(increment.toLong())).await()
     }
 
+    // 스크랩 하기
     suspend fun saveScrapNote(scrap: Scrap, userId: String) {
         db.collection("users")
             .document(userId)
@@ -135,7 +139,8 @@ class FirestoreNoteSource(
             .await()
     }
 
-    suspend fun removeBookmark(noteId: String, userId: String) {
+    // 스크랩 취소
+    suspend fun cancelScrapNote(noteId: String, userId: String) {
         db.collection("users")
             .document(userId)
             .collection("scraps")
@@ -144,6 +149,7 @@ class FirestoreNoteSource(
             .await()
     }
 
+    // 스크랩 조회
     suspend fun checkBookmarkExists(noteId: String, userId: String): Boolean {
         return try {
             val document = db.collection("users")
@@ -156,5 +162,16 @@ class FirestoreNoteSource(
         } catch (e: Exception) {
             false
         }
+    }
+
+    // 쪽지 수정
+    suspend fun editNote(noteId: String, request: NoteRequest) {
+        // todo :: 쪽지 수정 로직 추가
+    }
+
+
+    // 쪽지 삭제
+    suspend fun deleteNote(noteId: String) {
+        db.collection(collectionPath).document(noteId).delete().await()
     }
 }
