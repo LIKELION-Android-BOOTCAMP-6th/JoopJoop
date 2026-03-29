@@ -65,7 +65,7 @@ class AppContainer(context: Context) {
 
     // note (noteList, noteDetail, writeNote)
     val noteViewModelFactory: NoteViewModelFactory by lazy {
-        NoteViewModelFactory(noteRepository, locationProvider)
+        NoteViewModelFactory(noteRepository, locationProvider, authRepository)
     }
 
     // 저장용 유틸 등록

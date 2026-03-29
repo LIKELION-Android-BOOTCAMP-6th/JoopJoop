@@ -2,6 +2,7 @@ package com.example.joopjoop.feature.note.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.data.location.LocationProvider
 
@@ -9,7 +10,8 @@ import com.example.joopjoop.data.location.LocationProvider
 class NoteViewModelFactory(
     private val repository: NoteRepository,
 //    private val fusedLocationClient: FusedLocationProviderClient
-    private val locationProvider: LocationProvider // [변경] 공용 Provider 주입
+    private val locationProvider: LocationProvider, // [변경] 공용 Provider 주입
+    private val authRepository: AuthRepository
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -17,7 +19,7 @@ class NoteViewModelFactory(
         return when {
             // NoteDetailViewModel 생성 (위치 정보 미사용)
             modelClass.isAssignableFrom(NoteDetailViewModel::class.java) -> {
-                NoteDetailViewModel(repository) as T
+                NoteDetailViewModel(repository, authRepository) as T
             }
 
             // NoteListViewModel 생성 (내 위치 기준 거리 계산 및 줍기 판정)
