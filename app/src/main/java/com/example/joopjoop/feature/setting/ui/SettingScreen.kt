@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.setting.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +26,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +47,7 @@ import com.example.joopjoop.R
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
+import com.example.joopjoop.feature.setting.SettingEvent
 import com.example.joopjoop.feature.setting.SettingViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
@@ -52,7 +56,7 @@ import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextSecondary
 import com.example.joopjoop.ui.theme.TextTertiary
-
+import com.example.joopjoop.core.model.User
 @Composable
 fun SettingRoute(
     authRepository: AuthRepository,
@@ -60,32 +64,142 @@ fun SettingRoute(
     onNavigateToLogin: () -> Unit,
     onBackClick: () -> Unit
 ) {
+    val context = LocalContext.current
+
     val viewModel: SettingViewModel = viewModel(
         factory = AuthViewModelFactory(authRepository, notificationViewModel)
     )
-    // 로그아웃 성공 시 이벤트 처리
+
+    // 상태 수집
+    val currentUser by viewModel.currentUser.collectAsState()
+    val isNicknameAvailable by viewModel.isNicknameAvailable.collectAsState() // 중복 확인 상태
+
     LaunchedEffect(Unit) {
-        viewModel.logoutSuccess.collect {
-            onNavigateToLogin()
+        viewModel.settingEvent.collect { event ->
+            when (event) {
+                is SettingEvent.LogoutSuccess -> {
+                    onNavigateToLogin()
+                }
+                is SettingEvent.UpdateSuccess -> {
+                    // 💡 성공 토스트 알림
+                    Toast.makeText(context, "닉네임이 변경되었습니다.", Toast.LENGTH_SHORT).show()
+                }
+                is SettingEvent.Error -> {
+                    // 💡 에러 메시지 토스트 알림
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
-    // UI 레이아웃 호출
     SettingScreen(
+        user = currentUser,
+        isNicknameAvailable = isNicknameAvailable, // 💡 전달
+        onCheckNickname = { viewModel.checkNicknameAvailability(it) }, // 중복 확인 호출
+        onNicknameChanged = { viewModel.onNicknameChanged() }, // 타이핑 시 상태 리셋
+        onUpdateNickname = { viewModel.updateNickname(it) },
         onBackClick = onBackClick,
-        onProfileEditClick = { /* 프로필 수정 로직 */ },
-        onLogoutClick = { viewModel.logout() } // ViewModel의 로그아웃 함수 호출
+        onLogoutClick = { viewModel.logout() }
     )
 }
 
 @Composable
 fun SettingScreen(
+    user: User?,
+    isNicknameAvailable: Boolean?, // 💡 추가
+    onCheckNickname: (String) -> Unit, // 💡 추가
+    onNicknameChanged: () -> Unit, // 💡 추가
+    onUpdateNickname: (String) -> Unit,
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
     onProfileEditClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
     var isNotificationEnabled by remember { mutableStateOf(true) }
+    var showDialog by remember { mutableStateOf(false) }
+    var newNickname by remember { mutableStateOf(user?.nickname ?: "") }
+
+    // 닉네임 수정 팝업창
+    if (showDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = {
+                showDialog = false
+                onNicknameChanged()
+            },
+            title = { Text("닉네임 수정", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        androidx.compose.material3.TextField(
+                            value = newNickname,
+                            onValueChange = {
+                                newNickname = it
+                                onNicknameChanged() // 글자 바뀔 때마다 "확인" 다시 하게 리셋
+                            },
+                            placeholder = { Text("새 닉네임 입력") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            colors = androidx.compose.material3.TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor = OrangePrimary
+                            )
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        // 💡 중복 확인 버튼
+                        androidx.compose.material3.Button(
+                            onClick = { onCheckNickname(newNickname) },
+                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                containerColor = OrangePrimary
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("확인", fontSize = 12.sp)
+                        }
+                    }
+
+                    // 💡 중복 확인 결과 메시지
+                    val message = when (isNicknameAvailable) {
+                        true -> "사용 가능한 닉네임입니다."
+                        false -> "이미 존재하는 닉네임입니다."
+                        else -> ""
+                    }
+                    val messageColor = if (isNicknameAvailable == true) Color.Green else Color.Red
+
+                    if (message.isNotEmpty()) {
+                        Text(
+                            text = message,
+                            color = messageColor,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(top = 8.dp, start = 4.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Text(
+                    "변경",
+                    modifier = Modifier.clickable(enabled = isNicknameAvailable == true) {
+                        onUpdateNickname(newNickname)
+                        showDialog = false
+                    },
+                    color = if (isNicknameAvailable == true) OrangePrimary else Color.Gray,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            dismissButton = {
+                Text(
+                    "취소",
+                    modifier = Modifier.clickable { showDialog = false },
+                    color = TextSecondary
+                )
+            },
+            containerColor = BgDark
+        )
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -177,7 +291,7 @@ fun SettingScreen(
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "라이언 킴",
+                            text = user?.nickname ?: "사용자",
                             color = TextPrimary,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
@@ -185,13 +299,20 @@ fun SettingScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             painter = painterResource(id = R.drawable.ic_edit),
-                            contentDescription = null,
+                            contentDescription = "Edit Nickname",
                             tint = OrangePrimary,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clip(CircleShape) // 💡 클릭 영역을 둥글게 (시각적 피드백용)
+                                .clickable {
+                                    newNickname = user?.nickname ?: "" // 현재 이름 미리 채워두기
+                                    onNicknameChanged()              // 중복 확인 상태 초기화
+                                    showDialog = true                // 다이얼로그 띄우기!
+                                }
                         )
                     }
                     Text(
-                        text = "ryan.kim@example.com",
+                        text = user?.email ?: "이메일",
                         color = TextSecondary,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(top = 4.dp)
@@ -302,6 +423,15 @@ fun SettingActionRow(
 @Composable
 fun SettingScreenPreview() {
     JoopJoopTheme {
-        SettingScreen()
+        SettingScreen(
+            user = null,                // 테스트용 유저 데이터 (null 가능)
+            isNicknameAvailable = null, // 중복 확인 전 상태
+            onCheckNickname = {},       // 빈 함수
+            onNicknameChanged = {},     // 빈 함수
+            onUpdateNickname = {},      // 빈 함수
+            onBackClick = {},
+            onProfileEditClick = {},
+            onLogoutClick = {}
+        )
     }
 }

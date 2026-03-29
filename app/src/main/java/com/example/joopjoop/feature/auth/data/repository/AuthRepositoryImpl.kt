@@ -20,12 +20,14 @@ class AuthRepositoryImpl(
     externalScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : AuthRepository {
 
-    // 유저 정보 캐시 (StateFlow)
+    override fun getCurrentUid(): String? {
+        return authSource.getCurrentUserId() // 이미 존재하는 authSource의 기능을 활용합니다.
+    }
+
     private val _currentUser = MutableStateFlow<User?>(null)
     override val currentUser: Flow<User?> = _currentUser.asStateFlow()
 
     init {
-        // [자동 로그인] 앱 시작 시 로그인 상태 확인
         val savedUid = authSource.getCurrentUserId()
         if (savedUid != null) {
             externalScope.launch {

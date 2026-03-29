@@ -1,76 +1,53 @@
 package com.example.joopjoop.feature.mypage.data.repository
 
 import com.example.joopjoop.core.model.Note
-import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.User
 import com.example.joopjoop.core.repository.MyPageRepository
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
+import com.google.firebase.firestore.FieldPath
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 class MyPageRepositoryImpl(
-    private val userSource: FirestoreUserSource
+    private val userSource: FirestoreUserSource,
+    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) : MyPageRepository {
 
-    override suspend fun getUserProfile(userId: String): Result<User> {
-        // TODO: 실제로는 firestoreUserSource에서 가져와야 함
-        return Result.success(
-            User(
-                uid = userId,
-                nickname = "줍줍마스터",
-                profileImageUrl = "",
-                noteCount = 12
-            )
-        )
+    // F-MY-01: 내 프로필 정보 가져오기
+    override suspend fun getUserProfile(userId: String): Result<User> = runCatching {
+        userSource.getUser(userId) ?: throw Exception("존재하지 않는 사용자입니다.")
     }
 
-    override suspend fun getMyPosts(userId: String): Result<List<Note>> {
-        // 임시 리스트 리턴
-        val fakeNotes = listOf(
-            Note(noteId = "1", contentText = "오늘 날씨가 좋아서 쪽지 남겨요!", userNickname = "줍줍마스터"),
-            Note(noteId = "2", contentText = "여기 맛집 발견!", userNickname = "줍줍마스터")
-        )
-        return Result.success(fakeNotes)
+    // F-MY-02: 내가 쓴 쪽지 목록 가져오기
+    override suspend fun getMyPosts(userId: String): Result<List<Note>> = runCatching {
+        val snapshot = firestore.collection("notes")
+            .whereEqualTo("userId", userId)
+            .get()
+            .await()
+
+        snapshot.toObjects(Note::class.java)
     }
 
-    override suspend fun getMyScraps(userId: String): Result<List<Note>> {
-        // VO 구조에 맞춘 임시 데이터 리스트
-        val dummyScraps = listOf(
-            // 1. 이미지가 있는 쪽지 (이미지 예시 좌측 상단)
-            Note(
-                noteId = "s1",
-                userId = userId,
-                userNickname = "줍줍이_92",
-                contentText = "오늘은 날씨가 너무 좋아서 산책을 다녀왔다. 줍줍한 낙엽이 예쁘네.",
-                imageUrl = "https://lh3.googleusercontent.com/proxy/DNVIwWacFoW3Za-pUNm8BiFDjLDOUAaq6y3dVk0TVXZSvlRvLGAqznzidRc1c7d-TqVhTxP8-h2D14HNgDEwfWvD0td6hQK1okNte93oCTs", // 노을 사진 예시
-                location = NoteLocation(address = "서울시 성동구")
-            ),
-            // 2. 텍스트 위주의 메모 (이미지 예시 좌측 중앙)
-            Note(
-                noteId = "s2",
-                userId = userId,
-                userNickname = "줍줍이_92",
-                contentText = "\"작은 것들로부터 얻는 커다란 행복\"",
-                category = "MEMO", // 카테고리 활용
-                imageUrl = null
-            ),
-            // 3. 사진과 긴 텍스트가 섞인 쪽지 (이미지 예시 중앙 하단)
-            Note(
-                noteId = "s3",
-                userId = userId,
-                userNickname = "줍줍이_92",
-                contentText = "퇴근길에 본 하늘은 보라색이었다. 잊지 않으려고 기록한다.",
-                imageUrl = "https://cdn.eyesmag.com/content/uploads/posts/2025/01/22/shutterstock_2491179401-06f50759-c2c5-49cb-b10b-ba47ca6d2166.jpg"
-            ),
-            // 4. 짧은 텍스트 메모
-            Note(
-                noteId = "s4",
-                userId = userId,
-                userNickname = "줍줍이_92",
-                contentText = "플레이리스트 공유해용!",
-                category = "MUSIC",
-                imageUrl = null
-            )
-        )
+    // F-MY-03: 내가 스크랩한 쪽지 목록 가져오기
+    override suspend fun getMyScraps(userId: String): Result<List<Note>> = runCatching {
+        // 1. 유저 하위 컬렉션 'scraps'에서 모든 문서(스크랩 정보)를 가져옵니다.
+        val scrapSnapshot = firestore.collection("users")
+            .document(userId)
+            .collection("scraps")
+            .get()
+            .await()
 
-        return Result.success(dummyScraps)
+        // 2. Scrap 모델에서 noteId 리스트만 추출합니다.
+        val scrapIds = scrapSnapshot.documents.map { it.id } // 문서 ID가 곧 noteId인 경우
+
+        if (scrapIds.isEmpty()) return@runCatching emptyList<Note>()
+
+        // 3. 추출한 noteIds를 이용해 실제 'notes' 컬렉션에서 상세 정보를 가져옵니다.
+        val notesSnapshot = firestore.collection("notes")
+            .whereIn(FieldPath.documentId(), scrapIds)
+            .get()
+            .await()
+
+        notesSnapshot.toObjects(Note::class.java)
     }
 }

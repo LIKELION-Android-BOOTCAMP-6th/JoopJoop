@@ -3,6 +3,7 @@ package com.example.joopjoop.feature.auth.data.source
 import com.example.joopjoop.core.model.User
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import java.util.Date
 
 class FirestoreUserSource(
     db: FirebaseFirestore = FirebaseFirestore.getInstance()
@@ -28,7 +29,8 @@ class FirestoreUserSource(
             "uid" to uid, // 유저 UID
             "email" to email, // 유저 이메일
             "nickname" to nickname, // 유저 닉네임
-            "createAt" to System.currentTimeMillis() // 가입 시간 저장
+            "createdAt" to Date(), // Date 객체 주입 (Firestore Timestamp와 호환)
+            "lastCheckedAt" to Date(),
         )
 
         // Auth에서 받은 UID를 문서 ID로 사용하여 저장

@@ -22,6 +22,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -112,32 +113,30 @@ fun MyPageTopAppBar(onSettingClick: () -> Unit) {
 
 @Composable
 fun ProfileHeader(user: User?) {
+    LaunchedEffect(user) {
+        android.util.Log.d("UI_DATA", "현재 UI에 전달된 유저: $user")
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 프로필 이미지 영역 (JoopJoopImage 적용)
+        // [F-MY-01] 실제 사용자의 프로필 이미지를 불러옵니다.
         JoopJoopImage(
-            // 테스트 1: 실제 이미지를 보고 싶다면 아래 주석 해제
-            model = "https://picsum.photos/200",
-
-            // 테스트 2: 에러/로딩 상황 테스트 (user?.profileImageUrl이 비어있을 때)
-//            model = user?.profileImageUrl,
-
+            model = user?.profileImageUrl, // 하드코딩된 URL 삭제
             contentDescription = "프로필 이미지",
             modifier = Modifier
                 .size(80.dp)
                 .background(BgDark, CircleShape)
                 .border(2.dp, OrangePrimary, CircleShape)
-                .clip(CircleShape) // 이미지를 동그랗게 깎음
+                .clip(CircleShape)
         )
-
 
         Spacer(modifier = Modifier.width(16.dp))
 
         Column {
+            // [F-MY-01] 실제 닉네임과 게시물 수 표시
             Text(
                 text = user?.nickname ?: "사용자",
                 color = TextPrimary

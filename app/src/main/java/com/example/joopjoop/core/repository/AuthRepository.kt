@@ -8,6 +8,9 @@ import kotlinx.coroutines.flow.Flow
 // 인증 및 사용자 관리
 interface AuthRepository {
 
+    // 현재 로그인된 유저의 UID를 즉시 가져오기 위해 필요
+    fun getCurrentUid(): String?
+
     // 실시간 유저 상태 관찰 (캐시)
     val currentUser: Flow<User?>
 
