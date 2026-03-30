@@ -41,7 +41,7 @@ class FakeNoteRepository : NoteRepository {
         // 작성한 노트를 실제 리스트에 추가하여 다른 화면에서도 보이게 함
         val newNote = Note(
             noteId = newId,
-            userId = "me",
+            authorId = "me",
             userNickname = request.authorName ?: "나",
             userProfileImageUrl = "",
             contentText = request.content,

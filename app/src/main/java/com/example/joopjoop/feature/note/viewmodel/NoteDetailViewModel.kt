@@ -58,7 +58,7 @@ class NoteDetailViewModel(
 
                 _uiState.update {
                     it.copy(
-                        isAuthor = noteData?.userId == myUid.toString()
+                        isAuthor = noteData?.authorId == myUid.toString()
                     )
                 }
 

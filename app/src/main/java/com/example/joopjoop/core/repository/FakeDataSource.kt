@@ -36,7 +36,7 @@ object FakeDataSource {
 
         return Note(
             noteId = id,
-            userId = "user_mock",
+            authorId = "user_mock",
             userNickname = "줍줍이",
             userProfileImageUrl = "",
             contentText = "이것은 $id 번 쪽지입니다.",

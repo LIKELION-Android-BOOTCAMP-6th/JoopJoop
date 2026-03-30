@@ -72,7 +72,7 @@ class FirestoreNoteSource(
         val timestamp = doc.getTimestamp("createdAt")
         return Note(
             noteId = doc.id,
-            userId = doc.getString("authorId") ?: "",
+            authorId = doc.getString("authorId") ?: "",
             userNickname = doc.getString("authorName") ?: "익명 사용자",
             createdAt = timestamp?.toDate() ?: Date(),
             viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
@@ -94,18 +94,25 @@ class FirestoreNoteSource(
         val generatedId = documentRef.id
 
         // 2. 서버에 저장할 데이터 구성
+        val locationMap = hashMapOf(
+            "geohash" to (request.geohash ?: ""),
+            "latitude" to request.latitude,
+            "longitude" to request.longitude,
+            "address" to request.location, // 지역 동네 문자열
+            "distance" to ""
+        )
+        
         val noteData = hashMapOf(
             "id" to generatedId,
             "authorId" to request.authorId,
-            "authorName" to request.authorName,
-            "location" to request.location,
-            "content" to request.content,
+            "userNickname" to request.authorName,
+            "location" to locationMap,
+            "contentText" to request.content,
             "category" to request.category,
             "storageHours" to request.storageHours,
-            "imageUri" to request.imageUri,
+            "imageUrl" to request.imageUri,
             "createdAt" to Timestamp.now(),
-            "latitude" to request.latitude,
-            "longitude" to request.longitude,
+            "isActive" to true,
             "geohash" to request.geohash
         )
 
