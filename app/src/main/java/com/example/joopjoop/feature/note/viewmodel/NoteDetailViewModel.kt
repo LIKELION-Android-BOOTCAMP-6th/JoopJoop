@@ -8,7 +8,6 @@ import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.ui.detail.NoteDetailUiState
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,7 +47,6 @@ class NoteDetailViewModel(
             return
         }
         viewModelScope.launch {
-
             try {
                 // 로딩 시작
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -86,9 +84,9 @@ class NoteDetailViewModel(
                             createdAt = formatDate(noteData.createdAt),
                             viewCount = noteData.viewCount,
                             likeCount = maxOf(0, serverLikeCount),
-                            content = noteData.contentText,
-                            imageUri = noteData.imageUrl,
-                            location = noteData.location.address,
+                            contentText = noteData.contentText,
+                            imageUrl = noteData.imageUrl,
+                            address = noteData.location.address,
                             isLiked = isLiked,
                             isBookmarked = isBookmarked,
                             isLoading = false // 로딩 완료
@@ -157,8 +155,8 @@ class NoteDetailViewModel(
                     // 스크랩 하기
                     val newBookmark = Scrap(
                         noteId = noteId,
-                        contentText = _uiState.value.content,
-                        imageUrl = _uiState.value.imageUri
+                        contentText = _uiState.value.contentText,
+                        thumbnailUrl = _uiState.value.thumbnailUrl
                     )
                     repository.saveScrapNote(newBookmark, myId)
                 } else {

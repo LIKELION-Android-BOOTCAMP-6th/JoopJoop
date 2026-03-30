@@ -3,7 +3,6 @@ package com.example.joopjoop.core.repository
 import android.net.Uri
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.Scrap
-import com.example.joopjoop.feature.note.data.model.NoteRequest
 
 interface NoteRepository {
 
@@ -18,7 +17,7 @@ interface NoteRepository {
     suspend fun getNoteDetail(noteId: String): Note? // null을 허용하도록 수정
 
     // 쪽지 만들기
-    suspend fun createNote(request: NoteRequest): String
+    suspend fun createNote(request: Note): String
 
     // 조회수 증가
     suspend fun incrementViewCount(noteId: String)
@@ -30,11 +29,12 @@ interface NoteRepository {
     suspend fun addLike(noteId: String, userId: String)
 
     // 좋아요 취소
-   suspend fun removeLike(noteId: String, userId: String)
+    suspend fun removeLike(noteId: String, userId: String)
 
-   suspend fun checkLikeExists(noteId: String, userId: String): Boolean
+    // 좋아요 여부 조회
+    suspend fun checkLikeExists(noteId: String, userId: String): Boolean
 
-        // 스크랩 하기
+    // 스크랩 하기
     suspend fun saveScrapNote(scrap: Scrap, userId: String)
 
     // 스크랩 삭제
@@ -47,7 +47,7 @@ interface NoteRepository {
     suspend fun uploadImage(processedData: ByteArray, fileName: String): String?
 
     // 쪽지 수정
-    suspend fun editNote(noteId: String, request: NoteRequest)
+    suspend fun editNote(noteId: String, request: Note)
 
     // 쪽지 삭제
     suspend fun deleteNote(noteId: String)

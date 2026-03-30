@@ -11,10 +11,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.common.util.LocationUtil
+import com.example.joopjoop.core.model.Note
+import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.data.location.LocationProvider
-import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.ui.write.WriteNoteUiState
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.Date
 import java.util.Locale
 import kotlin.coroutines.resume
 
@@ -110,9 +112,11 @@ class WriteNoteViewModel(
         )
         _uiState.update { state ->
             state.copy(
-                latitude = location.latitude,
-                longitude = location.longitude,
-                geohash = hash
+                location = state.location.copy(
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    geohash = hash // NoteLocation에 geohash 필드가 있다고 가정합니다.
+                )
             )
         }
     }
@@ -255,28 +259,28 @@ class WriteNoteViewModel(
 
                 // Geohash 생성
                 val hash = LocationUtil.getGeohash(lat, lng)
-                Log.d("jay", "=====================hash: $hash")
-                Log.d(
-                    "jay",
-                    "=====================currentState.user.nickname: ${currentState.user.nickname}"
-                )
 
+                // 작성 현재 시간 및 노출 시간 계산한 실제 시간
                 val currentTime = System.currentTimeMillis()
                 val expiresTime = currentTime + (currentState.storageHours * 3600000L)
 
-                val request = NoteRequest(
-                    authorId = currentState.user.uid,
-                    authorName = currentState.user.nickname,
-                    content = currentState.noteContent,
-                    category = currentState.selectedCategory,
-                    storageHours = currentState.storageHours,
-                    imageUri = currentState.selectedImageUri,
+                val location = NoteLocation(
                     latitude = lat,
                     longitude = lng,
-                    createdAt = currentTime,
-                    expiresAt = expiresTime,
-                    geohash = hash,
-                    location = addressDisplay
+                    address = addressDisplay,
+                    geohash = hash
+                )
+
+                val request = Note(
+                    authorId = currentState.user.uid,
+                    userNickname = currentState.user.nickname,
+                    contentText = currentState.noteContent,
+                    category = currentState.selectedCategory,
+                    imageUrl = currentState.selectedImageUri,
+                    thumbnailUrl = currentState.selectedImageUri,
+                    createdAt = Date(currentTime),
+                    expiresAt = Date(expiresTime),
+                    location = location
                 )
 
                 val newId = repository.createNote(request)

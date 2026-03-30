@@ -1,12 +1,9 @@
 package com.example.joopjoop.feature.note.data.repository
 
-import android.net.Uri
-import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.core.repository.NoteRepository
-import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
@@ -57,20 +54,7 @@ class NoteRepositoryImpl(
     }
 
     // 쪽지 만들기
-    override suspend fun createNote(request: NoteRequest): String {
-        val noteData = hashMapOf(
-            "content" to request.content,
-            "category" to request.category,
-            "storageHours" to request.storageHours,
-            "imageUri" to request.imageUri,
-            "latitude" to request.latitude,
-            "longitude" to request.longitude,
-            "createdAt" to System.currentTimeMillis(),
-            "authorId" to request.authorId,
-            "authorName" to request.authorName,
-            "location" to request.location,
-            "geohash" to request.geohash
-        )
+    override suspend fun createNote(request: Note): String {
         return source.createNote(request)
     }
 
@@ -116,7 +100,7 @@ class NoteRepositoryImpl(
     }
 
     // 쪽지 수정
-    override suspend fun editNote(noteId: String, request: NoteRequest) {
+    override suspend fun editNote(noteId: String, request: Note) {
         // todo :: 쪽지 수정 로직 추가
     }
 

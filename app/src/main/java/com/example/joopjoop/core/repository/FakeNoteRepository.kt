@@ -5,13 +5,11 @@ import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
-import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
-import java.util.Date
 
 class FakeNoteRepository : NoteRepository {
     companion object {
@@ -53,7 +51,7 @@ class FakeNoteRepository : NoteRepository {
         }
     }
 
-    override suspend fun createNote(request: NoteRequest): String {
+    override suspend fun createNote(request: Note): String {
         delay(800)
         val newId = "user_note_${System.currentTimeMillis()}"
 
@@ -61,23 +59,26 @@ class FakeNoteRepository : NoteRepository {
         val newNote = Note(
             id = newId,
             authorId = "me",
-            userNickname = request.authorName ?: "나",
+            userNickname = request.userNickname,
             userProfileImageUrl = "",
-            contentText = request.content,
-            imageUrl = request.imageUri,
+            contentText = request.contentText,
+            imageUrl = request.imageUrl,
             category = request.category,
             viewCount = 0,
             likeCount = 0,
             location = NoteLocation(
-                geohash = LocationUtil.getGeohash(request.latitude, request.longitude),
-                latitude = request.latitude,
-                longitude = request.longitude,
-                address = request.location ?: "작성 위치",
-                distance = ""
+                geohash = LocationUtil.getGeohash(
+                    request.location.latitude,
+                    request.location.longitude
+                ),
+                latitude = request.location.latitude,
+                longitude = request.location.longitude,
+                address = request.location.address,
+                distance = request.location.distance
             ),
             isActive = true,
-            createdAt = Date(),
-            expiresAt = Date(System.currentTimeMillis() + (request.storageHours * 3600000L))
+            createdAt = request.createdAt,
+            expiresAt = request.expiresAt
         )
         // 리스트 맨 앞에 추가하여 최신순 유지
         _allFakeNotes.add(0, newNote)
@@ -178,7 +179,7 @@ class FakeNoteRepository : NoteRepository {
     }
 
     // 쪽지 수정
-    override suspend fun editNote(noteId: String, request: NoteRequest) {
+    override suspend fun editNote(noteId: String, request: Note) {
         // todo :: 수정 로직 추가
     }
 

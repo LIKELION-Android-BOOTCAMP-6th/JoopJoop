@@ -1,6 +1,5 @@
 package com.example.joopjoop.feature.note.ui.detail
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -188,7 +187,7 @@ fun NoteDetail(
                 )
                 // 위치
                 Text(
-                    text = uiState.location,
+                    text = uiState.address,
                     color = TextSecondary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
@@ -197,7 +196,7 @@ fun NoteDetail(
 
             }
         }
-        val isImageAdded = uiState.imageUri != null
+        val isImageAdded = uiState.imageUrl != null
         val blurRadius = if (isImageAdded) 0.dp else 16.dp
         // 메인 이미지 카드
         Column(
@@ -214,10 +213,10 @@ fun NoteDetail(
                     .clip(RoundedCornerShape(12.dp))
                     .background(BgDark) // 이미지 로딩 전 배경색
             ) {
-                val isImageAdded = !uiState.imageUri.isNullOrBlank()
+                val isImageAdded = !uiState.imageUrl.isNullOrBlank()
                 if (isImageAdded) {
                     JoopJoopImage(
-                        model = uiState.imageUri,
+                        model = uiState.imageUrl,
                         contentDescription = "쪽지 이미지",
                         modifier = Modifier.fillMaxSize()
                     )
@@ -247,7 +246,7 @@ fun NoteDetail(
 
         // 본문 텍스트 영역
         Text(
-            text = uiState.content,
+            text = uiState.contentText,
             color = TextSecondary,
             fontSize = 14.sp,
             lineHeight = 22.sp
