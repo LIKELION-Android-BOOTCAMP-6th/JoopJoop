@@ -4,10 +4,12 @@ import android.content.Context
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.NoteRepository
@@ -139,8 +141,35 @@ class WriteNoteViewModel(
         }
     }
 
-    fun onImageSelected(uri: String?) {
-        _uiState.update { it.copy(selectedImageUri = uri) }
+    fun onImageSelected(uri: Uri, context: Context) {
+
+        _uiState.update { it.copy(selectedImageUri = uri.toString()) }
+
+        val processor = ImageProcessor(context)
+
+        viewModelScope.launch {
+            try {
+                val processedData = processor.processOriginal(uri) ?: return@launch
+
+                val fileName = "note_${System.currentTimeMillis()}"
+                val imageUrl = repository.uploadImage(processedData, fileName)
+
+                if (imageUrl != null) {
+                    _uiState.update { it.copy(selectedImageUri = imageUrl) }
+                    Log.d("PhotoDebug", "업로드 완료: $imageUrl")
+                } else {
+                    Log.e("PhotoDebug", "업로드 결과가 null입니다.")
+                    _uiState.update { it.copy(errorMessage = "사진 업로드에 실패했습니다.") }
+                }
+            } catch (e: Exception) {
+                Log.e("PhotoDebug", "에러 발생: ${e.message}")
+                _uiState.update { it.copy(errorMessage = "이미지 처리 중 오류 발생") }
+            }
+        }
+    }
+
+    fun onImageRemoved() {
+        _uiState.update { it.copy(selectedImageUri = null) }
     }
 
     val isSubmitEnabled: Boolean

@@ -1,11 +1,14 @@
 package com.example.joopjoop.core.repository
 
+import android.util.Log
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.feature.note.data.model.NoteRequest
+import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import java.util.Date
@@ -30,8 +33,24 @@ class FakeNoteRepository : NoteRepository {
         return _allFakeNotes.filter { it.location.geohash.startsWith(centerGeohash) }
     }
 
+    private val firestoreSource = FirestoreNoteSource()
     override suspend fun getNoteDetail(noteId: String): Note? {
-        return _allFakeNotes.find { it.id == noteId }
+//        return _allFakeNotes.find { it.noteId == noteId }
+        return try {
+            Log.d("UIDebug", "Repository: Firestore에 데이터 요청 중... ID: $noteId")
+
+            // 🌟 진짜 Firestore 소스 호출
+            val remoteNote = firestoreSource.getNoteDetail(noteId)
+
+            Log.d("UIDebug", "Repository: 서버에서 읽어온 숫자 = ${remoteNote.likeCount}")
+
+            // 인터페이스가 Note? 를 원하므로 remoteNote(Note)를 그대로 반환해도 됩니다.
+            remoteNote
+        } catch (e: Exception) {
+            Log.e("UIDebug", "Repository 에러 발생: ${e.message}")
+            // 에러 시 null을 줘서 앱이 죽지 않게 방어합니다.
+            null
+        }
     }
 
     override suspend fun createNote(request: NoteRequest): String {
@@ -81,6 +100,30 @@ class FakeNoteRepository : NoteRepository {
         }
     }
 
+    override suspend fun addLike(noteId: String, userId: String) {
+        firestoreSource.addLike(noteId, userId)
+    }
+
+    override suspend fun removeLike(noteId: String, userId: String) {
+        firestoreSource.removeLike(noteId, userId)
+    }
+
+    override suspend fun checkLikeExists(noteId: String, userId: String): Boolean {
+        val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+        return try {
+            val document = db.collection("users")
+                .document(userId)
+                .collection("likes")
+                .document(noteId)
+                .get()
+                .await()
+            document.exists()
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+
     override suspend fun saveScrapNote(scrap: Scrap, userId: String) {
         val db: FirebaseFirestore = FirebaseFirestore.getInstance()
         db.collection("users")
@@ -113,6 +156,24 @@ class FakeNoteRepository : NoteRepository {
             document.exists() // 문서가 있으면 true, 없으면 false
         } catch (e: Exception) {
             false
+        }
+    }
+
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+
+    override suspend fun uploadImage(processedData: ByteArray, fileName: String): String? {
+        return try {
+            val storageRef = storage.reference.child("notes/$fileName.jpg")
+
+            // 1. 이미지 업로드 (ImageProcessor가 만든 ByteArray 사용)
+            storageRef.putBytes(processedData).await()
+
+            // 2. 업로드 완료 후 이미지의 '진짜 주소(URL)' 가져오기
+            val downloadUrl = storageRef.downloadUrl.await()
+            downloadUrl.toString() // 이 URL을 Firestore의 imageUri 필드에 저장하면 됩니다!
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 

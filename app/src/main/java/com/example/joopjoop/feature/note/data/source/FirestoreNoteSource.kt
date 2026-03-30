@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.note.data.source
 
+import android.util.Log
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
@@ -27,6 +28,8 @@ class FirestoreNoteSource(
                 id = doc.id,
                 userNickname = doc.getString("authorName") ?: "",
                 createdAt = timestamp?.toDate() ?: Date(),
+                likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
+                viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
                 contentText = doc.getString("content") ?: "",
                 location = NoteLocation(
                     latitude = lat,
@@ -49,17 +52,22 @@ class FirestoreNoteSource(
 
         return snapshot.documents.mapNotNull { doc ->
             val timestamp = doc.getTimestamp("createdAt")
+
+            // 'location'이라는 내부 Map 꺼내기
+            val data = doc.data ?: throw Exception("데이터가 없습니다.")
+            val locationMap = data["location"] as? Map<String, Any>
+
             Note(
                 id = doc.id,
                 userNickname = doc.getString("authorName") ?: "익명",
                 contentText = doc.getString("content") ?: "",
                 category = doc.getString("category") ?: "일상",
-                imageUrl = doc.getString("imageUri"),
+                imageUrl = doc.getString("imageUri") ?: "",
                 location = NoteLocation(
-                    geohash = doc.getString("geohash") ?: "",
-                    latitude = doc.getDouble("latitude") ?: 0.0,
-                    longitude = doc.getDouble("longitude") ?: 0.0,
-                    address = doc.getString("location") ?: "" // DB의 'location' 필드가 주소 문자열임
+                    address = locationMap?.get("address") as? String ?: "위치 정보 없음",
+                    latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
+                    longitude = (locationMap?.get("longitude") as? Number)?.toDouble() ?: 0.0,
+                    geohash = locationMap?.get("geohash") as? String ?: ""
                 ),
                 createdAt = timestamp?.toDate() ?: Date()
             )
@@ -84,6 +92,7 @@ class FirestoreNoteSource(
             viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
             likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
             contentText = doc.getString("contentText") ?: "내용 없음",
+            imageUrl = doc.getString("imageUri"),
             location = NoteLocation(
                 address = locationMap?.get("address") as? String ?: "위치 정보 없음",
                 latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
@@ -108,7 +117,7 @@ class FirestoreNoteSource(
             "address" to request.location, // 지역 동네 문자열
             "distance" to ""
         )
-        
+
         val noteData = hashMapOf(
             "id" to generatedId,
             "authorId" to request.authorId,
@@ -122,7 +131,6 @@ class FirestoreNoteSource(
             "isActive" to true,
             "geohash" to request.geohash
         )
-
 
         // 3. Firestore에 저장 (await - 문서 저장 반환)
         documentRef.set(noteData).await()
@@ -141,6 +149,63 @@ class FirestoreNoteSource(
         val docRef = db.collection(collectionPath).document(noteId)
         // increment가 1이면 +1, -1이면 -1
         docRef.update("likeCount", FieldValue.increment(increment.toLong())).await()
+    }
+
+    // 쪽지 좋아요 버튼
+    suspend fun addLike(noteId: String, userId: String) {
+        val userLikeRef = db.collection("users")
+            .document(userId)
+            .collection("likes")
+            .document(noteId)
+
+        val noteRef = db.collection("notes").document(noteId)
+        userLikeRef.set(hashMapOf("noteId" to noteId, "timestamp" to FieldValue.serverTimestamp()))
+            .await()
+
+        val noteDoc = noteRef.get().await()
+        if (noteDoc.exists()) {
+            noteRef.update("likeCount", FieldValue.increment(1)).await()
+        }
+    }
+
+    // 쪽지 좋아요 해제
+    suspend fun removeLike(noteId: String, userId: String) {
+        val userLikeRef =
+            db.collection("users").document(userId).collection("likes").document(noteId)
+        val noteRef = db.collection("notes").document(noteId)
+
+        db.runTransaction { transaction ->
+            val likeDoc = transaction.get(userLikeRef)
+            if (!likeDoc.exists()) return@runTransaction // 이미 없으면 중단
+
+            val noteDoc = transaction.get(noteRef)
+
+            // 1. 좋아요 기록 삭제
+            transaction.delete(userLikeRef)
+
+            // 2. 노트 문서가 있을 때만 카운트 감소
+            if (noteDoc.exists()) {
+                val currentCount = noteDoc.getLong("likeCount") ?: 0
+                if (currentCount > 0) {
+                    transaction.update(noteRef, "likeCount", currentCount - 1)
+                }
+            }
+        }.await()
+    }
+
+    // 쪽지 좋아요 여부 조회
+    suspend fun checkLikeExists(noteId: String, userId: String): Boolean {
+        return try {
+            val document = db.collection("users")
+                .document(userId)
+                .collection("likes")
+                .document(noteId)
+                .get()
+                .await()
+            document.exists()
+        } catch (e: Exception) {
+            false
+        }
     }
 
     // 스크랩 하기
