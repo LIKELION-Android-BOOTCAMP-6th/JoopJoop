@@ -13,8 +13,10 @@ import kotlinx.coroutines.tasks.await
 
 class NoteRepositoryImpl(
     private val source: FirestoreNoteSource,
-    private val storage: FirebaseStorage = FirebaseStorage.getInstance(),
 ) : NoteRepository {
+
+
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 
     // 이건 fireStore에서 모든 쪽지를 긁어오는 것처럼 보입니다.
     // 아래에 getNotesByLocation 함수를 새로 만들겠습니다
@@ -25,10 +27,10 @@ class NoteRepositoryImpl(
             return try {
                 val storageRef = storage.reference.child("notes/$fileName.jpg")
 
-                // 1. 이미지 업로드 (ImageProcessor가 만든 ByteArray 사용)
+                // 이미지 업로드
                 storageRef.putBytes(processedData).await()
 
-                // 2. 업로드 완료 후 이미지의 '진짜 주소(URL)' 가져오기
+                // 업로드 완료 후 이미지 url 가져오기
                 val downloadUrl = storageRef.downloadUrl.await()
                 downloadUrl.toString() // 이 URL을 Firestore의 imageUri 필드에 저장하면 됩니다!
             } catch (e: Exception) {
