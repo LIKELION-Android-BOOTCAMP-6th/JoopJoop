@@ -84,7 +84,7 @@ class NoteRepositoryImpl(
 
     // 스크랩 취소
     override suspend fun removeBookmark(noteId: String, userId: String) {
-        source.removeBookmark(noteId, userId)
+        source.cancelScrapNote(noteId, userId)
     }
 
     // 스크랩 상태 조회
