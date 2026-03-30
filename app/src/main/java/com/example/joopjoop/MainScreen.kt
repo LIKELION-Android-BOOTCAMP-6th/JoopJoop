@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.joopjoop.core.designsystem.components.BottomNavigation
+import com.example.joopjoop.ui.theme.BgDarkest
 
 @Composable
 fun MainScreen(rootNavController: NavController) {
@@ -14,8 +15,8 @@ fun MainScreen(rootNavController: NavController) {
     val mainNavController = rememberNavController()
 
     Scaffold(
+        containerColor = BgDarkest, // 번쩍임을 없애기 위해 검은 배경으로 변경
         bottomBar = {
-            // 네비게이션 바
             BottomNavigation(mainNavController, rootNavController)
         }
     ) { innerPadding ->
