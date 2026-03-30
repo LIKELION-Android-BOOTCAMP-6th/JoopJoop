@@ -1,5 +1,8 @@
 package com.example.joopjoop.feature.note.ui.write
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.joopjoop.R
+import com.example.joopjoop.core.common.util.JoopJoopImage
 import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
@@ -76,8 +80,19 @@ fun WriteNoteScreen(
         stringResource(R.string.category_memory),
         stringResource(R.string.category_restaurant)
     )
+
+    // 갤러리 실행 런쳐
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.onImageSelected(it, context)
+        }
+    }
+
     // 1. 포커스 매니저 가져오기
     val focusManager = LocalFocusManager.current
+
 
     LaunchedEffect(uiState.isSubmitSuccess) {
         if (uiState.isSubmitSuccess) {
@@ -186,31 +201,75 @@ fun WriteNoteScreen(
                         .padding(bottom = 8.dp, end = 8.dp)
                 )
 
+                val isImageAdded = !uiState.selectedImageUri.isNullOrBlank()
+
                 // 사진 추가 버튼 (기능은 나중에)
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(bottom = 8.dp)
                         .size(80.dp)
+                        .clip(RoundedCornerShape(16.dp)) // 클릭 영역 제한
                         .border(1.dp, TextTertiary, RoundedCornerShape(16.dp))
-                        .clickable { /* 사진 추가 로직 */ }, contentAlignment = Alignment.Center
+                        .clickable { galleryLauncher.launch("image/*") },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_camera),
-                            contentDescription = null,
-                            tint = TextTertiary,
-                            modifier = Modifier.size(24.dp)
+                    if (isImageAdded) {
+                        JoopJoopImage(
+                            model = uiState.selectedImageUri, // 뷰모델의 상태값 (Uri 또는 URL)
+                            contentDescription = "선택된 이미지",
+                            modifier = Modifier.fillMaxSize()
                         )
-                        Text(
-                            text = stringResource(R.string.add_photo),
-                            color = TextTertiary,
-                            fontSize = 10.sp
-                        )
+                        // 이미지 삭제 버튼 (옵션: 작게 'X' 표시하고 싶을 때)
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(4.dp)
+                                .size(20.dp)
+                                .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                                .clickable { viewModel.onImageRemoved() }, // 이미지 제거 로직
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_delete_24),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                    } else {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_camera),
+                                contentDescription = null,
+                                tint = TextTertiary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.add_photo),
+                                color = TextTertiary,
+                                fontSize = 10.sp
+                            )
+                        }
                     }
                 }
             }
-
+                        /*Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_camera),
+                                contentDescription = null,
+                                tint = TextTertiary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.add_photo),
+                                color = TextTertiary,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+                }
+            }*/
             Spacer(modifier = Modifier.height(24.dp))
 
             // 3. 보관 기간 조절 Row

@@ -27,8 +27,8 @@ class FirestoreNoteSource(
                 id = doc.id,
                 userNickname = doc.getString("authorName") ?: "",
                 createdAt = timestamp?.toDate() ?: Date(),
-                likeCount = doc.getLong("likeCount")?.toInt() ?: 0, // 삭제할 것
-                viewCount = doc.getLong("viewCount")?.toInt() ?: 0, // 삭제할 것
+                likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
+                viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
                 contentText = doc.getString("content") ?: "",
                 location = NoteLocation(
                     latitude = lat,
@@ -86,12 +86,12 @@ class FirestoreNoteSource(
             viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
             likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
             contentText = doc.getString("contentText") ?: "내용 없음",
+            imageUrl = doc.getString("imageUri"),
             location = NoteLocation(
-                address = locationMap?.get("address") as? String ?: "위치 정보 없음",
-                latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
-                longitude = (locationMap?.get("longitude") as? Number)?.toDouble() ?: 0.0,
-                geohash = locationMap?.get("geohash") as? String ?: "",
-                distance = locationMap?.get("distance") as? String ?: ""
+                geohash = doc.getString("geohash") ?: "",
+                latitude = doc.getDouble("latitude") ?: 0.0,
+                longitude = doc.getDouble("longitude") ?: 0.0,
+                address = doc.getString("location") ?: "위치 정보 없음"
             )
         )
     }
@@ -152,7 +152,8 @@ class FirestoreNoteSource(
             .document(noteId)
 
         val noteRef = db.collection("notes").document(noteId)
-        userLikeRef.set(hashMapOf("noteId" to noteId, "timestamp" to FieldValue.serverTimestamp())).await()
+        userLikeRef.set(hashMapOf("noteId" to noteId, "timestamp" to FieldValue.serverTimestamp()))
+            .await()
 
         val noteDoc = noteRef.get().await()
         if (noteDoc.exists()) {

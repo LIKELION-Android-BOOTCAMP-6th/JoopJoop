@@ -8,6 +8,7 @@ import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import java.util.Date
@@ -157,6 +158,24 @@ class FakeNoteRepository : NoteRepository {
             document.exists() // 문서가 있으면 true, 없으면 false
         } catch (e: Exception) {
             false
+        }
+    }
+
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
+
+    override suspend fun uploadImage(processedData: ByteArray, fileName: String): String? {
+        return try {
+            val storageRef = storage.reference.child("notes/$fileName.jpg")
+
+            // 1. 이미지 업로드 (ImageProcessor가 만든 ByteArray 사용)
+            storageRef.putBytes(processedData).await()
+
+            // 2. 업로드 완료 후 이미지의 '진짜 주소(URL)' 가져오기
+            val downloadUrl = storageRef.downloadUrl.await()
+            downloadUrl.toString() // 이 URL을 Firestore의 imageUri 필드에 저장하면 됩니다!
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 
