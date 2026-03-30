@@ -10,29 +10,46 @@ object FakeDataSource {
     fun getFakeNotes(baseLat: Double, baseLng: Double): List<Note> {
         val notes = mutableListOf<Note>()
 
-        // 줍기 가능한 아주 가까운 쪽지 (30m 이내) - 최소 2개 보장
+        // - 20m 이내에 최소 2개 생성
         repeat(2) { i ->
-            val (lat, lng) = getRandomLocation(baseLat, baseLng, 20.0) // 20m 이내
-            notes.add(createMockNote("near_pickup_${i + 1}", lat, lng))
-        }
+            val (lat, lng) = getRandomLocation(baseLat, baseLng, 20.0)
 
-        // 5km 이내의 검색되는 쪽지 샘플 15개 생성
+            notes.add(
+                createMockNote(
+                    id = "near_pickup_${i + 1}",
+                    lat = lat,
+                    lng = lng,
+                )
+            )
+        }
+        // - 최대 약 2km 범위 내 랜덤 생성
         repeat(15) { i ->
             val (lat, lng) = getRandomLocation(baseLat, baseLng, 2000.0)
-            notes.add(createMockNote("fake_${i + 1}", lat, lng))
+
+            notes.add(
+                createMockNote(
+                    id = "fake_${i + 1}",
+                    lat = lat,
+                    lng = lng,
+                )
+            )
         }
         return notes
     }
 
     private fun createMockNote(id: String, lat: Double, lng: Double): Note {
-        // 70% 확률로 이미지가 있고, 30% 확률로 텍스트만 있는 경우 시뮬레이션
-        val hasImage = Random.nextInt(100) < 70
+
+        val now = Date() // 생성 기준 시간 (createdAt & expiresAt 동일 기준)
+        val hasImage = Random.nextInt(100) < 70 // 70% 확률로 이미지 포함 (UI 테스트용)
+
         val randomImageUrl = if (hasImage) {
-            // picsum.photos를 사용하여 id 기반으로 고유한 랜덤 이미지 할당
             "https://picsum.photos/seed/$id/400/300"
         } else {
             null
         }
+
+        val hours = listOf(3, 6, 9, 12).random()
+        val expiresAt = Date(System.currentTimeMillis() + hours * 60 * 60 * 1000)
 
         return Note(
             id = id,
@@ -40,7 +57,8 @@ object FakeDataSource {
             userNickname = "줍줍이",
             userProfileImageUrl = "",
             contentText = "이것은 $id 번 쪽지입니다.",
-            imageUrl = null,
+            thumbnailUrl = randomImageUrl,
+            imageUrl = randomImageUrl,       // 랜덤 이미지
             category = "일상",
             viewCount = 0,
             likeCount = 0,
@@ -52,8 +70,8 @@ object FakeDataSource {
                 distance = ""
             ),
             isActive = true,
-            createdAt = Date(),
-            expiresAt = Date(System.currentTimeMillis() + 86400000)
+            createdAt = now,
+            expiresAt = expiresAt
         )
     }
 

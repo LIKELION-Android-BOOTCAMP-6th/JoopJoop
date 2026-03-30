@@ -58,7 +58,12 @@ class MapViewModel(
                     )
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = e.message ?: "loadNotes 알 수 없는 오류"
+                    )
+                }
             }
 //
 //            // 실제로는 repository.fetchNearbyNotes(center)가 들어갈 자리

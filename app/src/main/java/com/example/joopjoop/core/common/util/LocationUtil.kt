@@ -49,15 +49,24 @@ object LocationUtil {
         return GeoFireUtils.getGeoHashForLocation(GeoLocation(lat, lng))
     }
 
-    /**
-     * 거리를 사람이 읽기 좋은 텍스트로 변환합니다.
-     * 예: 30m, 1.2km 등
-     */
-    fun formatDistance(distanceInMeters: Float): String {
-        return if (distanceInMeters < 1000) {
-            "${distanceInMeters.toInt()}m"
+
+    // 쪽지 쿼리시 거리계산해서 Text값 저장하기 위해
+    fun getDistanceText(
+        lat1: Double,
+        lng1: Double,
+        lat2: Double,
+        lng2: Double
+    ): String {
+        val results = FloatArray(1)
+        Location.distanceBetween(
+            lat1, lng1, lat2, lng2, results
+        )
+        val distance = results[0]
+
+        return if (distance < 1000) {
+            "${distance.toInt()}m"
         } else {
-            "%.1fkm".format(distanceInMeters / 1000)
+            String.format("%.1fkm", distance / 1000)
         }
     }
 }
