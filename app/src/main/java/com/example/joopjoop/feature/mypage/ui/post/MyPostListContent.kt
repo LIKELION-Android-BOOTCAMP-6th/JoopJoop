@@ -58,8 +58,12 @@ fun MyPostListContent(
                         MyNoteGridItem(
                             note = note,
                             onNoteClick = { noteId ->
-                                // TODO: NavGraph에서 전달받은 상세화면 이동 로직 호출
-                                println("클릭된 쪽지 ID: $noteId")
+                                // 💡 중요: 넘겨받은 콜백(onNoteClick)을 실행해야
+                                // RootNavHost의 네비게이션 로직이 동작합니다!
+                                onNoteClick(noteId)
+
+                                // 확인용 로그 (필요 시 유지)
+                                android.util.Log.d("Navigation", "상세화면 이동 요청: $noteId")
                             }
                         )
                     }
