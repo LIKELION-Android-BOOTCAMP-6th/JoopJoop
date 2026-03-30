@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -98,14 +99,35 @@ fun NoteDetailScreen(
 //                DetailBottomBar(navController)
 //            }
         ) { innerPadding ->
-            NoteDetail(
-                uiState = uiState,
-                navController = navController,
-                modifier = Modifier.padding(innerPadding),
-                viewModel = viewModel,
-                noteId = noteId
-            )
+            if (uiState.isLoading) {
+                LoadingScreen(Modifier.padding(innerPadding))
+            } else {
+                NoteDetail(
+                    uiState = uiState,
+                    navController = navController,
+                    modifier = Modifier.padding(innerPadding),
+                    viewModel = viewModel,
+                    noteId = noteId
+                )
+            }
         }
+    }
+}
+
+@Composable
+fun LoadingScreen(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(BgDarkest), // 배경색 통일
+        contentAlignment = Alignment.Center
+    ) {
+        // 주황색 로딩 스피너
+        CircularProgressIndicator(
+            modifier = Modifier.size(48.dp),
+            color = OrangePrimary,
+            strokeWidth = 4.dp
+        )
     }
 }
 
