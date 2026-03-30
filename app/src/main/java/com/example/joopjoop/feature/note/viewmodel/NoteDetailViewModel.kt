@@ -39,6 +39,13 @@ class NoteDetailViewModel(
 
     // 특정 쪽지의 상세 데이터를 가져옴
     fun loadNoteDetail(noteId: String) {
+        // noteId가 비어있는지 먼저 확인 로그를 찍어보세요!
+        Log.d("NoteDetail", "전달받은 noteId: '$noteId'")
+
+        if (noteId.isEmpty()) {
+            Log.e("NoteDetail", "Error: noteId가 비어있습니다!")
+            return
+        }
         viewModelScope.launch {
             try {
                 // 로딩 시작

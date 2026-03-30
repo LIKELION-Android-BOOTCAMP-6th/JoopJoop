@@ -30,10 +30,10 @@ fun NoteMarker(
     note: Note, isPickable: Boolean, onClick: () -> Unit = {}
 ) {
     // 마커의 고유 아이디를 키로 설정하여 성능 최적화
-    key(note.noteId) {
+    key(note.id) {
         MarkerComposable(
             state = MarkerState(position = LatLng(note.location.latitude, note.location.longitude)),
-            title = note.noteId,
+            title = note.id,
             onClick = {
                 onClick()
                 true // true를 반환해야 지도의 기본 동작(카메라 중앙 이동 등)을 제어할 수 있다.

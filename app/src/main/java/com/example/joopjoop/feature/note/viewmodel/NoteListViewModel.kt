@@ -166,7 +166,7 @@ class NoteListViewModel(
                 .map { (note, distanceInMeters) ->
                     // VO(Note)를 UI 전용 모델(NoteItem)로 변환
                     NoteItem(
-                        id = note.noteId,
+                        id = note.id,
                         content = note.contentText,
                         // 거리 포맷팅 (1km 이상은 km로 표시)
                         distance = if (distanceInMeters >= 1000) "${(distanceInMeters / 1000).toInt()}km"

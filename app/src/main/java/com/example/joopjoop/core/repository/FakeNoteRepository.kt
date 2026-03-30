@@ -31,7 +31,7 @@ class FakeNoteRepository : NoteRepository {
     }
 
     override suspend fun getNoteDetail(noteId: String): Note? {
-        return _allFakeNotes.find { it.noteId == noteId }
+        return _allFakeNotes.find { it.id == noteId }
     }
 
     override suspend fun createNote(request: NoteRequest): String {
@@ -40,7 +40,7 @@ class FakeNoteRepository : NoteRepository {
 
         // 작성한 노트를 실제 리스트에 추가하여 다른 화면에서도 보이게 함
         val newNote = Note(
-            noteId = newId,
+            id = newId,
             authorId = "me",
             userNickname = request.authorName ?: "나",
             userProfileImageUrl = "",
@@ -66,7 +66,7 @@ class FakeNoteRepository : NoteRepository {
     }
 
     override suspend fun incrementViewCount(noteId: String) {
-        val index = _allFakeNotes.indexOfFirst { it.noteId == noteId }
+        val index = _allFakeNotes.indexOfFirst { it.id == noteId }
         if (index != -1) {
             _allFakeNotes[index] =
                 _allFakeNotes[index].copy(viewCount = _allFakeNotes[index].viewCount + 1)
@@ -74,7 +74,7 @@ class FakeNoteRepository : NoteRepository {
     }
 
     override suspend fun updateLikeCount(noteId: String, increment: Int) {
-        val index = _allFakeNotes.indexOfFirst { it.noteId == noteId }
+        val index = _allFakeNotes.indexOfFirst { it.id == noteId }
         if (index != -1) {
             _allFakeNotes[index] =
                 _allFakeNotes[index].copy(likeCount = _allFakeNotes[index].likeCount + increment)

@@ -60,7 +60,7 @@ fun MyPostListContent(
                             onNoteClick = { noteId ->
                                 // 💡 중요: 넘겨받은 콜백(onNoteClick)을 실행해야
                                 // RootNavHost의 네비게이션 로직이 동작합니다!
-                                onNoteClick(noteId)
+                                onNoteClick(note.id)
 
                                 // 확인용 로그 (필요 시 유지)
                                 android.util.Log.d("Navigation", "상세화면 이동 요청: $noteId")
