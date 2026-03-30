@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.note.data.source
 
+import android.util.Log
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
@@ -51,17 +52,22 @@ class FirestoreNoteSource(
 
         return snapshot.documents.mapNotNull { doc ->
             val timestamp = doc.getTimestamp("createdAt")
+
+            // 'location'이라는 내부 Map 꺼내기
+            val data = doc.data ?: throw Exception("데이터가 없습니다.")
+            val locationMap = data["location"] as? Map<String, Any>
+
             Note(
                 id = doc.id,
                 userNickname = doc.getString("authorName") ?: "익명",
                 contentText = doc.getString("content") ?: "",
                 category = doc.getString("category") ?: "일상",
-                imageUrl = doc.getString("imageUri"),
+                imageUrl = doc.getString("imageUri") ?: "",
                 location = NoteLocation(
-                    geohash = doc.getString("geohash") ?: "",
-                    latitude = doc.getDouble("latitude") ?: 0.0,
-                    longitude = doc.getDouble("longitude") ?: 0.0,
-                    address = doc.getString("location") ?: "" // DB의 'location' 필드가 주소 문자열임
+                    address = locationMap?.get("address") as? String ?: "위치 정보 없음",
+                    latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
+                    longitude = (locationMap?.get("longitude") as? Number)?.toDouble() ?: 0.0,
+                    geohash = locationMap?.get("geohash") as? String ?: ""
                 ),
                 createdAt = timestamp?.toDate() ?: Date()
             )
@@ -88,10 +94,11 @@ class FirestoreNoteSource(
             contentText = doc.getString("contentText") ?: "내용 없음",
             imageUrl = doc.getString("imageUri"),
             location = NoteLocation(
-                geohash = doc.getString("geohash") ?: "",
-                latitude = doc.getDouble("latitude") ?: 0.0,
-                longitude = doc.getDouble("longitude") ?: 0.0,
-                address = doc.getString("location") ?: "위치 정보 없음"
+                address = locationMap?.get("address") as? String ?: "위치 정보 없음",
+                latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
+                longitude = (locationMap?.get("longitude") as? Number)?.toDouble() ?: 0.0,
+                geohash = locationMap?.get("geohash") as? String ?: "",
+                distance = locationMap?.get("distance") as? String ?: ""
             )
         )
     }
