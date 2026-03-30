@@ -27,6 +27,8 @@ class FirestoreNoteSource(
                 noteId = doc.id,
                 userNickname = doc.getString("authorName") ?: "",
                 createdAt = timestamp?.toDate() ?: Date(),
+                likeCount = doc.getLong("likeCount")?.toInt() ?: 0, // 삭제할 것
+                viewCount = doc.getLong("viewCount")?.toInt() ?: 0, // 삭제할 것
                 contentText = doc.getString("content") ?: "",
                 location = NoteLocation(
                     latitude = lat,
@@ -106,9 +108,11 @@ class FirestoreNoteSource(
             "createdAt" to Timestamp.now(),
             "latitude" to request.latitude,
             "longitude" to request.longitude,
-            "geohash" to request.geohash
+            "geohash" to request.geohash,
+            "longitude" to request.longitude,
+            "likeCount" to 0,
+            "viewCount" to 0
         )
-
 
         // 3. Firestore에 저장 (await - 문서 저장 반환)
         documentRef.set(noteData).await()
@@ -127,6 +131,62 @@ class FirestoreNoteSource(
         val docRef = db.collection(collectionPath).document(noteId)
         // increment가 1이면 +1, -1이면 -1
         docRef.update("likeCount", FieldValue.increment(increment.toLong())).await()
+    }
+
+    // 쪽지 좋아요 버튼
+    suspend fun addLike(noteId: String, userId: String) {
+        val userLikeRef = db.collection("users")
+            .document(userId)
+            .collection("likes")
+            .document(noteId)
+
+        val noteRef = db.collection("notes").document(noteId)
+        userLikeRef.set(hashMapOf("noteId" to noteId, "timestamp" to FieldValue.serverTimestamp())).await()
+
+        val noteDoc = noteRef.get().await()
+        if (noteDoc.exists()) {
+            noteRef.update("likeCount", FieldValue.increment(1)).await()
+        }
+    }
+
+    // 쪽지 좋아요 해제
+    suspend fun removeLike(noteId: String, userId: String) {
+        val userLikeRef =
+            db.collection("users").document(userId).collection("likes").document(noteId)
+        val noteRef = db.collection("notes").document(noteId)
+
+        db.runTransaction { transaction ->
+            val likeDoc = transaction.get(userLikeRef)
+            if (!likeDoc.exists()) return@runTransaction // 이미 없으면 중단
+
+            val noteDoc = transaction.get(noteRef)
+
+            // 1. 좋아요 기록 삭제
+            transaction.delete(userLikeRef)
+
+            // 2. 노트 문서가 있을 때만 카운트 감소
+            if (noteDoc.exists()) {
+                val currentCount = noteDoc.getLong("likeCount") ?: 0
+                if (currentCount > 0) {
+                    transaction.update(noteRef, "likeCount", currentCount - 1)
+                }
+            }
+        }.await()
+    }
+
+    // 쪽지 좋아요 여부 조회
+    suspend fun checkLikeExists(noteId: String, userId: String): Boolean {
+        return try {
+            val document = db.collection("users")
+                .document(userId)
+                .collection("likes")
+                .document(noteId)
+                .get()
+                .await()
+            document.exists()
+        } catch (e: Exception) {
+            false
+        }
     }
 
     // 스크랩 하기

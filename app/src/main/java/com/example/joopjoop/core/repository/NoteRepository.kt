@@ -25,7 +25,15 @@ interface NoteRepository {
     // 좋아요 업데이트
     suspend fun updateLikeCount(noteId: String, increment: Int)
 
-    // 스크랩 하기
+    // 좋아요 추가
+    suspend fun addLike(noteId: String, userId: String)
+
+    // 좋아요 취소
+   suspend fun removeLike(noteId: String, userId: String)
+
+   suspend fun checkLikeExists(noteId: String, userId: String): Boolean
+
+        // 스크랩 하기
     suspend fun saveScrapNote(scrap: Scrap, userId: String)
 
     // 스크랩 삭제

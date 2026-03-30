@@ -62,6 +62,21 @@ class NoteRepositoryImpl(
         source.updateLikeCount(noteId, increment)
     }
 
+    // 좋아요 추가
+    override suspend fun addLike(noteId: String, userId: String){
+        source.addLike(noteId, userId)
+    }
+
+    // 좋아요 취소
+    override suspend fun removeLike(noteId: String, userId: String){
+        source.removeLike(noteId, userId)
+    }
+
+    // 좋아요 여부 조회
+    override suspend fun checkLikeExists(noteId: String, userId: String): Boolean {
+        return source.checkLikeExists(noteId, userId)
+    }
+
     // 스크랩 하기
     override suspend fun saveScrapNote(scrap: Scrap, userId: String) {
         source.saveScrapNote(scrap, userId)
@@ -69,7 +84,7 @@ class NoteRepositoryImpl(
 
     // 스크랩 취소
     override suspend fun removeBookmark(noteId: String, userId: String) {
-        source.cancelScrapNote(noteId, userId)
+        source.removeBookmark(noteId, userId)
     }
 
     // 스크랩 상태 조회

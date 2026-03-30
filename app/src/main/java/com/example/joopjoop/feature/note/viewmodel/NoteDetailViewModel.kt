@@ -8,6 +8,7 @@ import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.ui.detail.NoteDetailUiState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,14 +25,14 @@ class NoteDetailViewModel(
     val uiState: StateFlow<NoteDetailUiState> = _uiState.asStateFlow()
     private var currentUserId: String? = null
 
+
     init {
         observeUserStatus()
     }
 
     private fun observeUserStatus() {
         viewModelScope.launch {
-            authRepository.currentUser
-                .collect { user ->
+            authRepository.currentUser.collect { user ->
                     currentUserId = user?.uid
                 }
         }
@@ -40,12 +41,16 @@ class NoteDetailViewModel(
     // 특정 쪽지의 상세 데이터를 가져옴
     fun loadNoteDetail(noteId: String) {
         viewModelScope.launch {
+
             try {
                 // 로딩 시작
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
                 // 조회수 반영된 최신 데이터 가져오기
                 val noteData = repository.getNoteDetail(noteId)
+
+                // 좋아요 상태 로드
+                val isLiked = currentUserId?.let { repository.checkLikeExists(noteId, it) } ?: false
 
                 // 쪽지 스크랩 조회
                 val isBookmarked = currentUserId?.let { currentUserId ->
@@ -66,15 +71,17 @@ class NoteDetailViewModel(
                     // 데이터가 있을 때만 조회수를 증가
                     // 조회수 +1 요청
                     repository.incrementViewCount(noteId)
+                    val serverLikeCount = noteData.likeCount
 
                     _uiState.update {
                         it.copy(
                             userNickName = noteData.userNickname,
                             createdAt = formatDate(noteData.createdAt),
                             viewCount = noteData.viewCount,
-                            likeCount = noteData.likeCount,
+                            likeCount = maxOf(0, serverLikeCount),
                             content = noteData.contentText,
                             location = noteData.location.address,
+                            isLiked = isLiked,
                             isBookmarked = isBookmarked,
                             isLoading = false // 로딩 완료
                         )
@@ -91,21 +98,29 @@ class NoteDetailViewModel(
         }
     }
 
-    // 좋아요 버튼 클릭 처리
     fun toggleLike(noteId: String) {
+        val myId = currentUserId ?: return
+        val isCurrentlyLiked = _uiState.value.isLiked
+        val nextState = !isCurrentlyLiked
+
+        _uiState.update { it.copy(isLiked = nextState) }
         viewModelScope.launch {
-            val currentState = _uiState.value
-            val isNowLiked = !currentState.isLiked
+            try {
+                if (nextState) {
+                    repository.addLike(noteId, myId)
+                } else {
+                    repository.removeLike(noteId, myId)
+                }
 
-            // +1 or -1
-            val amount = if (isNowLiked) 1 else -1
-
-            repository.updateLikeCount(noteId, amount)
-            _uiState.update { state ->
-                state.copy(
-                    isLiked = isNowLiked,
-                    likeCount = state.likeCount + amount
-                )
+                // Firestore 실제값으로 동기화
+                val noteData = repository.getNoteDetail(noteId)
+                _uiState.update { state ->
+                    state.copy(
+                        likeCount = noteData?.likeCount ?: state.likeCount
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLiked = isCurrentlyLiked) }
             }
         }
     }
