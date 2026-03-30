@@ -3,7 +3,7 @@ package com.example.joopjoop.core.model
 import java.util.Date
 
 data class Note(
-    val noteId: String = "",
+    val id: String = "", // firestore의 필드명과 통일
     val authorId: String = "",
     val userNickname: String = "",
     val userProfileImageUrl: String = "",
