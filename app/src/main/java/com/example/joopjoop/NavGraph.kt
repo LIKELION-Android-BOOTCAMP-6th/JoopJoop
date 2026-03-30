@@ -42,6 +42,7 @@ import com.example.joopjoop.feature.note.viewmodel.NoteListViewModel
 import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 import com.example.joopjoop.feature.setting.ui.SettingRoute
+import kotlinx.coroutines.delay
 
 // Routes 정의
 object Routes {
@@ -82,21 +83,33 @@ fun RootNavHost() {
     )
     val isLoggedIn by mainViewModel.isLoggedIn.collectAsState()
 
-    // 로그인 상태 확인 전까지는 아무것도 그리지 않음 (혹은 빈 화면)
-    // isLoggedIn이 null이면 아직 Firebase나 캐시에서 정보를 가져오는 중입니다.
-    if (isLoggedIn == null) return
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn == true) {
+            delay(300) // 화면 전환 전 로딩 애니메이션이 자연스럽게 끝나도록 약간 지연
+            rootNavController.navigate(Routes.MAIN) {
+                popUpTo(Routes.AUTH) { inclusive = true }
+            }
+        }
+    }
+
+    // isLoggedIn == null → 로그인 상태 로딩 중 (IntroScreen에서 로딩 UI 처리)
+//    if (isLoggedIn == null) return
 
     NavHost(
         navController = rootNavController,
-        // 로그인 여부에 따라 시작점 결정
-        startDestination = if (isLoggedIn == true) Routes.MAIN else Routes.AUTH
+        // 인증 그래프를 시작점으로 사용 (로그인 여부는 내부 상태로 처리)
+        startDestination = Routes.AUTH
     ) {
-        // 1. 인증 그래프 (Auth Graph)
-        // Intro, Login, Signup 등을 포함하며 로그인 완료 시 스택에서 제거됩니다.
+        // 인증 관련 화면 그룹 (Intro, Login, Signup)
+        // 로그인 완료 시 전체 스택에서 제거됨
         navigation(startDestination = Routes.INTRO, route = Routes.AUTH) {
             composable(Routes.INTRO) {
                 // 인트로 화면 (필요 시 뷰모델 주입)
                 IntroScreen(
+                    // 로그인 상태 로딩 중(null)일 때 로딩 UI 유지
+                    isLoading = isLoggedIn == null,
+                    // 로그인 성공 여부 (Root에서 화면 전환 트리거로 사용)
+                    isLoginSuccess = isLoggedIn == true,
                     onLoginClick = { rootNavController.navigate(Routes.LOGIN) },
                     onSignupClick = { rootNavController.navigate(Routes.SIGNUP) }
                 )
@@ -118,9 +131,6 @@ fun RootNavHost() {
                     viewModel = loginViewModel,
                     notificationViewModel = notificationViewModel,  // 권한 요청 및 알림 시작 로직을 위해 직접 전달
                     onLoginSuccess = {
-                        rootNavController.navigate(Routes.MAIN) {
-                            popUpTo(Routes.AUTH) { inclusive = true }
-                        }
                     },
                     onBackClick = { rootNavController.popBackStack() },
                     onCreateAccountClick = { rootNavController.navigate(Routes.SIGNUP) }
