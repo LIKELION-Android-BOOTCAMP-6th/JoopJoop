@@ -21,16 +21,40 @@ class FakeNoteRepository : NoteRepository {
     }
 
     override suspend fun getNotesByLocation(lat: Double, lng: Double): List<Note> {
-        delay(500)
-        // 초기 1회 현재 위치 기반 샘플 생성
+        delay(500) // 네트워크 지연 시뮬레이션
+
         if (!isInitialized) {
             _allFakeNotes.addAll(FakeDataSource.getFakeNotes(lat, lng))
             isInitialized = true
         }
 
-        // Firestore와 동일하게 Geohash 앞 5자리로 주변 노트를 필터링
         val centerGeohash = LocationUtil.getGeohash(lat, lng).take(5)
-        return _allFakeNotes.filter { it.location.geohash.startsWith(centerGeohash) }
+        val now = Date()
+
+        return _allFakeNotes
+            .filter { note ->
+                // geohash 필터
+                note.location.geohash.startsWith(centerGeohash)
+                        // 활성화된 노트만
+                        && note.isActive
+                        // 만료되지 않은 노트만
+                        && note.expiresAt.after(now)
+            }
+            .map { note ->
+                // distance 계산 (Fake에서는 여기서 처리)
+                val distance = LocationUtil.getDistanceText(
+                    lat,
+                    lng,
+                    note.location.latitude,
+                    note.location.longitude
+                )
+                // 기존 Note 객체를 변경하지 않고, distance 값만 반영된 새로운 객체를 생성
+                note.copy(
+                    location = note.location.copy(
+                        distance = distance
+                    )
+                )
+            }
     }
 
     private val firestoreSource = FirestoreNoteSource()
