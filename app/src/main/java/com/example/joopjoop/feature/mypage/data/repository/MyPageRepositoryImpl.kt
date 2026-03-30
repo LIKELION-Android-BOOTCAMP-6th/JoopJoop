@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.mypage.data.repository
 
+import android.util.Log
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.User
 import com.example.joopjoop.core.repository.MyPageRepository
@@ -20,12 +21,23 @@ class MyPageRepositoryImpl(
 
     // F-MY-02: 내가 쓴 쪽지 목록 가져오기
     override suspend fun getMyPosts(userId: String): Result<List<Note>> = runCatching {
+        try{
+            Log.d("MyPageRepo", "조회 시작 - 내 UID: $userId")
+
         val snapshot = firestore.collection("notes")
-            .whereEqualTo("userId", userId)
+            .whereEqualTo("authorId", userId)
             .get()
             .await()
 
-        snapshot.toObjects(Note::class.java)
+            val notes = snapshot.toObjects(Note::class.java)
+            Log.d("MyPageRepo", "조회 성공 - 가져온 개수: ${notes.size}")
+            notes
+        } catch (e: Exception) {
+            // 에러의 원인 로그
+            Log.e("MyPageRepo", "Firestore 에러 발생: ${e.message}")
+            Log.e("MyPageRepo", "에러 상세 원인: ", e)
+            throw e // runCatching이 에러를 잡아서 Result.failure로 
+        }
     }
 
     // F-MY-03: 내가 스크랩한 쪽지 목록 가져오기

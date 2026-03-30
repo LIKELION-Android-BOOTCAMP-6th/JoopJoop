@@ -4,7 +4,7 @@ import java.util.Date
 
 data class Note(
     val noteId: String = "",
-    val userId: String = "",
+    val authorId: String = "",
     val userNickname: String = "",
     val userProfileImageUrl: String = "",
     val contentText: String = "",
