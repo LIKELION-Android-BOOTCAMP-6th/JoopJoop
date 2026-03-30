@@ -1,5 +1,6 @@
 package com.example.joopjoop
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
@@ -42,6 +43,8 @@ import com.example.joopjoop.feature.note.viewmodel.NoteListViewModel
 import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 import com.example.joopjoop.feature.setting.ui.SettingRoute
+import com.example.joopjoop.ui.theme.BgDarkest
+import kotlinx.coroutines.delay
 
 // Routes 정의
 object Routes {
@@ -82,139 +85,153 @@ fun RootNavHost() {
     )
     val isLoggedIn by mainViewModel.isLoggedIn.collectAsState()
 
-    // 로그인 상태 확인 전까지는 아무것도 그리지 않음 (혹은 빈 화면)
-    // isLoggedIn이 null이면 아직 Firebase나 캐시에서 정보를 가져오는 중입니다.
-    if (isLoggedIn == null) return
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn == true) {
+            delay(300) // 화면 전환 전 로딩 애니메이션이 자연스럽게 끝나도록 약간 지연
+            rootNavController.navigate(Routes.MAIN) {
+                popUpTo(Routes.AUTH) { inclusive = true }
+            }
+        }
+    }
 
-    NavHost(
-        navController = rootNavController,
-        // 로그인 여부에 따라 시작점 결정
-        startDestination = if (isLoggedIn == true) Routes.MAIN else Routes.AUTH
+    Box( // 번쩍임을 없애기 위해 검은 배경을 깔아둠
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BgDarkest)
     ) {
-        // 1. 인증 그래프 (Auth Graph)
-        // Intro, Login, Signup 등을 포함하며 로그인 완료 시 스택에서 제거됩니다.
-        navigation(startDestination = Routes.INTRO, route = Routes.AUTH) {
-            composable(Routes.INTRO) {
-                // 인트로 화면 (필요 시 뷰모델 주입)
-                IntroScreen(
-                    onLoginClick = { rootNavController.navigate(Routes.LOGIN) },
-                    onSignupClick = { rootNavController.navigate(Routes.SIGNUP) }
-                )
-            }
+        // isLoggedIn == null → 로그인 상태 로딩 중 (IntroScreen에서 로딩 UI 처리)
+//    if (isLoggedIn == null) return
+        NavHost(
+            navController = rootNavController,
+            // 인증 그래프를 시작점으로 사용 (로그인 여부는 내부 상태로 처리)
+            startDestination = Routes.AUTH
+        ) {
+            // 인증 관련 화면 그룹 (Intro, Login, Signup)
+            // 로그인 완료 시 전체 스택에서 제거됨
+            navigation(startDestination = Routes.INTRO, route = Routes.AUTH) {
+                composable(Routes.INTRO) {
+                    // 인트로 화면 (필요 시 뷰모델 주입)
+                    IntroScreen(
+                        // 로그인 상태 로딩 중(null)일 때 로딩 UI 유지
+                        isLoading = isLoggedIn == null,
+                        // 로그인 성공 여부 (Root에서 화면 전환 트리거로 사용)
+                        isLoginSuccess = isLoggedIn == true,
+                        onLoginClick = { rootNavController.navigate(Routes.LOGIN) },
+                        onSignupClick = { rootNavController.navigate(Routes.SIGNUP) }
+                    )
+                }
 
-            composable(Routes.LOGIN) {
-                val notificationViewModel: NotificationViewModel = viewModel()
+                composable(Routes.LOGIN) {
+                    val notificationViewModel: NotificationViewModel = viewModel()
 
-                val loginViewModel: LoginViewModel = viewModel(
-                    // notification 기능을 추가하면서 LoginViewModel 생성 시 NotificationViewModel 사용이 필요한 로직이라서 주석처리함
+                    val loginViewModel: LoginViewModel = viewModel(
+                        // notification 기능을 추가하면서 LoginViewModel 생성 시 NotificationViewModel 사용이 필요한 로직이라서 주석처리함
 //                    factory = appContainer.authViewModelFactory
-                    factory = AuthViewModelFactory(
-                        authRepository = appContainer.authRepository,
-                        notificationViewModel = notificationViewModel
+                        factory = AuthViewModelFactory(
+                            authRepository = appContainer.authRepository,
+                            notificationViewModel = notificationViewModel
+                        )
                     )
-                )
 
-                LoginRoute(
-                    viewModel = loginViewModel,
-                    notificationViewModel = notificationViewModel,  // 권한 요청 및 알림 시작 로직을 위해 직접 전달
-                    onLoginSuccess = {
-                        rootNavController.navigate(Routes.MAIN) {
-                            popUpTo(Routes.AUTH) { inclusive = true }
+                    LoginRoute(
+                        viewModel = loginViewModel,
+                        notificationViewModel = notificationViewModel,  // 권한 요청 및 알림 시작 로직을 위해 직접 전달
+                        onLoginSuccess = {
+                        },
+                        onBackClick = { rootNavController.popBackStack() },
+                        onCreateAccountClick = { rootNavController.navigate(Routes.SIGNUP) }
+                    )
+                }
+
+                composable(Routes.SIGNUP) {
+                    // 마찬가지로 상단의 appContainer를 사용합니다.
+                    val signupViewModel: SignupViewModel = viewModel(
+                        factory = SignupViewModelFactory(
+                            authRepository = appContainer.authRepository
+                        )
+                    )
+
+                    SignupRoute(
+                        viewModel = signupViewModel,
+                        onSignupSuccess = {
+                            rootNavController.popBackStack()
+                        },
+                        onBackClick = {
+                            rootNavController.popBackStack()
                         }
-                    },
-                    onBackClick = { rootNavController.popBackStack() },
-                    onCreateAccountClick = { rootNavController.navigate(Routes.SIGNUP) }
+                    )
+                }
+            }
+
+            // 2. 메인 그래프 (Main Graph)
+            // 바텀 네비게이션이 존재하는 '그릇' 화면.
+            composable(Routes.MAIN) {
+                MainScreen(rootNavController = rootNavController)
+            }
+
+            // 3. 서브 그래프 (Sub Graph / 상세 화면)
+            // 바텀바가 보이지 않아야 하는 독립적인 상세 페이지
+
+            composable(Routes.NOTE_LIST) {
+                val viewModel: NoteListViewModel = viewModel(
+                    factory = appContainer.noteViewModelFactory
+                )
+                NoteListScreen(
+                    navController = rootNavController,
+                    viewModel = viewModel
                 )
             }
 
-            composable(Routes.SIGNUP) {
-                // 마찬가지로 상단의 appContainer를 사용합니다.
-                val signupViewModel: SignupViewModel = viewModel(
-                    factory = SignupViewModelFactory(
-                        authRepository = appContainer.authRepository
-                    )
+            composable(Routes.WRITE) {
+                // AppContainer 내부에서 이미 FusedLocationClient를 주입한 팩토리를 가져옵니다.
+                val viewModel: WriteNoteViewModel = viewModel(
+                    factory = appContainer.noteViewModelFactory
                 )
 
-                SignupRoute(
-                    viewModel = signupViewModel,
-                    onSignupSuccess = {
-                        rootNavController.popBackStack()
+                WriteNoteScreen(
+                    navController = rootNavController,
+                    viewModel = viewModel
+                )
+            }
+
+            composable(
+                route = Routes.NOTE_DETAIL,
+                arguments = listOf(navArgument("noteId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
+                val viewModel: NoteDetailViewModel = viewModel(
+                    factory = appContainer.noteViewModelFactory
+                )
+
+                // 화면이 처음 뜰 때 데이터를 로드하도록 설정
+                LaunchedEffect(noteId) {
+                    viewModel.loadNoteDetail(noteId)
+                }
+
+                NoteDetailScreen(
+                    navController = rootNavController,
+                    noteId = noteId,
+                    viewModel = viewModel
+                )
+            }
+
+            // 설정 화면 주소 등록
+            composable(Routes.SETTINGS) {
+                // SettingRoute를 호출하여 의존성(Repository, ViewModel)을 주입합니다.
+                SettingRoute(
+                    authRepository = appContainer.authRepository,
+                    notificationViewModel = viewModel(), // 필요 시 appContainer에서 가져올 수도 있음.
+                    onNavigateToLogin = {
+                        // 로그아웃 성공 시 AUTH 화면으로 이동하며 스택 정리
+                        rootNavController.navigate(Routes.AUTH) {
+                            popUpTo(Routes.MAIN) { inclusive = true }
+                        }
                     },
                     onBackClick = {
                         rootNavController.popBackStack()
                     }
                 )
             }
-        }
-
-        // 2. 메인 그래프 (Main Graph)
-        // 바텀 네비게이션이 존재하는 '그릇' 화면.
-        composable(Routes.MAIN) {
-            MainScreen(rootNavController = rootNavController)
-        }
-
-        // 3. 서브 그래프 (Sub Graph / 상세 화면)
-        // 바텀바가 보이지 않아야 하는 독립적인 상세 페이지
-
-        composable(Routes.NOTE_LIST) {
-            val viewModel: NoteListViewModel = viewModel(
-                factory = appContainer.noteViewModelFactory
-            )
-            NoteListScreen(
-                navController = rootNavController,
-                viewModel = viewModel
-            )
-        }
-
-        composable(Routes.WRITE) {
-            // AppContainer 내부에서 이미 FusedLocationClient를 주입한 팩토리를 가져옵니다.
-            val viewModel: WriteNoteViewModel = viewModel(
-                factory = appContainer.noteViewModelFactory
-            )
-
-            WriteNoteScreen(
-                navController = rootNavController,
-                viewModel = viewModel
-            )
-        }
-
-        composable(
-            route = Routes.NOTE_DETAIL,
-            arguments = listOf(navArgument("noteId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val noteId = backStackEntry.arguments?.getString("noteId") ?: ""
-            val viewModel: NoteDetailViewModel = viewModel(
-                factory = appContainer.noteViewModelFactory
-            )
-
-            // 화면이 처음 뜰 때 데이터를 로드하도록 설정
-            LaunchedEffect(noteId) {
-                viewModel.loadNoteDetail(noteId)
-            }
-
-            NoteDetailScreen(
-                navController = rootNavController,
-                noteId = noteId,
-                viewModel = viewModel
-            )
-        }
-
-        // 설정 화면 주소 등록
-        composable(Routes.SETTINGS) {
-            // SettingRoute를 호출하여 의존성(Repository, ViewModel)을 주입합니다.
-            SettingRoute(
-                authRepository = appContainer.authRepository,
-                notificationViewModel = viewModel(), // 필요 시 appContainer에서 가져올 수도 있음.
-                onNavigateToLogin = {
-                    // 로그아웃 성공 시 AUTH 화면으로 이동하며 스택 정리
-                    rootNavController.navigate(Routes.AUTH) {
-                        popUpTo(Routes.MAIN) { inclusive = true }
-                    }
-                },
-                onBackClick = {
-                    rootNavController.popBackStack()
-                }
-            )
         }
     }
 }

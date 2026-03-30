@@ -3,6 +3,11 @@ package com.example.joopjoop
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
 class MainActivity : ComponentActivity() {
@@ -17,7 +22,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             JoopJoopTheme {
-                RootNavHost()
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(BgDarkest) // 번쩍임을 없애기 위해 검은 배경으로 변경
+                ) {
+                    RootNavHost()
+                }
             }
         }
     }
