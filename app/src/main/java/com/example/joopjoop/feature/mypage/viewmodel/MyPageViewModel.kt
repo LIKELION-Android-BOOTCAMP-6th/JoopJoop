@@ -9,8 +9,11 @@ import com.example.joopjoop.feature.mypage.ui.main.MyPageUiState
 import com.example.joopjoop.feature.mypage.ui.post.MyPostUiState
 import com.example.joopjoop.feature.mypage.ui.scrap.MyScrapUiState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -21,7 +24,14 @@ class MyPageViewModel(
 
     // 1. 메인 상태 (유저 정보, 탭 등)
     private val _uiState = MutableStateFlow(MyPageUiState())
-    val uiState: StateFlow<MyPageUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<MyPageUiState> = authRepository.currentUser
+        .combine(_uiState) { user, state ->
+            state.copy(user = user) // Auth의 최신 유저 정보를 마이페이지 상태에 주입
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = MyPageUiState(isLoading = true)
+        )
 
     // 2. 쪽지 상태
     private val _postUiState = MutableStateFlow(MyPostUiState())
