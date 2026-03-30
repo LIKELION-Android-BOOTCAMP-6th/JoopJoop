@@ -1,9 +1,8 @@
-package com.example.joopjoop.feature.setting
+package com.example.joopjoop.feature.setting.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.model.User
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.auth.data.model.AuthResult
@@ -24,7 +23,7 @@ class SettingViewModel(
     val currentUser: StateFlow<User?> = authRepository.currentUser
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Companion.WhileSubscribed(5000),
             initialValue = null
         )
 
