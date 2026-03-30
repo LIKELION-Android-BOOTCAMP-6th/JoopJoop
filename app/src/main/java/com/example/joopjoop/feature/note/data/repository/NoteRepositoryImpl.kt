@@ -1,6 +1,7 @@
 package com.example.joopjoop.feature.note.data.repository
 
 import android.net.Uri
+import android.util.Log
 import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.Note
@@ -29,11 +30,11 @@ class NoteRepositoryImpl(
 
                 // 이미지 업로드
                 storageRef.putBytes(processedData).await()
+                val downloadUrl = storageRef.downloadUrl.await().toString()
+                downloadUrl
 
-                // 업로드 완료 후 이미지 url 가져오기
-                val downloadUrl = storageRef.downloadUrl.await()
-                downloadUrl.toString() // 이 URL을 Firestore의 imageUri 필드에 저장하면 됩니다!
             } catch (e: Exception) {
+                Log.e("PhotoDebug", "Storage 업로드 중 에러: ${e.message}")
                 e.printStackTrace()
                 null
             }

@@ -1,6 +1,8 @@
 package com.example.joopjoop.feature.note.ui.write
 
+import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -85,8 +87,13 @@ fun WriteNoteScreen(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let {
-            viewModel.onImageSelected(it, context)
+        uri?.let { try {
+                val contentResolver = context.contentResolver
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                viewModel.onImageSelected(it, context)
+            } catch (e: Exception) {
+                Log.e("PhotoDebug", "URI 권한 획득 실패")
+            }
         }
     }
 
@@ -96,7 +103,6 @@ fun WriteNoteScreen(
 
     LaunchedEffect(uiState.isSubmitSuccess) {
         if (uiState.isSubmitSuccess) {
-            // 저장이 성공했다면 지도가 있는 이전 화면으로 돌아갑니다.
             navController.popBackStack()
         }
     }
@@ -220,7 +226,7 @@ fun WriteNoteScreen(
                             contentDescription = "선택된 이미지",
                             modifier = Modifier.fillMaxSize()
                         )
-                        // 이미지 삭제 버튼 (옵션: 작게 'X' 표시하고 싶을 때)
+                        // 이미지 삭제 버튼
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
@@ -345,8 +351,7 @@ fun WriteNoteScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp),
-                enabled = uiState.noteContent.isNotBlank() && !uiState.isSubmitting,
-                shape = RoundedCornerShape(32.dp),
+                enabled = uiState.noteContent.isNotBlank() && !uiState.isSubmitting && !uiState.isImageUploading,                shape = RoundedCornerShape(32.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = OrangePrimary, contentColor = TextPrimary,
                     disabledContainerColor = OrangePrimary.copy(alpha = 0.3f),

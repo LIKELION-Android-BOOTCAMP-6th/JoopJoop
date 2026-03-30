@@ -18,12 +18,14 @@ import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.ui.write.WriteNoteUiState
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.coroutines.resume
 
@@ -142,28 +144,40 @@ class WriteNoteViewModel(
     }
 
     fun onImageSelected(uri: Uri, context: Context) {
-
-        _uiState.update { it.copy(selectedImageUri = uri.toString()) }
-
-        val processor = ImageProcessor(context)
+        _uiState.update { it.copy(
+            selectedImageUri = uri.toString(),
+            isImageUploading = true
+        ) }
 
         viewModelScope.launch {
             try {
-                val processedData = processor.processOriginal(uri) ?: return@launch
+                // ImageProcessor를 통해 리사이징 및 압축
+                val processedData = withContext(Dispatchers.IO) {
+                    ImageProcessor(context).processOriginal(uri)
+                }
 
+                if (processedData == null) {
+                    _uiState.update { it.copy(isImageUploading = false, errorMessage = "이미지 가공 실패") }
+                    return@launch
+                }
+
+                Log.d("es", "이미지 가공 성공: 크기 ${processedData.size} bytes")
+
+                // 가공된 ByteArray 데이터와 파일명을 Repository에 전달
                 val fileName = "note_${System.currentTimeMillis()}"
                 val imageUrl = repository.uploadImage(processedData, fileName)
 
                 if (imageUrl != null) {
-                    _uiState.update { it.copy(selectedImageUri = imageUrl) }
-                    Log.d("PhotoDebug", "업로드 완료: $imageUrl")
+                    // 업로드 성공 시, 상태의 URI를 '서버 URL(https://)'로 교체
+                    _uiState.update { it.copy(
+                        selectedImageUri = imageUrl,
+                        isImageUploading = false
+                    ) }
                 } else {
-                    Log.e("PhotoDebug", "업로드 결과가 null입니다.")
-                    _uiState.update { it.copy(errorMessage = "사진 업로드에 실패했습니다.") }
+                    _uiState.update { it.copy(isImageUploading = false, errorMessage = "서버 전송 실패") }
                 }
             } catch (e: Exception) {
-                Log.e("PhotoDebug", "에러 발생: ${e.message}")
-                _uiState.update { it.copy(errorMessage = "이미지 처리 중 오류 발생") }
+                _uiState.update { it.copy(isImageUploading = false, errorMessage = "오류 발생: ${e.message}") }
             }
         }
     }
@@ -246,10 +260,20 @@ class WriteNoteViewModel(
         if (lat == 0.0 || lng == 0.0) {
             return
         }
+        val currentState = _uiState.value
+
+        if (currentState.isImageUploading) {
+            _uiState.update {
+                it.copy(
+                    isSubmitting = false,
+                    errorMessage = "사진 업로드 중입니다. 잠시만 기다려주세요."
+                )
+            }
+            return
+        }
+
         viewModelScope.launch {
             try {
-                val currentState = _uiState.value
-
                 // 좌표 기반 "구 동" 텍스트 추출
                 val addressDisplay = getAddress(context, lat, lng)
 

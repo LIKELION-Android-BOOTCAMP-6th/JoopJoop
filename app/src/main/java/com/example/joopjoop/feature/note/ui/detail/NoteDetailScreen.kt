@@ -45,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.showToast
@@ -197,10 +198,27 @@ fun NoteDetail(
 
             }
         }
-        val isImageAdded = uiState.imageUri != null
-        val blurRadius = if (isImageAdded) 0.dp else 16.dp
         // 메인 이미지 카드
-        Column(
+        if (!uiState.imageUri.isNullOrBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f) // 사진이 있을 때만 정사각형 비율 유지
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(BgDark)
+            ) {
+                JoopJoopImage(
+                    model = uiState.imageUri,
+                    contentDescription = "쪽지 이미지",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+        } else {
+            // 사진이 없을 때 유저 정보와 본문 사이의 최소한의 여백만 추가
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        /*Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f) // 정사각형 비율
@@ -216,6 +234,13 @@ fun NoteDetail(
             ) {
                 val isImageAdded = !uiState.imageUri.isNullOrBlank()
                 if (isImageAdded) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(BgDark)
+                    ){
                     JoopJoopImage(
                         model = uiState.imageUri,
                         contentDescription = "쪽지 이미지",
@@ -243,7 +268,7 @@ fun NoteDetail(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(20.dp))*/
 
         // 본문 텍스트 영역
         Text(
