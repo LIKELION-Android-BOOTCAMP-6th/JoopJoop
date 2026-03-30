@@ -87,10 +87,12 @@ fun WriteNoteScreen(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let { try {
+        uri?.let {
+            try {
                 val contentResolver = context.contentResolver
                 val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                viewModel.onImageSelected(it, context)
+                context.contentResolver.takePersistableUriPermission(it, takeFlags)
+            viewModel.onImageSelected(it, context)
             } catch (e: Exception) {
                 Log.e("PhotoDebug", "URI 권한 획득 실패")
             }

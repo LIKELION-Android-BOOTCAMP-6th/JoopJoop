@@ -92,7 +92,7 @@ class FirestoreNoteSource(
             viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
             likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
             contentText = doc.getString("contentText") ?: "내용 없음",
-            imageUrl = doc.getString("imageUri"),
+            imageUrl = doc.getString("imageUrl"),
             location = NoteLocation(
                 address = locationMap?.get("address") as? String ?: "위치 정보 없음",
                 latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,

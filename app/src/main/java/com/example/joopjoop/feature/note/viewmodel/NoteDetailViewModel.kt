@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.note.viewmodel
 
+import android.os.Process.myUid
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -127,6 +128,8 @@ class NoteDetailViewModel(
                 }
 
                 val noteData = repository.getNoteDetail(noteId)
+                Log.d("NoteDetailDebug", "DB에서 가져온 이미지 URL: ${noteData?.imageUrl}")
+                Log.d("NoteDetailDebug", "쪽지 작성자 ID: ${noteData?.authorId}")
                 if (noteData != null) {
                     _uiState.update { state ->
                         state.copy(
