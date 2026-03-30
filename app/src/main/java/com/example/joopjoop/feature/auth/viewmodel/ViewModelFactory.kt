@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
-import com.example.joopjoop.feature.setting.SettingViewModel
+import com.example.joopjoop.feature.setting.viewmodel.SettingViewModel
 
 
 // 인증 및 설정용 통합 팩토리로 사용중

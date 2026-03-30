@@ -24,7 +24,7 @@ class FirestoreNoteSource(
             val lng = doc.getDouble("longitude") ?: 0.0
             val timestamp = doc.getTimestamp("createdAt")
             Note(
-                noteId = doc.id,
+                id = doc.id,
                 userNickname = doc.getString("authorName") ?: "",
                 createdAt = timestamp?.toDate() ?: Date(),
                 likeCount = doc.getLong("likeCount")?.toInt() ?: 0, // 삭제할 것
@@ -52,7 +52,7 @@ class FirestoreNoteSource(
         return snapshot.documents.mapNotNull { doc ->
             val timestamp = doc.getTimestamp("createdAt")
             Note(
-                noteId = doc.id,
+                id = doc.id,
                 userNickname = doc.getString("authorName") ?: "익명",
                 contentText = doc.getString("content") ?: "",
                 category = doc.getString("category") ?: "일상",
@@ -71,20 +71,27 @@ class FirestoreNoteSource(
     // 쪽지 상세 데이터 조회
     suspend fun getNoteDetail(noteId: String): Note {
         val doc = db.collection(collectionPath).document(noteId).get().await()
+
+        // 문서 데이터 전체를 Map으로 가져옵니다.
+        val data = doc.data ?: throw Exception("데이터가 없습니다.")
+
+        // 'location'이라는 내부 Map 꺼내기
+        val locationMap = data["location"] as? Map<String, Any>
         val timestamp = doc.getTimestamp("createdAt")
         return Note(
-            noteId = doc.id,
+            id = doc.id,
             authorId = doc.getString("authorId") ?: "",
-            userNickname = doc.getString("authorName") ?: "익명 사용자",
+            userNickname = doc.getString("userNickname") ?: "익명 사용자",
             createdAt = timestamp?.toDate() ?: Date(),
             viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
             likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
-            contentText = doc.getString("content") ?: "내용 없음",
+            contentText = doc.getString("contentText") ?: "내용 없음",
             location = NoteLocation(
-                geohash = doc.getString("geohash") ?: "",
-                latitude = doc.getDouble("latitude") ?: 0.0,
-                longitude = doc.getDouble("longitude") ?: 0.0,
-                address = doc.getString("location") ?: "위치 정보 없음"
+                address = locationMap?.get("address") as? String ?: "위치 정보 없음",
+                latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
+                longitude = (locationMap?.get("longitude") as? Number)?.toDouble() ?: 0.0,
+                geohash = locationMap?.get("geohash") as? String ?: "",
+                distance = locationMap?.get("distance") as? String ?: ""
             )
         )
     }

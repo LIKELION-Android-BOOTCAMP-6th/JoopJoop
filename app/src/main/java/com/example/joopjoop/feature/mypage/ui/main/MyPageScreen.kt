@@ -49,6 +49,11 @@ fun MyPageScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // 화면이 처음 그려지거나 다른 화면(글쓰기 등)에 갔다 돌아올 때마다 새로고침
+    LaunchedEffect(Unit) {
+        viewModel.refreshAllData()
+    }
+
     MyPageContent(
         uiState = uiState,
         onSettingClick = onSettingClick,

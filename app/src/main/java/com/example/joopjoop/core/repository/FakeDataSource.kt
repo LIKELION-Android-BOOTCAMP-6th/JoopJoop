@@ -35,7 +35,7 @@ object FakeDataSource {
         }
 
         return Note(
-            noteId = id,
+            id = id,
             authorId = "user_mock",
             userNickname = "줍줍이",
             userProfileImageUrl = "",

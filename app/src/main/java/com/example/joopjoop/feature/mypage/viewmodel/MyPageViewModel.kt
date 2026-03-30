@@ -59,7 +59,7 @@ class MyPageViewModel(
     }
 
     // 1. 유저 프로필 로드
-    private fun loadUserProfile(userId: String) {
+    fun loadUserProfile(userId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val result = myPageRepository.getUserProfile(userId)
@@ -71,7 +71,7 @@ class MyPageViewModel(
     }
 
     // 2. 내가 작성한 쪽지 로드
-    private fun loadMyPosts(userId: String) {
+    fun loadMyPosts(userId: String) {
         viewModelScope.launch {
             _postUiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = myPageRepository.getMyPosts(userId)
@@ -92,7 +92,7 @@ class MyPageViewModel(
 
     // 3. 스크랩한 쪽지 로드
     // MyPageViewModel.kt 내부
-    private fun loadMyScraps(userId: String) {
+    fun loadMyScraps(userId: String) {
         if (_scrapUiState.value.isLoading) return
 
         viewModelScope.launch {
@@ -132,6 +132,16 @@ class MyPageViewModel(
                     loadMyScraps(currentUserId)
                 }
             }
+        }
+    }
+    // UI에서 호출할 수 있도록 refresh 함수 추가
+    fun refreshAllData() {
+        val userId = authRepository.getCurrentUid() ?: ""
+        if (userId.isNotEmpty()) {
+            currentUserId = userId
+            loadUserProfile(userId)
+            loadMyPosts(userId)
+            loadMyScraps(userId)
         }
     }
 }

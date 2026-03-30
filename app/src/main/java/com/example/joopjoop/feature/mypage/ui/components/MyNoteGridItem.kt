@@ -31,7 +31,7 @@ fun MyNoteGridItem(
         modifier = Modifier
             .padding(1.dp) // 그리드 사이의 간격
             .aspectRatio(1f) // 1:1 정사각형 비율 유지
-            .clickable { onNoteClick(note.noteId) },
+            .clickable { onNoteClick(note.id) },
         shape = RectangleShape
     ) {
         Box(

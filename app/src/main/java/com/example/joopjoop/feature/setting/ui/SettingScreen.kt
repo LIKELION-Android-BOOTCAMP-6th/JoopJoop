@@ -47,8 +47,8 @@ import com.example.joopjoop.R
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
-import com.example.joopjoop.feature.setting.SettingEvent
-import com.example.joopjoop.feature.setting.SettingViewModel
+import com.example.joopjoop.feature.setting.viewmodel.SettingEvent
+import com.example.joopjoop.feature.setting.viewmodel.SettingViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.JoopJoopTheme
@@ -57,6 +57,7 @@ import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextSecondary
 import com.example.joopjoop.ui.theme.TextTertiary
 import com.example.joopjoop.core.model.User
+
 @Composable
 fun SettingRoute(
     authRepository: AuthRepository,

@@ -7,7 +7,6 @@ import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
@@ -32,25 +31,28 @@ class FakeNoteRepository : NoteRepository {
         val centerGeohash = LocationUtil.getGeohash(lat, lng).take(5)
         return _allFakeNotes.filter { it.location.geohash.startsWith(centerGeohash) }
     }
+
     private val firestoreSource = FirestoreNoteSource()
     override suspend fun getNoteDetail(noteId: String): Note? {
 //        return _allFakeNotes.find { it.noteId == noteId }
-            return try {
-                Log.d("UIDebug", "Repository: Firestore에 데이터 요청 중... ID: $noteId")
+        return try {
+            Log.d("UIDebug", "Repository: Firestore에 데이터 요청 중... ID: $noteId")
 
-                // 🌟 진짜 Firestore 소스 호출
-                val remoteNote = firestoreSource.getNoteDetail(noteId)
+            // 🌟 진짜 Firestore 소스 호출
+            val remoteNote = firestoreSource.getNoteDetail(noteId)
 
-                Log.d("UIDebug", "Repository: 서버에서 읽어온 숫자 = ${remoteNote.likeCount}")
+            Log.d("UIDebug", "Repository: 서버에서 읽어온 숫자 = ${remoteNote.likeCount}")
 
-                // 인터페이스가 Note? 를 원하므로 remoteNote(Note)를 그대로 반환해도 됩니다.
-                remoteNote
-            } catch (e: Exception) {
-                Log.e("UIDebug", "Repository 에러 발생: ${e.message}")
-                // 에러 시 null을 줘서 앱이 죽지 않게 방어합니다.
-                null
-            }
+            // 인터페이스가 Note? 를 원하므로 remoteNote(Note)를 그대로 반환해도 됩니다.
+            remoteNote
+        } catch (e: Exception) {
+            Log.e("UIDebug", "Repository 에러 발생: ${e.message}")
+            // 에러 시 null을 줘서 앱이 죽지 않게 방어합니다.
+            null
         }
+    }
+        return _allFakeNotes.find { it.id == noteId }
+    }
 
     override suspend fun createNote(request: NoteRequest): String {
         delay(800)
@@ -84,7 +86,7 @@ class FakeNoteRepository : NoteRepository {
     }
 
     override suspend fun incrementViewCount(noteId: String) {
-        val index = _allFakeNotes.indexOfFirst { it.noteId == noteId }
+        val index = _allFakeNotes.indexOfFirst { it.id == noteId }
         if (index != -1) {
             _allFakeNotes[index] =
                 _allFakeNotes[index].copy(viewCount = _allFakeNotes[index].viewCount + 1)
@@ -92,7 +94,7 @@ class FakeNoteRepository : NoteRepository {
     }
 
     override suspend fun updateLikeCount(noteId: String, increment: Int) {
-        val index = _allFakeNotes.indexOfFirst { it.noteId == noteId }
+        val index = _allFakeNotes.indexOfFirst { it.id == noteId }
         if (index != -1) {
             _allFakeNotes[index] =
                 _allFakeNotes[index].copy(likeCount = _allFakeNotes[index].likeCount + increment)
