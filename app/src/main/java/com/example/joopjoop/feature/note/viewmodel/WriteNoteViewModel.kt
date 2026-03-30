@@ -151,41 +151,100 @@ class WriteNoteViewModel(
 
         viewModelScope.launch {
             try {
-                // ImageProcessor를 통해 리사이징 및 압축
-                val processedData = withContext(Dispatchers.IO) {
-                    ImageProcessor(context).processOriginal(uri)
+                // 1. ImageProcessor를 통해 원본과 썸네일 '둘 다' 생성
+                val (originalData, thumbData) = withContext(Dispatchers.IO) {
+                    val processor = ImageProcessor(context)
+                    val original = processor.processOriginal(uri)
+                    val thumb = processor.processThumbnail(uri)
+                    original to thumb
                 }
 
-                if (processedData == null) {
-                    _uiState.update { it.copy(isImageUploading = false, errorMessage = "이미지 가공 실패") }
+                if (originalData == null || thumbData == null) {
+                    _uiState.update {
+                        it.copy(
+                            isImageUploading = false,
+                            errorMessage = "이미지 가공 실패"
+                        )
+                    }
                     return@launch
                 }
 
-                Log.d("es", "이미지 가공 성공: 크기 ${processedData.size} bytes")
+                val timestamp = System.currentTimeMillis()
 
-                // 가공된 ByteArray 데이터와 파일명을 Repository에 전달
-                val fileName = "note_${System.currentTimeMillis()}"
-                val imageUrl = repository.uploadImage(processedData, fileName, onProgress = { progress ->
-                    _uiState.update { it.copy(uploadProgress = progress) }
-                })
+                // 2. 원본 이미지 업로드
+                val originalUrl = repository.uploadImage(
+                    originalData,
+                    "note_$timestamp",
+                    onProgress = { progress ->
+                        _uiState.update { it.copy(uploadProgress = progress) }
+                    })
 
-                if (imageUrl != null) {
-                    // 업로드 성공 시, 상태의 URI를 '서버 URL(https://)'로 교체
-                    _uiState.update { it.copy(
-                        selectedImageUri = imageUrl,
-                        isImageUploading = false
-                    ) }
+                // 3. 썸네일 이미지 업로드 (파일명에 _thumb 추가)
+                val thumbUrl =
+                    repository.uploadImage(thumbData, "note_${timestamp}_thumb", onProgress = {})
+
+                if (originalUrl != null && thumbUrl != null) {
+                    // 4. 업로드 성공 시, 원본 URL과 썸네일 URL을 모두 상태에 저장
+                    _uiState.update {
+                        it.copy(
+                            selectedImageUri = originalUrl,    // 원본 URL
+                            selectedThumbnailUri = thumbUrl,   // 썸네일 URL
+                            isImageUploading = false
+                        )
+                    }
                 } else {
                     _uiState.update { it.copy(isImageUploading = false, errorMessage = "서버 전송 실패") }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isImageUploading = false, errorMessage = "오류 발생: ${e.message}") }
+                _uiState.update {
+                    it.copy(
+                        isImageUploading = false,
+                        errorMessage = "오류 발생: ${e.message}"
+                    )
+                }
             }
         }
-    }
+
+            /*
+                                // ImageProcessor를 통해 리사이징 및 압축
+                                val processedData = withContext(Dispatchers.IO) {
+                                    ImageProcessor(context).processOriginal(uri)
+                                }
+
+                                if (processedData == null) {
+                                    _uiState.update { it.copy(isImageUploading = false, errorMessage = "이미지 가공 실패") }
+                                    return@launch
+                                }
+
+                                Log.d("es", "이미지 가공 성공: 크기 ${processedData.size} bytes")
+
+                                // 가공된 ByteArray 데이터와 파일명을 Repository에 전달
+                                val fileName = "note_${System.currentTimeMillis()}"
+                                val imageUrl = repository.uploadImage(processedData, fileName, onProgress = { progress ->
+                                    _uiState.update { it.copy(uploadProgress = progress) }
+                                })
+
+                                if (imageUrl != null) {
+                                    // 업로드 성공 시, 상태의 URI를 '서버 URL(https://)'로 교체
+                                    _uiState.update { it.copy(
+                                        selectedImageUri = imageUrl,
+                                        isImageUploading = false
+                                    ) }
+                                } else {
+                                    _uiState.update { it.copy(isImageUploading = false, errorMessage = "서버 전송 실패") }
+                                }
+                            } catch (e: Exception) {
+                                _uiState.update { it.copy(isImageUploading = false, errorMessage = "오류 발생: ${e.message}") }
+                            }
+                        }
+                    }*/
+            }
 
     fun onImageRemoved() {
-        _uiState.update { it.copy(selectedImageUri = null) }
+        _uiState.update { it.copy(
+            selectedImageUri = null,
+            selectedThumbnailUri = null
+        ) }
     }
 
     val isSubmitEnabled: Boolean
@@ -297,6 +356,7 @@ class WriteNoteViewModel(
                     category = currentState.selectedCategory,
                     storageHours = currentState.storageHours,
                     imageUri = currentState.selectedImageUri,
+                    thumbnailUri = currentState.selectedThumbnailUri,
                     latitude = lat,
                     longitude = lng,
                     createdAt = currentTime,

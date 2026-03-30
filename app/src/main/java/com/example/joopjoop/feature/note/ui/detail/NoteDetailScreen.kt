@@ -73,7 +73,9 @@ fun NoteDetailScreen(
 
     // 화면 진입 시 데이터 불러오기
     LaunchedEffect(noteId) {
-        viewModel.loadNoteDetail(noteId)
+        if (noteId.isNotEmpty()) {
+            viewModel.loadNoteDetail(noteId)
+        }
     }
 
     // 에러 메시지 감시 및 토스트 출력

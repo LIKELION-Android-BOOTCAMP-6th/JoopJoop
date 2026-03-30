@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.joopjoop.R
+import com.example.joopjoop.core.common.util.JoopJoopImage
 import com.example.joopjoop.feature.note.viewmodel.NoteListViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
@@ -190,7 +191,61 @@ fun NoteCard(item: NoteItem, onClick: () -> Unit = {}) {
                 .background(BgDark),
             contentAlignment = Alignment.Center
         ) {
-            if (isLocked) {
+            when {
+                isLocked -> { // 30m 밖
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_lock),
+                        contentDescription = null,
+                        tint = TextTertiary,
+                        modifier = Modifier.size(40.dp))
+                }
+                !item.thumbnailUrl.isNullOrBlank() -> { // thumbnailUrl이 있으면 노출
+                    JoopJoopImage(
+                        model = item.thumbnailUrl,
+                        contentDescription = "쪽지 썸neil",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                else -> { // 사진 없는 경우 기본 아이콘
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_mail_24),
+                        contentDescription = null,
+                        tint = OrangePrimary,
+                        modifier = Modifier.size(48.dp))
+                }
+            }
+        }
+
+            /*when {
+                // 1. 잠금 상태 (30m 밖)
+                isLocked -> {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_lock),
+                        contentDescription = null,
+                        tint = TextTertiary,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+                // 2. 30m 이내 & 사진 있음 (썸네일 노출)
+                !item.thumbnailUrl.isNullOrBlank() -> {
+                    JoopJoopImage(
+                        model = item.thumbnailUrl,
+                        contentDescription = "쪽지 썸네일",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                // 3. 30m 이내 & 사진 없음 (기존 아이콘)
+                else -> {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_mail_24),
+                        contentDescription = null,
+                        tint = OrangePrimary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+            }
+        }*/
+            /*if (isLocked) {
                 // 잠금 상태일 때 잠금 아이콘
                 Icon(
                     painter = painterResource(id = R.drawable.ic_lock),
@@ -207,13 +262,13 @@ fun NoteCard(item: NoteItem, onClick: () -> Unit = {}) {
                     modifier = Modifier.size(48.dp)
                 )
             }
-        }
+        }*/
 
         Spacer(modifier = Modifier.height(10.dp))
 
         // 내용 - 본문 일부 노출(한줄만, 넘어가면 ... 처리)
         Text(
-            text = if (isLocked) "가까이 이동해서 확인하세요" else item.content, color = TextPrimary,
+            text = if (isLocked) "가까이 이동해보세요" else item.content, color = TextPrimary,
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
@@ -242,8 +297,7 @@ fun NoteCard(item: NoteItem, onClick: () -> Unit = {}) {
                 fontSize = 12.sp
             )
         }
-    }
-}
+    }}
 
 // 공통네비게이션바가 적용되므로 주석으로 막음 (추후 삭제해도 됨)
 

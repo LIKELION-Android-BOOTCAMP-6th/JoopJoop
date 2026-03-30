@@ -60,9 +60,10 @@ class FirestoreNoteSource(
             Note(
                 id = doc.id,
                 userNickname = doc.getString("authorName") ?: "익명",
-                contentText = doc.getString("content") ?: "",
+                contentText = doc.getString("contentText") ?: "",
+                thumbnailUrl = doc.getString("thumbnailUrl"),
                 category = doc.getString("category") ?: "일상",
-                imageUrl = doc.getString("imageUri") ?: "",
+                imageUrl = doc.getString("imageUrl") ?: "",
                 location = NoteLocation(
                     address = locationMap?.get("address") as? String ?: "위치 정보 없음",
                     latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
@@ -76,8 +77,12 @@ class FirestoreNoteSource(
 
     // 쪽지 상세 데이터 조회
     suspend fun getNoteDetail(noteId: String): Note {
-        val doc = db.collection(collectionPath).document(noteId).get().await()
 
+        val docRef = db.collection(collectionPath).document(noteId)
+        // 조회 요청 - 조회수 +1
+        docRef.update("viewCount", FieldValue.increment(1)).await()
+
+        val doc = docRef.get().await()
         // 문서 데이터 전체를 Map으로 가져옵니다.
         val data = doc.data ?: throw Exception("데이터가 없습니다.")
 
@@ -127,6 +132,7 @@ class FirestoreNoteSource(
             "category" to request.category,
             "storageHours" to request.storageHours,
             "imageUrl" to request.imageUri,
+            "thumbnailUrl" to request.thumbnailUri,
             "createdAt" to Timestamp.now(),
             "isActive" to true,
             "geohash" to request.geohash

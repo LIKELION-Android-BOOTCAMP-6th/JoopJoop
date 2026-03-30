@@ -8,11 +8,11 @@ data class Note(
     val userNickname: String = "",
     val userProfileImageUrl: String = "",
     val contentText: String = "",
-    val imageUrl: String? = null,
+    val thumbnailUrl: String? = null,   // 썸네일 url
+    val imageUrl: String? = null,       // 이미지 url
     val category: String = "",
     val viewCount: Int = 0,
     val likeCount: Int = 0,
-    val isLiked: Boolean = false,
     // location 도 확실히 정의할 필요 있음
     val location: NoteLocation = NoteLocation(),
     val isActive: Boolean = true,

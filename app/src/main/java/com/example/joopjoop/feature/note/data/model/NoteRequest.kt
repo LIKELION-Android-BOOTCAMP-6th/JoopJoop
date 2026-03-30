@@ -7,6 +7,7 @@ data class NoteRequest(
     val category: String = "",
     val storageHours: Int = 12,
     val imageUri: String? = null,
+    val thumbnailUri: String? = null,
 
     // 위치 관련
     val latitude: Double = 0.0,
