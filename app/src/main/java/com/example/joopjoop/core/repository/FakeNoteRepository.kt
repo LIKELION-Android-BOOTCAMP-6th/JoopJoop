@@ -52,8 +52,6 @@ class FakeNoteRepository : NoteRepository {
             null
         }
     }
-        return _allFakeNotes.find { it.id == noteId }
-    }
 
     override suspend fun createNote(request: NoteRequest): String {
         delay(800)
@@ -61,7 +59,7 @@ class FakeNoteRepository : NoteRepository {
 
         // 작성한 노트를 실제 리스트에 추가하여 다른 화면에서도 보이게 함
         val newNote = Note(
-            noteId = newId,
+            id = newId,
             authorId = "me",
             userNickname = request.authorName ?: "나",
             userProfileImageUrl = "",
