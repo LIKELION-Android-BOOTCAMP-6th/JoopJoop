@@ -165,7 +165,9 @@ class WriteNoteViewModel(
 
                 // 가공된 ByteArray 데이터와 파일명을 Repository에 전달
                 val fileName = "note_${System.currentTimeMillis()}"
-                val imageUrl = repository.uploadImage(processedData, fileName)
+                val imageUrl = repository.uploadImage(processedData, fileName, onProgress = { progress ->
+                    _uiState.update { it.copy(uploadProgress = progress) }
+                })
 
                 if (imageUrl != null) {
                     // 업로드 성공 시, 상태의 URI를 '서버 URL(https://)'로 교체

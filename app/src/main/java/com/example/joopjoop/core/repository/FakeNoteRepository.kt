@@ -161,7 +161,7 @@ class FakeNoteRepository : NoteRepository {
 
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 
-    override suspend fun uploadImage(processedData: ByteArray, fileName: String): String? {
+    override suspend fun uploadImage(processedData: ByteArray, fileName: String, onProgress: (Float) -> Unit): String? {
         return try {
             val storageRef = storage.reference.child("notes/$fileName.jpg")
 

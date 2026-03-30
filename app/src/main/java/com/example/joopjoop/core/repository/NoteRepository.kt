@@ -44,7 +44,7 @@ interface NoteRepository {
     suspend fun isNoteBookmarked(noteId: String, userId: String): Boolean
 
     // 이미지 업로드
-    suspend fun uploadImage(processedData: ByteArray, fileName: String): String?
+    suspend fun uploadImage(processedData: ByteArray, fileName: String, onProgress: (Float) -> Unit): String?
 
     // 쪽지 수정
     suspend fun editNote(noteId: String, request: NoteRequest)

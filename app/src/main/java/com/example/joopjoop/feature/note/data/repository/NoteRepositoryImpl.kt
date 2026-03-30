@@ -24,9 +24,22 @@ class NoteRepositoryImpl(
 //    override suspend fun getNotes(): List<Note> {
 //        return source.getNotes()
 //    }
-        override suspend fun uploadImage(processedData: ByteArray, fileName: String): String? {
+        override suspend fun uploadImage(
+            processedData: ByteArray,
+            fileName: String,
+            onProgress: (Float) -> Unit
+        ): String? {
             return try {
                 val storageRef = storage.reference.child("notes/$fileName.jpg")
+                val uploadTask = storageRef.putBytes(processedData)
+
+                uploadTask.addOnProgressListener { taskSnapshot ->
+                    val transferred = taskSnapshot.bytesTransferred.toDouble()
+                    val total = taskSnapshot.totalByteCount.toDouble()
+
+                    val progress = if (total > 0) (transferred / total).toFloat() else 0f
+                    onProgress(progress)
+                }.await()
 
                 // 이미지 업로드
                 storageRef.putBytes(processedData).await()

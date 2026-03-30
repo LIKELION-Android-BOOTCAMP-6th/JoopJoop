@@ -2,6 +2,7 @@ package com.example.joopjoop.feature.note.ui.write
 
 import android.content.Intent
 import android.net.Uri
+import android.util.LayoutDirection
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,11 +28,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -220,9 +224,10 @@ fun WriteNoteScreen(
                         .clickable { galleryLauncher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
+                    // 1. 선택된 이미지 표시
                     if (isImageAdded) {
                         JoopJoopImage(
-                            model = uiState.selectedImageUri, // 뷰모델의 상태값 (Uri 또는 URL)
+                            model = uiState.selectedImageUri,
                             contentDescription = "선택된 이미지",
                             modifier = Modifier.fillMaxSize()
                         )
@@ -257,6 +262,23 @@ fun WriteNoteScreen(
                                 fontSize = 10.sp
                             )
                         }
+                    }
+                }
+                // 사진 전체 밑에 길게 들어가는 프로그레스 바
+                if (isImageAdded && uiState.isImageUploading) {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(start = 5.dp, bottom = 5.dp)
+                            .width(80.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "${(uiState.uploadProgress * 100).toInt()}%",
+                            color = TextPrimary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
