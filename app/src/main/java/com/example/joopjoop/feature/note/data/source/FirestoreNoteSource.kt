@@ -27,8 +27,8 @@ class FirestoreNoteSource(
                 noteId = doc.id,
                 userNickname = doc.getString("authorName") ?: "",
                 createdAt = timestamp?.toDate() ?: Date(),
-                likeCount = doc.getLong("likeCount")?.toInt() ?: 0, // 삭제할 것
-                viewCount = doc.getLong("viewCount")?.toInt() ?: 0, // 삭제할 것
+                likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
+                viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
                 contentText = doc.getString("content") ?: "",
                 location = NoteLocation(
                     latitude = lat,
@@ -72,6 +72,7 @@ class FirestoreNoteSource(
     suspend fun getNoteDetail(noteId: String): Note {
         val doc = db.collection(collectionPath).document(noteId).get().await()
         val timestamp = doc.getTimestamp("createdAt")
+
         return Note(
             noteId = doc.id,
             userId = doc.getString("authorId") ?: "",
@@ -80,6 +81,7 @@ class FirestoreNoteSource(
             viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
             likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
             contentText = doc.getString("content") ?: "내용 없음",
+            imageUrl = doc.getString("imageUri"),
             location = NoteLocation(
                 geohash = doc.getString("geohash") ?: "",
                 latitude = doc.getDouble("latitude") ?: 0.0,

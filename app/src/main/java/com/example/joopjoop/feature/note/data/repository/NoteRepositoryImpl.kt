@@ -1,14 +1,19 @@
 package com.example.joopjoop.feature.note.data.repository
 
+import android.net.Uri
+import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.tasks.await
 
 class NoteRepositoryImpl(
-    private val source: FirestoreNoteSource
+    private val source: FirestoreNoteSource,
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance(),
 ) : NoteRepository {
 
     // 이건 fireStore에서 모든 쪽지를 긁어오는 것처럼 보입니다.
@@ -16,6 +21,21 @@ class NoteRepositoryImpl(
 //    override suspend fun getNotes(): List<Note> {
 //        return source.getNotes()
 //    }
+        override suspend fun uploadImage(processedData: ByteArray, fileName: String): String? {
+            return try {
+                val storageRef = storage.reference.child("notes/$fileName.jpg")
+
+                // 1. 이미지 업로드 (ImageProcessor가 만든 ByteArray 사용)
+                storageRef.putBytes(processedData).await()
+
+                // 2. 업로드 완료 후 이미지의 '진짜 주소(URL)' 가져오기
+                val downloadUrl = storageRef.downloadUrl.await()
+                downloadUrl.toString() // 이 URL을 Firestore의 imageUri 필드에 저장하면 됩니다!
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
 
     // 주변 쪽지 탐색
     override suspend fun getNotesByLocation(
@@ -89,6 +109,7 @@ class NoteRepositoryImpl(
 
     // 스크랩 상태 조회
     override suspend fun isNoteBookmarked(noteId: String, userId: String): Boolean {
+        // 소스의 함수를 호출 (아래 2번에서 구현)
         return source.checkBookmarkExists(noteId, userId)
     }
 
@@ -101,6 +122,7 @@ class NoteRepositoryImpl(
     override suspend fun deleteNote(noteId: String) {
         source.deleteNote(noteId)
     }
+
 }
 
 

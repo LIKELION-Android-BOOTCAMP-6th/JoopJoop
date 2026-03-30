@@ -56,6 +56,7 @@ import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextSecondary
 import com.example.joopjoop.ui.theme.TextTertiary
+import com.example.joopjoop.core.common.util.JoopJoopImage
 
 @Composable
 fun NoteDetailScreen(
@@ -177,38 +178,47 @@ fun NoteDetail(
         val isImageAdded = uiState.imageUri != null
         val blurRadius = if (isImageAdded) 0.dp else 16.dp
         // 메인 이미지 카드
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f) // 정사각형 비율
                 .clip(RoundedCornerShape(12.dp))
                 .background(BgDark) // 이미지 로딩 전 배경색
         ) {
-            if (isImageAdded) {
-                Image(
-                    painter = painterResource(id = R.drawable.note_detail_image),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(OrangePrimary.copy(alpha = 0.2f), BgDarkest)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f) // 정사각형 비율
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(BgDark) // 이미지 로딩 전 배경색
+            ) {
+                val isImageAdded = !uiState.imageUri.isNullOrBlank()
+                if (isImageAdded) {
+                    JoopJoopImage(
+                        model = uiState.imageUri,
+                        contentDescription = "쪽지 이미지",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(OrangePrimary.copy(alpha = 0.2f), BgDarkest)
+                                )
                             )
-                        )
-                        .blur(20.dp)
-                )
-                Icon(
-                    painter = painterResource(id = R.drawable.outline_edit_square_24),
-                    contentDescription = null,
-                    tint = TextTertiary.copy(alpha = 0.4f),
-                    modifier = Modifier
-                        .size(64.dp)
-                        .align(Alignment.Center)
-                )
+                            .blur(20.dp)
+                    )
+                    Icon(
+                        painter = painterResource(id = R.drawable.outline_edit_square_24),
+                        contentDescription = null,
+                        tint = TextTertiary.copy(alpha = 0.4f),
+                        modifier = Modifier
+                            .size(64.dp)
+                            .align(Alignment.Center)
+                    )
+                }
             }
         }
         Spacer(modifier = Modifier.height(20.dp))

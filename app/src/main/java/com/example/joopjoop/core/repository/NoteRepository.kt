@@ -1,5 +1,6 @@
 package com.example.joopjoop.core.repository
 
+import android.net.Uri
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.feature.note.data.model.NoteRequest
@@ -41,6 +42,9 @@ interface NoteRepository {
 
     // 쪽지 스크랩 조회
     suspend fun isNoteBookmarked(noteId: String, userId: String): Boolean
+
+    // 이미지 업로드
+    suspend fun uploadImage(processedData: ByteArray, fileName: String): String?
 
     // 쪽지 수정
     suspend fun editNote(noteId: String, request: NoteRequest)

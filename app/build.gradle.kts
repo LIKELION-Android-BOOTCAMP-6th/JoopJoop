@@ -77,6 +77,7 @@ dependencies {
 
     // 파이어베이스 관련 라이브러리
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-storage-ktx")
     // 사용할 서비스들
     implementation("com.google.firebase:firebase-auth-ktx")     // 인증용
     implementation("com.google.firebase:firebase-firestore-ktx") // 데이터베이스용

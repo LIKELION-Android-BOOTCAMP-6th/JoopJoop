@@ -80,6 +80,7 @@ class NoteDetailViewModel(
                             viewCount = noteData.viewCount,
                             likeCount = maxOf(0, serverLikeCount),
                             content = noteData.contentText,
+                            imageUri = noteData.imageUrl,
                             location = noteData.location.address,
                             isLiked = isLiked,
                             isBookmarked = isBookmarked,
@@ -87,11 +88,10 @@ class NoteDetailViewModel(
                         )
                     }
                 } else {
-                    // 데이터가 null일 때 (ID가 존재하지 않을 때) (예: 가짜 마커 ID 5번 클릭 시)
+                    // 데이터가 null일 때 (ID가 존재하지 않을 때)
                     _uiState.update { it.copy(isLoading = false, errorMessage = "쪽지를 찾을 수 없습니다.") }
                 }
             } catch (e: Exception) {
-                // 네트워크 단절 등 진짜 '시스템 에러'가 발생했을 때
                 Log.e("NoteDetail", "Load Error: ${e.message}")
                 _uiState.update { it.copy(isLoading = false, errorMessage = "데이터 로딩 실패") }
             }
@@ -103,7 +103,14 @@ class NoteDetailViewModel(
         val isCurrentlyLiked = _uiState.value.isLiked
         val nextState = !isCurrentlyLiked
 
-        _uiState.update { it.copy(isLiked = nextState) }
+        // UI 상태 즉시 반영
+        _uiState.update { state ->
+            state.copy(
+                isLiked = nextState,
+                likeCount = if (nextState) state.likeCount + 1 else (state.likeCount - 1).coerceAtLeast(0)
+            )
+        }
+
         viewModelScope.launch {
             try {
                 if (nextState) {
@@ -112,15 +119,20 @@ class NoteDetailViewModel(
                     repository.removeLike(noteId, myId)
                 }
 
-                // Firestore 실제값으로 동기화
                 val noteData = repository.getNoteDetail(noteId)
-                _uiState.update { state ->
-                    state.copy(
-                        likeCount = noteData?.likeCount ?: state.likeCount
-                    )
+                if (noteData != null) {
+                    _uiState.update { state ->
+                        state.copy(
+                            likeCount = noteData.likeCount // 여기서 noteData.likeCount가 정확히 오는지 확인
+                        )
+                    }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLiked = isCurrentlyLiked) }
+                // 실패 시 원복
+                _uiState.update { it.copy(
+                    isLiked = isCurrentlyLiked,
+                    likeCount = if (isCurrentlyLiked) _uiState.value.likeCount else _uiState.value.likeCount // 적절히 원복 로직 추가
+                )}
             }
         }
     }

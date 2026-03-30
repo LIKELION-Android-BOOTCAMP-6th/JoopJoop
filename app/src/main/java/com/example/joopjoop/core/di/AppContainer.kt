@@ -17,6 +17,7 @@ import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModelFactory
 import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.example.joopjoop.feature.note.viewmodel.NoteViewModelFactory
+import com.google.firebase.storage.FirebaseStorage
 
 // 앱 전체의 의존성을 관리하는 중앙 컨테이너
 class AppContainer(context: Context) {
@@ -41,8 +42,8 @@ class AppContainer(context: Context) {
     val noteRepository: NoteRepository by lazy {
         // 필요한 데이터에 따라 둘중 하나의 주석을 해제해서 사용하세요
         // 1. 실제 서버 데이터가 필요할 때
-        NoteRepositoryImpl(firestoreNoteSource)
-
+        NoteRepositoryImpl(source = firestoreNoteSource,
+            storage = FirebaseStorage.getInstance())
         // 2. 가짜 데이터가 필요할 때
 //        FakeNoteRepository()
     }
