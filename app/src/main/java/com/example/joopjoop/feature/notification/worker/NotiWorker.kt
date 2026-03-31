@@ -12,7 +12,7 @@ class NotiWorker(
     override suspend fun doWork(): Result {
         val notificationHelper = NotificationHelper(applicationContext)
         notificationHelper.createNotificationChannel()
-        notificationHelper.showNotification("JoopJoop", "주변에 새로운 게시글이 있는지 확인해 보세요!")
+        notificationHelper.showNotification("JoopJoop", "주변에 새로운 쪽지가 있는지 확인해 보세요!")
 
         return Result.success()
     }
