@@ -22,6 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.example.joopjoop.Routes.NOTE_EDIT
 import com.example.joopjoop.feature.auth.ui.intro.IntroScreen
 import com.example.joopjoop.feature.auth.ui.login.LoginRoute
 import com.example.joopjoop.feature.auth.ui.signup.SignupRoute
@@ -63,6 +64,7 @@ object Routes {
     const val WRITE = "write"           // 새로운 쪽지 작성 화면
     const val NOTE_LIST = "noteList"    // 주변 쪽지들을 리스트로 보는 화면
     const val NOTE_DETAIL = "noteDetail/{noteId}" // 특정 쪽지의 상세 내용을 보는 화면
+    const val NOTE_EDIT = "write_note?noteId={noteId}"      // 쪽지 수정을 위한 화면 전환
     const val SETTINGS = "settings"      // 알림 설정, 계정 관리 등 설정 화면
 }
 
@@ -189,6 +191,11 @@ fun RootNavHost() {
                     factory = appContainer.noteViewModelFactory
                 )
 
+                LaunchedEffect(Unit) {
+                    // 노트 작성 진입시 상황에 따라 위치 값 검색 여부
+                    viewModel.prepareNewNote()
+                }
+
                 WriteNoteScreen(
                     navController = rootNavController,
                     viewModel = viewModel
@@ -212,6 +219,44 @@ fun RootNavHost() {
                 NoteDetailScreen(
                     navController = rootNavController,
                     noteId = noteId,
+                    viewModel = viewModel
+                )
+            }
+
+            // 설정 화면 주소 등록
+            composable(Routes.SETTINGS) {
+                // SettingRoute를 호출하여 의존성(Repository, ViewModel)을 주입합니다.
+                SettingRoute(
+                    authRepository = appContainer.authRepository,
+                    notificationViewModel = viewModel(), // 필요 시 appContainer에서 가져올 수도 있음.
+                    onNavigateToLogin = {
+                        // 로그아웃 성공 시 AUTH 화면으로 이동하며 스택 정리
+                        rootNavController.navigate(Routes.AUTH) {
+                            popUpTo(Routes.MAIN) { inclusive = true }
+                        }
+                    },
+                    onBackClick = {
+                        rootNavController.popBackStack()
+                    }
+                )
+            }
+
+            // 쪽지 내용 수정
+            composable(
+                route = NOTE_EDIT,
+                arguments = listOf(navArgument("noteId") { nullable = true })
+            ) { backStackEntry ->
+                val noteId = backStackEntry.arguments?.getString("noteId")
+                val viewModel: WriteNoteViewModel = viewModel(
+                    factory = appContainer.noteViewModelFactory
+                )
+
+                LaunchedEffect(noteId) {
+                    viewModel.loadNoteForEdit(noteId)
+                }
+
+                WriteNoteScreen(
+                    navController = rootNavController,
                     viewModel = viewModel
                 )
             }

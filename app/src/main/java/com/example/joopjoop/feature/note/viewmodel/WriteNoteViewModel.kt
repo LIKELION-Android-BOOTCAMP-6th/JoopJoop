@@ -43,12 +43,12 @@ class WriteNoteViewModel(
 
     private val _uiState = MutableStateFlow(WriteNoteUiState())
     val uiState: StateFlow<WriteNoteUiState> = _uiState.asStateFlow()
+    private var editingNoteId: String? = null   // 쪽지 수정하기 위한 노트 id
 
     val categories = listOf("일상", "감성", "추억", "맛집")
     private val timeOptions = listOf(3, 6, 12, 24)
 
     init {
-        fetchCurrentLocation()
         initUserInfo()
     }
 
@@ -82,6 +82,9 @@ class WriteNoteViewModel(
 
     // 위치 가져오기
     private fun fetchCurrentLocation() {
+        Log.d("jay", "editedNoteId ============== ${_uiState.value.editedNoteId}")
+        if (_uiState.value.editedNoteId != null) return
+
         viewModelScope.launch {
             try {
                 // LocationProvider 내부에서 getCurrentLocation(Priority_HIGH) 로직이 처리됨
@@ -180,7 +183,12 @@ class WriteNoteViewModel(
                 }
 
                 if (originalData == null || thumbData == null) {
-                    _uiState.update { it.copy(isImageUploading = false, errorMessage = "이미지 가공 실패") }
+                    _uiState.update {
+                        it.copy(
+                            isImageUploading = false,
+                            errorMessage = "이미지 가공 실패"
+                        )
+                    }
                     return@launch
                 }
 
@@ -302,9 +310,8 @@ class WriteNoteViewModel(
     }
 
     fun performSubmit(context: Context, lat: Double, lng: Double) {
-        if (lat == 0.0 || lng == 0.0) {
-            return
-        }
+        if (lat == 0.0 || lng == 0.0) return
+
         val currentState = _uiState.value
 
         if (currentState.isImageUploading) {
@@ -319,24 +326,46 @@ class WriteNoteViewModel(
 
         viewModelScope.launch {
             try {
-                // 좌표 기반 "구 동" 텍스트 추출
-                val addressDisplay = getAddress(context, lat, lng)
+                // 수정 작업 분기 처리
+                val isEditMode = currentState.editedNoteId != null
+                val currentState = _uiState.value
 
-                // Geohash 생성
-                val hash = LocationUtil.getGeohash(lat, lng)
+                // 1. 공통으로 사용할 변수 선언 (초기값 설정 또는 선언만 수행)
+                val finalLocation: NoteLocation
+                val finalCreatedAt: Date
+                val finalExpiresAt: Date
+                val id: String
+                val finalStorageHours : Int
 
-                // 작성 현재 시간 및 노출 시간 계산한 실제 시간
-                val currentTime = System.currentTimeMillis()
-                val expiresTime = currentTime + (currentState.storageHours * 3600000L)
+                if (isEditMode) {
+                    // [쪽지 수정] 기존 uiState에 저장된 값을 그대로 사용한다
+                    finalLocation = currentState.location
+                    finalCreatedAt = currentState.createdAt
+                    finalStorageHours = currentState.storageHours
+                    finalExpiresAt = Date(finalCreatedAt.time + (finalStorageHours * 3600000L))
+                    id = currentState.editedNoteId.toString()
+                } else {
+                    // 새로 쪽지 작성
+                    val currentTime = System.currentTimeMillis()
+                    val addressDisplay = getAddress(context, lat, lng)
+                    val hash = LocationUtil.getGeohash(lat, lng)
 
-                val location = NoteLocation(
-                    latitude = lat,
-                    longitude = lng,
-                    address = addressDisplay,
-                    geohash = hash
-                )
+                    id = ""
+                    finalStorageHours = currentState.storageHours
+                    finalCreatedAt = Date(currentTime)           // 작성 현재 시간
+                    finalExpiresAt =
+                        Date(currentTime + (currentState.storageHours * 3600000L))      // 노출 시간 (실제 시간)
+
+                    finalLocation = NoteLocation(
+                        latitude = lat,
+                        longitude = lng,
+                        address = addressDisplay,
+                        geohash = hash
+                    )
+                }
 
                 val request = Note(
+                    id = currentState.editedNoteId.toString(),
                     authorId = currentState.user.uid,
                     userNickname = currentState.user.nickname,
                     profileImageUrl = currentState.user.profileImageUrl,
@@ -344,18 +373,22 @@ class WriteNoteViewModel(
                     category = currentState.selectedCategory,
                     imageUrl = currentState.selectedImageUri,
                     thumbnailUrl = currentState.selectedThumbnailUri,
-                    createdAt = Date(currentTime),
-                    expiresAt = Date(expiresTime),
-                    location = location
+                    storageHours = finalStorageHours,
+                    createdAt = finalCreatedAt,
+                    expiresAt = finalExpiresAt,
+                    location = finalLocation
                 )
 
-                val newId = repository.createNote(request)
+                if (isEditMode) {
+                    // 쪽지 수정
+                    repository.submitEditedNote(currentState.editedNoteId!!, request)
+                } else {
+                    // 새 쪽지 작성
+                    repository.createNote(request)
+                }
+
                 _uiState.update {
-                    it.copy(
-                        isSubmitSuccess = true,
-                        createdNoteId = newId,
-                        isSubmitting = false
-                    )
+                    it.copy(isSubmitting = false, isSubmitSuccess = true)
                 }
             } catch (e: Exception) {
                 _uiState.update {
@@ -427,5 +460,47 @@ class WriteNoteViewModel(
             dong.isNotEmpty() -> dong // 동만 있을 때
             else -> address.subLocality ?: address.locality ?: "쪽지 위치" // 둘 다 없다면
         }
+    }
+
+    // 쪽지 수정 하기 위한 데이터 로딩
+    fun loadNoteForEdit(noteId: String?) {
+        if (noteId == null) {
+            editingNoteId = null
+            return
+        }
+
+        editingNoteId = noteId
+
+        viewModelScope.launch {
+            try {
+                val note = repository.getNoteDetail(noteId)
+                note?.let { data ->
+                    _uiState.update {
+                        it.copy(
+                            editedNoteId = noteId,           // 수정할 쪽지 ID 저장
+                            noteContent = data.contentText,   // 기존 내용
+                            selectedCategory = data.category, // 기존 카테고리
+                            selectedImageUri = data.imageUrl, // 기존 이미지
+                            selectedThumbnailUri = data.thumbnailUrl, // 썸네일 이미지
+                            location = data.location,         // 기존 위치(좌표, 주소, 해시)
+                            storageHours = data.storageHours, // 쪽지 보관 시간
+                            createdAt = data.createdAt,       // 최초 작성일
+                            expiresAt = data.expiresAt        // 만료 예정일
+                        )
+                    }
+                    Log.d("jay", "contentText = ${data.contentText}")
+                    Log.d("jay", "selectedCategory = ${data.category}")
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "데이터를 불러오지 못했습니다.") }
+            }
+        }
+    }
+
+    // 작성 페이지 노출했을 때 호출
+    fun prepareNewNote() {
+        // 이미 쪽지 id가 있으면 위치 잡지 않음 (수정상태일때는 위치 검색 x)
+        if (_uiState.value.editedNoteId != null) return
+        fetchCurrentLocation()
     }
 }

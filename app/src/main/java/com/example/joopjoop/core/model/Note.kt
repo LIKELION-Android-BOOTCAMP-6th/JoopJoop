@@ -15,6 +15,7 @@ data class Note(
     val likeCount: Int = 0,             // 좋아요
     val location: NoteLocation = NoteLocation(),    // 위치
     val isActive: Boolean = true,       // 쪽지 노출 여부
+    val storageHours: Int = 12,         // 보관 시간
     val createdAt: Date = Date(),       // 작성 시간
     val expiresAt: Date = Date()        // 만료 시간 (3, 6, 9 ,12 시간 더한 실제시간 저장)
 )

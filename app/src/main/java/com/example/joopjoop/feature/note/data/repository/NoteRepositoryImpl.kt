@@ -7,6 +7,7 @@ import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 
 class NoteRepositoryImpl(
@@ -27,8 +28,30 @@ class NoteRepositoryImpl(
         fileName: String,
         onProgress: (Float) -> Unit
     ): Pair<String, String>? { // 두 개의 URL을 반환하도록 변경
-        return source.uploadImage(originalData, thumbnailData, fileName, onProgress)
+        return try {
+            // 경로를 각각 다르게 설정 (폴더 분리)
+            val originalRef = storage.reference.child("notes/images/$fileName.jpg")
+            val thumbnailRef = storage.reference.child("notes/thumbnails/${fileName}_thumb.jpg")
 
+            // 1. 원본 업로드 (진행률은 원본 기준으로 표시)
+            val originalTask = originalRef.putBytes(originalData)
+            originalTask.addOnProgressListener { taskSnapshot ->
+                val progress = (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
+                onProgress(progress)
+            }.await()
+            val originalUrl = originalRef.downloadUrl.await().toString()
+
+            // 2. 썸네일 업로드
+            thumbnailRef.putBytes(thumbnailData).await()
+            val thumbnailUrl = thumbnailRef.downloadUrl.await().toString()
+
+            // 두 URL을 묶어서 반환
+            Pair(originalUrl, thumbnailUrl)
+
+        } catch (e: Exception) {
+            Log.e("PhotoDebug", "업로드 중 에러: ${e.message}")
+            null
+        }
     }
 
     // 주변 쪽지 탐색
@@ -57,8 +80,8 @@ class NoteRepositoryImpl(
     }
 
     // 쪽지 만들기
-    override suspend fun createNote(request: Note): String {
-        return source.createNote(request)
+    override suspend fun createNote(request: Note) {
+        source.createNote(request)
     }
 
     // 조회수 증가
@@ -102,16 +125,15 @@ class NoteRepositoryImpl(
         return source.checkBookmarkExists(noteId, userId)
     }
 
-    // 쪽지 수정
-    override suspend fun editNote(noteId: String, request: Note) {
-        // todo :: 쪽지 수정 로직 추가
-    }
-
     // 쪽지 삭제
     override suspend fun deleteNote(noteId: String) {
         source.deleteNote(noteId)
     }
 
+    // 수정한 쪽지 제출
+    override suspend fun submitEditedNote(noteId: String, updatedNote: Note) {
+        source.submitEditedNote(noteId, updatedNote)
+    }
 }
 
 

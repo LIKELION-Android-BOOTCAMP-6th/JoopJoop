@@ -3,7 +3,6 @@ package com.example.joopjoop.core.repository
 import android.net.Uri
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.Scrap
-import okio.`-DeprecatedOkio`.source
 
 interface NoteRepository {
 
@@ -18,7 +17,7 @@ interface NoteRepository {
     suspend fun getNoteDetail(noteId: String): Note? // null을 허용하도록 수정
 
     // 쪽지 만들기
-    suspend fun createNote(request: Note): String
+    suspend fun createNote(request: Note)
 
     // 내 쪽지 + 내 주변 쪽지만 보이게 하기
     suspend fun getVisibleNotes(lat: Double, lng: Double, myUid: String): List<Note>
@@ -50,9 +49,9 @@ interface NoteRepository {
     // 이미지 업로드
     suspend fun uploadImage(originalData: ByteArray, thumbnailData: ByteArray, fileName: String, onProgress: (Float) -> Unit): Pair<String, String>?
 
-    // 쪽지 수정
-    suspend fun editNote(noteId: String, request: Note)
-
     // 쪽지 삭제
     suspend fun deleteNote(noteId: String)
+
+    // 수정한 쪽지 제출
+    suspend fun submitEditedNote(noteId: String, updatedNote: Note)
 }

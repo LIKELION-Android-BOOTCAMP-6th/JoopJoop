@@ -13,6 +13,7 @@ data class WriteNoteUiState(
         createdAt = Date(),
         lastCheckedAt = Date(),
     ),
+    val editedNoteId: String? = null,                // 수정 시 사용 (null 이면 신규 작성)
     val selectedCategory: String = "일상",           // 카테고리 상태 : 어떤 카테고리
     val noteContent: String = "",                   // 내용
     val storageHours: Int = 12,                     // 보관시간
@@ -25,4 +26,6 @@ data class WriteNoteUiState(
     val createdNoteId: String? = null,              // 새로 생성된 쪽지 ID 저장용
     val errorMessage: String? = null,               // 에러 메시지
     val location: NoteLocation = NoteLocation(),    // 주소
+    val createdAt: Date = Date(),
+    val expiresAt: Date = Date()
 )

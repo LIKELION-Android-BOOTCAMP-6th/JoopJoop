@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.JoopJoopImage
 import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
@@ -138,8 +139,14 @@ fun WriteNoteScreen(
                         modifier = Modifier.size(24.dp)
                     )
                 }
+
+                // 쪽지 수정시 note id 값 가져오기
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val noteId = navBackStackEntry?.arguments?.getString("noteId")
+                val title = if (noteId == null) stringResource(R.string.write_note_title) else stringResource(R.string.edit_note)
+
                 Text(
-                    text = stringResource(R.string.write_note_title),
+                    text = title,
                     color = TextPrimary,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold

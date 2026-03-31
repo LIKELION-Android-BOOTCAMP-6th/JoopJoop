@@ -103,6 +103,7 @@ class FirestoreNoteSource(
             id = doc.id,
             authorId = doc.getString("authorId") ?: "",
             userNickname = doc.getString("userNickname") ?: "익명 사용자",
+            category = doc.getString("category") ?: "일상",
             profileImageUrl = doc.getString("profileImageUrl") ?: "",
             createdAt = timestamp?.toDate() ?: Date(),
             viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
@@ -110,6 +111,7 @@ class FirestoreNoteSource(
             contentText = doc.getString("contentText") ?: "내용 없음",
             imageUrl = doc.getString("imageUrl"),
             thumbnailUrl = doc.getString("thumbnailUrl"),
+            storageHours = doc.getLong("storageHours")?.toInt() ?: 0,
             location = NoteLocation(
                 address = locationMap?.get("address") as? String ?: "위치 정보 없음",
                 latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
@@ -121,7 +123,7 @@ class FirestoreNoteSource(
     }
 
     // 쪽지 생성
-    suspend fun createNote(request: Note): String {
+    suspend fun createNote(request: Note) {
         // 1. ID 자동 생성
         val documentRef = db.collection(collectionPath).document()
         val generatedId = documentRef.id
@@ -146,14 +148,13 @@ class FirestoreNoteSource(
             "category" to request.category,
             "location" to locationMap,
             "isActive" to true,
+            "storageHours" to request.storageHours,
             "expiresAt" to request.expiresAt,
             "createdAt" to Timestamp.now()
         )
 
         // 3. Firestore에 저장 (await - 문서 저장 반환)
         documentRef.set(noteData).await()
-
-        return generatedId // 생성된 ID 반환
     }
 
     suspend fun uploadImage(
@@ -170,7 +171,8 @@ class FirestoreNoteSource(
             // 1. 원본 업로드 (진행률은 원본 기준으로 표시)
             val originalTask = originalRef.putBytes(originalData)
             originalTask.addOnProgressListener { taskSnapshot ->
-                val progress = (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
+                val progress =
+                    (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
                 onProgress(progress)
             }.await()
             val originalUrl = originalRef.downloadUrl.await().toString()
@@ -204,6 +206,7 @@ class FirestoreNoteSource(
             emptyList()
         }
     }
+
     suspend fun getVisibleNotes(
         lat: Double,
         lng: Double,
@@ -380,14 +383,16 @@ class FirestoreNoteSource(
         }
     }
 
-    // 쪽지 수정
-    suspend fun editNote(noteId: String, request: Note) {
-        // todo :: 쪽지 수정 로직 추가
-    }
-
-
     // 쪽지 삭제
     suspend fun deleteNote(noteId: String) {
         db.collection(collectionPath).document(noteId).delete().await()
+    }
+
+    // 수정한 쪽지 제출
+    suspend fun submitEditedNote(noteId: String, updatedNote: Note) {
+        db.collection("notes")
+            .document(noteId)
+            .set(updatedNote)
+            .await()
     }
 }
