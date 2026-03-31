@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -260,9 +261,12 @@ fun WriteNoteScreen(
                             )
                         }
                     }
+                    if (uiState.isImageUploading) {
+                        ImageUploadIndicator(modifier = Modifier.fillMaxSize())
+                    }
                 }
             }
-                        /*Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            /*Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_camera),
                                 contentDescription = null,
@@ -367,6 +371,16 @@ fun WriteNoteScreen(
                     fontWeight = FontWeight.Bold
                 )
             }
+            if (uiState.isSubmitting) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = OrangePrimary)
+                }
+            }
         }
     }
 }
@@ -387,6 +401,24 @@ fun CategorySelection(
             color = if (isSelected) TextPrimary else TextTertiary,
             fontSize = 14.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+        )
+    }
+}
+
+@Composable
+fun ImageUploadIndicator(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.5f)),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(30.dp),
+            color = OrangePrimary,
+            strokeWidth = 3.dp
         )
     }
 }
