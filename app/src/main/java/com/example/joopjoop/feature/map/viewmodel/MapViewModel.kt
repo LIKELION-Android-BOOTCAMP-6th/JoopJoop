@@ -26,17 +26,30 @@ class MapViewModel(
 
     //앱 시작 시 또는 특정 시점에 내 현재 위치를 즉시 가져와 지도를 이동
     //LocationProvider의 suspend 함수를 사용하여 콜백 없이 구현
-    fun fetchCurrentLocation() {
+    fun fetchCurrentLocationIfNeeded() {
+        // 이미 위치가 있으면 아무것도 안 함
+        if (_uiState.value.currentUserLocation != null) return
+
         viewModelScope.launch {
             val location = locationProvider.getCurrentLocation()
-            location?.let {
-                val currentLatLng = LatLng(it.latitude, it.longitude)
-                _uiState.update { state ->
-                    state.copy(currentUserLocation = currentLatLng)
+
+            if (location == null) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "위치를 가져올 수 없습니다"
+                    )
                 }
-                // 위치를 가져오면 해당 지점을 중심으로 주변 쪽지도 함께 로드
-                loadNotes(currentLatLng)
+                return@launch
             }
+
+            // 정상 흐름
+            val currentLatLng = LatLng(location.latitude, location.longitude)
+
+            _uiState.update { state ->
+                state.copy(currentUserLocation = currentLatLng)
+            }
+            loadNotes(currentLatLng)
         }
     }
 
@@ -147,7 +160,7 @@ class MapViewModel(
         _uiState.update { it.copy(isPermissionGranted = isGranted) }
 
         if (isGranted) {
-            fetchCurrentLocation()
+            fetchCurrentLocationIfNeeded()
         } else {
             // [수정] 시스템 팝업에서 거절당했을 때, 설정을 유도하는 다이얼로그를 띄웁니다.
             showSettingsDialog(onDenied)
