@@ -186,7 +186,7 @@ class NoteListViewModel(
                         // 내 쪽지거나 30m 이내일 때만 줍기(열람) 활성화
                         isWithinRange = isMine || distanceInMeters <= 30f,
                         latitude = note.location.latitude,
-                        longitude = note.location.longitude,
+                        longitude = note.location.longitude
                     )
                 }
             _uiState.update { it.copy(notes = notes, isLoading = false) }

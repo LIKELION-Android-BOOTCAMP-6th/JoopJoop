@@ -31,6 +31,9 @@ fun MyScrapListContent(
 ) {
     val scrapState by viewModel.scrapUiState.collectAsState()
 
+    // 현재 로그인된 유저 ID 가져오기
+    val currentUserId = viewModel.getCurrentUserId()
+
     Box(
         modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
     ) {
@@ -45,7 +48,7 @@ fun MyScrapListContent(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(text = scrapState.errorMessage!!, color = Color.White)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = { /* 재시도 로직 호출 */ }) {
+                    Button(onClick = { viewModel.loadMyScraps(currentUserId) }) {
                         Text("다시 시도")
                     }
                 }
@@ -64,13 +67,15 @@ fun MyScrapListContent(
             // 4. 리스트 표시
             else -> {
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(3), modifier = Modifier.fillMaxSize()
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     items(scrapState.scraps) { note ->
                         MyNoteGridItem(
-                            note = note, onNoteClick = { noteId ->
+                            note = note,
+                            onNoteClick = { noteId ->
                                 // TODO: NavGraph에서 전달받은 상세화면 이동 로직 호출
-                                println("클릭된 쪽지 ID: $noteId")
+                                onNoteClick(noteId)
                             })
                     }
                 }

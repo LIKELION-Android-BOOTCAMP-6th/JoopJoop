@@ -8,6 +8,7 @@ data class NoteListUiState(
     val distance: String = "",      // 거리
     val myLatitude: Double = 0.0,   // 내 현재 위도
     val myLongitude: Double = 0.0,  // 내 현재 경도
+    val myUid: String = ""          // 내 유저 아이디
 )
 
 data class NoteItem(
@@ -19,4 +20,4 @@ data class NoteItem(
     val isWithinRange: Boolean,   // 반경 이내 여부
     val latitude: Double,         // 위도
     val longitude: Double         // 경도
-)
+    )
