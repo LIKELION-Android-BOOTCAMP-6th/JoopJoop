@@ -4,7 +4,6 @@ import android.util.Log
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
-import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -44,14 +43,15 @@ class FirestoreNoteSource(
     suspend fun getNotesByLocation(centerGeohash: String): List<Note> {
         // 5자리 Geohash 접두사로 시작하는 문서들만 쿼리
         val snapshot = db.collection(collectionPath)
-            .orderBy("geohash")
+            .orderBy("location.geohash")
             .startAt(centerGeohash)
             .endAt(centerGeohash + "\uf8ff")
             .get()
             .await()
 
         return snapshot.documents.mapNotNull { doc ->
-            val timestamp = doc.getTimestamp("createdAt")
+            val createdAt = doc.getTimestamp("createdAt")
+            val expiresAt = doc.getTimestamp("expiresAt")
 
             // 'location'이라는 내부 Map 꺼내기
             val data = doc.data ?: throw Exception("데이터가 없습니다.")
@@ -59,25 +59,29 @@ class FirestoreNoteSource(
 
             Note(
                 id = doc.id,
-                userNickname = doc.getString("authorName") ?: "익명",
-                contentText = doc.getString("content") ?: "",
+                userNickname = doc.getString("userNickname") ?: "익명",
+                contentText = doc.getString("contentText") ?: "",
                 category = doc.getString("category") ?: "일상",
-                imageUrl = doc.getString("imageUri") ?: "",
+                thumbnailUrl = doc.getString("thumbnailUrl") ?: "",
                 location = NoteLocation(
                     address = locationMap?.get("address") as? String ?: "위치 정보 없음",
                     latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
                     longitude = (locationMap?.get("longitude") as? Number)?.toDouble() ?: 0.0,
                     geohash = locationMap?.get("geohash") as? String ?: ""
                 ),
-                createdAt = timestamp?.toDate() ?: Date()
+                createdAt = createdAt?.toDate() ?: Date(),
+                expiresAt = expiresAt?.toDate() ?: Date()
             )
         }
     }
 
     // 쪽지 상세 데이터 조회
     suspend fun getNoteDetail(noteId: String): Note {
-        val doc = db.collection(collectionPath).document(noteId).get().await()
+        val docRef = db.collection(collectionPath).document(noteId)
+        // 조회 요청 - 조회수 +1
+        docRef.update("viewCount", FieldValue.increment(1)).await()
 
+        val doc = docRef.get().await()
         // 문서 데이터 전체를 Map으로 가져옵니다.
         val data = doc.data ?: throw Exception("데이터가 없습니다.")
 
@@ -92,7 +96,8 @@ class FirestoreNoteSource(
             viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
             likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
             contentText = doc.getString("contentText") ?: "내용 없음",
-            imageUrl = doc.getString("imageUri"),
+            imageUrl = doc.getString("imageUrl"),
+            thumbnailUrl = doc.getString("thumbnailUrl"),
             location = NoteLocation(
                 address = locationMap?.get("address") as? String ?: "위치 정보 없음",
                 latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
@@ -104,32 +109,33 @@ class FirestoreNoteSource(
     }
 
     // 쪽지 생성
-    suspend fun createNote(request: NoteRequest): String {
+    suspend fun createNote(request: Note): String {
         // 1. ID 자동 생성
         val documentRef = db.collection(collectionPath).document()
         val generatedId = documentRef.id
 
         // 2. 서버에 저장할 데이터 구성
         val locationMap = hashMapOf(
-            "geohash" to (request.geohash ?: ""),
-            "latitude" to request.latitude,
-            "longitude" to request.longitude,
-            "address" to request.location, // 지역 동네 문자열
-            "distance" to ""
+            "geohash" to request.location.geohash,
+            "latitude" to request.location.latitude,
+            "longitude" to request.location.longitude,
+            "address" to request.location.address, // 지역 동네 문자열
+            "distance" to request.location.distance
         )
 
         val noteData = hashMapOf(
             "id" to generatedId,
             "authorId" to request.authorId,
-            "userNickname" to request.authorName,
-            "location" to locationMap,
-            "contentText" to request.content,
+            "userNickname" to request.userNickname,
+            "userProfileImageUrl" to request.userProfileImageUrl,
+            "contentText" to request.contentText,
+            "thumbnailUrl" to request.thumbnailUrl,
+            "imageUrl" to request.imageUrl,
             "category" to request.category,
-            "storageHours" to request.storageHours,
-            "imageUrl" to request.imageUri,
-            "createdAt" to Timestamp.now(),
+            "location" to locationMap,
             "isActive" to true,
-            "geohash" to request.geohash
+            "expiresAt" to request.expiresAt,
+            "createdAt" to Timestamp.now()
         )
 
         // 3. Firestore에 저장 (await - 문서 저장 반환)
@@ -244,7 +250,7 @@ class FirestoreNoteSource(
     }
 
     // 쪽지 수정
-    suspend fun editNote(noteId: String, request: NoteRequest) {
+    suspend fun editNote(noteId: String, request: Note) {
         // todo :: 쪽지 수정 로직 추가
     }
 

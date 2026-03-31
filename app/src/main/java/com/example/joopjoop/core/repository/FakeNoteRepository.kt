@@ -5,7 +5,6 @@ import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
-import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -21,16 +20,40 @@ class FakeNoteRepository : NoteRepository {
     }
 
     override suspend fun getNotesByLocation(lat: Double, lng: Double): List<Note> {
-        delay(500)
-        // 초기 1회 현재 위치 기반 샘플 생성
+        delay(500) // 네트워크 지연 시뮬레이션
+
         if (!isInitialized) {
             _allFakeNotes.addAll(FakeDataSource.getFakeNotes(lat, lng))
             isInitialized = true
         }
 
-        // Firestore와 동일하게 Geohash 앞 5자리로 주변 노트를 필터링
         val centerGeohash = LocationUtil.getGeohash(lat, lng).take(5)
-        return _allFakeNotes.filter { it.location.geohash.startsWith(centerGeohash) }
+        val now = Date()
+
+        return _allFakeNotes
+            .filter { note ->
+                // geohash 필터
+                note.location.geohash.startsWith(centerGeohash)
+                        // 활성화된 노트만
+                        && note.isActive
+                        // 만료되지 않은 노트만
+                        && note.expiresAt.after(now)
+            }
+            .map { note ->
+                // distance 계산 (Fake에서는 여기서 처리)
+                val distance = LocationUtil.getDistanceText(
+                    lat,
+                    lng,
+                    note.location.latitude,
+                    note.location.longitude
+                )
+                // 기존 Note 객체를 변경하지 않고, distance 값만 반영된 새로운 객체를 생성
+                note.copy(
+                    location = note.location.copy(
+                        distance = distance
+                    )
+                )
+            }
     }
 
     private val firestoreSource = FirestoreNoteSource()
@@ -53,7 +76,7 @@ class FakeNoteRepository : NoteRepository {
         }
     }
 
-    override suspend fun createNote(request: NoteRequest): String {
+    override suspend fun createNote(request: Note): String {
         delay(800)
         val newId = "user_note_${System.currentTimeMillis()}"
 
@@ -61,23 +84,26 @@ class FakeNoteRepository : NoteRepository {
         val newNote = Note(
             id = newId,
             authorId = "me",
-            userNickname = request.authorName ?: "나",
+            userNickname = request.userNickname,
             userProfileImageUrl = "",
-            contentText = request.content,
-            imageUrl = request.imageUri,
+            contentText = request.contentText,
+            imageUrl = request.imageUrl,
             category = request.category,
             viewCount = 0,
             likeCount = 0,
             location = NoteLocation(
-                geohash = LocationUtil.getGeohash(request.latitude, request.longitude),
-                latitude = request.latitude,
-                longitude = request.longitude,
-                address = request.location ?: "작성 위치",
-                distance = ""
+                geohash = LocationUtil.getGeohash(
+                    request.location.latitude,
+                    request.location.longitude
+                ),
+                latitude = request.location.latitude,
+                longitude = request.location.longitude,
+                address = request.location.address,
+                distance = request.location.distance
             ),
             isActive = true,
-            createdAt = Date(),
-            expiresAt = Date(System.currentTimeMillis() + (request.storageHours * 3600000L))
+            createdAt = request.createdAt,
+            expiresAt = request.expiresAt
         )
         // 리스트 맨 앞에 추가하여 최신순 유지
         _allFakeNotes.add(0, newNote)
@@ -161,7 +187,7 @@ class FakeNoteRepository : NoteRepository {
 
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 
-    override suspend fun uploadImage(processedData: ByteArray, fileName: String): String? {
+    override suspend fun uploadImage(processedData: ByteArray, fileName: String, onProgress: (Float) -> Unit): String? {
         return try {
             val storageRef = storage.reference.child("notes/$fileName.jpg")
 
@@ -178,7 +204,7 @@ class FakeNoteRepository : NoteRepository {
     }
 
     // 쪽지 수정
-    override suspend fun editNote(noteId: String, request: NoteRequest) {
+    override suspend fun editNote(noteId: String, request: Note) {
         // todo :: 수정 로직 추가
     }
 
