@@ -170,12 +170,31 @@ fun NoteDetail(
                 .padding(vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                modifier = Modifier.size(40.dp).clip(CircleShape).background(BgDark),
-                painter = painterResource(id = R.drawable.baseline_person_24),
-                contentDescription = null,
-                tint = TextTertiary
-            )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(BgDark),
+                contentAlignment = Alignment.Center
+            ) {
+                if (uiState.profileImageUrl.isNullOrEmpty()) {
+                    // 이미지가 없으면 기본 아이콘
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_person_24),
+                        contentDescription = null,
+                        tint = TextTertiary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    // 이미지가 있으면 서버에서 불러오기
+                    coil.compose.AsyncImage(
+                        model = uiState.profileImageUrl,
+                        contentDescription = "작성자 프로필",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                }
+            }
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {

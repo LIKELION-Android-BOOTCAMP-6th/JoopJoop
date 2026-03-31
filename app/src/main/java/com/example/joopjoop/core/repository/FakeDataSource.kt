@@ -55,7 +55,7 @@ object FakeDataSource {
             id = id,
             authorId = "user_mock",
             userNickname = "줍줍이",
-            userProfileImageUrl = "",
+            profileImageUrl = "",
             contentText = "이것은 $id 번 쪽지입니다.",
             thumbnailUrl = randomImageUrl,
             imageUrl = randomImageUrl,       // 랜덤 이미지

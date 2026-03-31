@@ -84,6 +84,33 @@ class AuthRepositoryImpl(
         }
     }
 
+    // 프로필 사진 삭제, 기본 이미지로
+    override suspend fun deleteProfileImage(): AuthResult<Unit> {
+        return try {
+            val user = _currentUser.value ?: return AuthResult.Failure(Exception("로그인 정보 없음"))
+            val uid = user.uid
+            val currentNickname = user.nickname // [중요] 현재 닉네임 가져오기
+
+            // 1. Storage에서 사진 파일 삭제
+            val storageRef = Firebase.storage.reference.child("profiles/$uid.jpg")
+            try {
+                storageRef.delete().await()
+            } catch (e: Exception) {
+                // 이미 삭제되었거나 없는 경우를 위해 예외 처리 (무시하고 진행)
+            }
+
+            // 2. Firestore 업데이트: 닉네임은 유지하고 이미지만 null로 변경
+            userSource.updateUser(uid, currentNickname, null)
+
+            // 3. 앱 내 상태(State) 즉시 반영
+            _currentUser.value = user.copy(profileImageUrl = null)
+
+            AuthResult.Success(Unit)
+        } catch (e: Exception) {
+            AuthResult.Failure(e)
+        }
+    }
+
     override suspend fun signUp(
         email: String,
         password: String,

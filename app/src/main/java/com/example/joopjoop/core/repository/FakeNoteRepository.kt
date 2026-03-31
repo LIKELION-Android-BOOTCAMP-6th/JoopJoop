@@ -84,7 +84,7 @@ class FakeNoteRepository : NoteRepository {
             id = newId,
             authorId = "me",
             userNickname = request.userNickname,
-            userProfileImageUrl = "",
+            profileImageUrl = "",
             contentText = request.contentText,
             imageUrl = request.imageUrl,
             category = request.category,

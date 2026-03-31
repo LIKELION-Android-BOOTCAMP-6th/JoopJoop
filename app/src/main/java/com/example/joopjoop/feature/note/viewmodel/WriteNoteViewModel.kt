@@ -98,11 +98,21 @@ class WriteNoteViewModel(
         viewModelScope.launch {
             authRepository.currentUser
                 .collect { user ->
+                    Log.d("WriteNoteDebug", """
+                ┌────────────────────────────────────────────────────
+                │ 👤 현재 로그인 유저 정보 체크 (Auth)
+                ├────────────────────────────────────────────────────
+                │ 🆔 UID: ${user?.uid}
+                │ 🏷️ 닉네임: ${user?.nickname}
+                │ 🖼️ 이미지URL: '${user?.profileImageUrl}'  <-- 이게 비어있으면 저장도 비어서 됩니다!
+                └────────────────────────────────────────────────────
+            """.trimIndent())
                     _uiState.update { currentState ->
                         currentState.copy(
                             user = currentState.user.copy(
                                 uid = user?.uid ?: "",
-                                nickname = user?.nickname ?: "익명사용자"
+                                nickname = user?.nickname ?: "익명사용자",
+                                profileImageUrl = user?.profileImageUrl ?: ""
                             )
                         )
                     }
@@ -329,6 +339,7 @@ class WriteNoteViewModel(
                 val request = Note(
                     authorId = currentState.user.uid,
                     userNickname = currentState.user.nickname,
+                    profileImageUrl = currentState.user.profileImageUrl,
                     contentText = currentState.noteContent,
                     category = currentState.selectedCategory,
                     imageUrl = currentState.selectedImageUri,

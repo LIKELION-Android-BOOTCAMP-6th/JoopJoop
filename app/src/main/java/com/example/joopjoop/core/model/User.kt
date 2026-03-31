@@ -6,7 +6,7 @@ data class User(
     val uid: String = "",
     val email: String = "",
     val nickname: String = "",
-    val profileImageUrl: String = "",
+    val profileImageUrl: String? = "",
     val createdAt: Date = Date(),
     val lastCheckedAt: Date = Date(),
 //    해당 변수 및 타입 확실히 정의 필요

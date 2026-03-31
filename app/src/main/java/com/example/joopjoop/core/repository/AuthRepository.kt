@@ -32,6 +32,9 @@ interface AuthRepository {
     // imageBytes ImageProcessor로 압축된 이미지 데이터
     // 성공 시 업로드된 이미지의 다운로드 URL (String) 반환
     suspend fun uploadProfileImage(imageBytes: ByteArray): AuthResult<String>
+
+    // 기본 이미지 변경
+    suspend fun deleteProfileImage(): AuthResult<Unit>
     
 
     // 이메일 회원가입 실행

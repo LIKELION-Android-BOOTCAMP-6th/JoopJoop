@@ -36,10 +36,8 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.rememberCameraPositionState
 
-/**
- * 메인 지도 화면 컴포넌트
- * 역할: 전체 레이아웃 구성, 권한 처리, 컴포넌트 조립 및 뷰모델 상태 연결
- */
+// 메인 지도 화면 컴포넌트
+// 역할: 전체 레이아웃 구성, 권한 처리, 컴포넌트 조립 및 뷰모델 상태 연결
 @Composable
 fun MapScreen(
     viewModel: MapViewModel,
@@ -84,10 +82,8 @@ fun MapScreen(
         // 권한 확인
         if (PermissionManager.hasLocationPermission(context)) {
             viewModel.onPermissionResult(true)
-            // 이미 위치 정보가 있다면(뒤로가기로 돌아온 경우) 다시 요청하지 않음
-            if (uiState.currentUserLocation == null) {
-                viewModel.fetchCurrentLocation()
-            }
+
+            viewModel.fetchCurrentLocationIfNeeded()
         } else {
             // [변경 포인트] 팝업을 바로 띄우지 않고, '사전 안내 다이얼로그'
             viewModel.askPermissionWithGuide {
@@ -131,7 +127,7 @@ fun MapScreen(
                     NoteMarker(
                         note = note,
                         isPickable = false,
-                        onClick = { /* 거리가 멀면 클릭 안되게 하거나 안내 메시지 */ }
+                        onClick = { /*TODO 거리가 멀면 클릭 안되게 하거나 안내 메시지 */ }
                     )
                 }
             }
@@ -171,7 +167,7 @@ fun MapScreen(
                         uiState.currentUserLocation?.let { userPos ->
                             cameraPositionState.position =
                                 CameraPosition.fromLatLngZoom(userPos, 16f)
-                        } ?: viewModel.fetchCurrentLocation()
+                        } ?: viewModel.fetchCurrentLocationIfNeeded()
                     } else {
                         viewModel.askPermissionWithGuide {
                             permissionLauncher.launch(PermissionManager.locationPermissions)

@@ -6,7 +6,7 @@ data class Note(
     val id: String = "",                // note 문서 id
     val authorId: String = "",          // 유저 uid
     val userNickname: String = "",      // 유저 닉네임
-    val userProfileImageUrl: String = "",   // 유저 프로필 사진
+    val profileImageUrl: String? = "",   // 유저 프로필 사진
     val contentText: String = "",       // 쪽지 내용
     val thumbnailUrl: String? = null,   // 썸네일 url
     val imageUrl: String? = null,       // 이미지 url
