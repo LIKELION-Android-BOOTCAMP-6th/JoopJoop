@@ -111,6 +111,15 @@ class AuthRepositoryImpl(
         }
     }
 
+    override suspend fun getUserInfoByUid(uid: String): User? {
+        return try {
+            // 이미 초기화 시점에 사용하던 userSource.getUser를 그대로 활용
+            userSource.getUser(uid)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     override suspend fun signUp(
         email: String,
         password: String,

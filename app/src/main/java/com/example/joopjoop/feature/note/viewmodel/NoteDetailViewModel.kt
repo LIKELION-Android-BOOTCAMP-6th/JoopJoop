@@ -79,11 +79,12 @@ class NoteDetailViewModel(
                     // 데이터가 있을 때만 조회수를 증가
                     // 조회수 +1 요청
                     val serverLikeCount = noteData.likeCount
+                    val latestAuthorInfo = authRepository.getUserInfoByUid(noteData.authorId)
 
                     _uiState.update {
                         it.copy(
                             userNickName = noteData.userNickname,
-                            profileImageUrl = noteData.profileImageUrl,
+                            profileImageUrl = latestAuthorInfo?.profileImageUrl ?: noteData.profileImageUrl,
                             createdAt = formatDate(noteData.createdAt),
                             viewCount = noteData.viewCount,
                             likeCount = maxOf(0, serverLikeCount),

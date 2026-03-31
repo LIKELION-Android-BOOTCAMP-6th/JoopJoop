@@ -35,6 +35,9 @@ interface AuthRepository {
 
     // 기본 이미지 변경
     suspend fun deleteProfileImage(): AuthResult<Unit>
+
+    //  특정 UID로 유저의 최신 정보를 단건 조회
+    suspend fun getUserInfoByUid(uid: String): User?
     
 
     // 이메일 회원가입 실행
