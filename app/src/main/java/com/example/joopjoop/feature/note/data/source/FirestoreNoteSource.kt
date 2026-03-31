@@ -11,7 +11,6 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
-import okio.`-DeprecatedOkio`.source
 import java.util.Date
 
 
@@ -69,6 +68,7 @@ class FirestoreNoteSource(
 
             Note(
                 id = doc.id,
+                authorId = doc.getString("authorId") ?: "",
                 userNickname = doc.getString("userNickname") ?: "익명",
                 profileImageUrl = doc.getString("profileImageUrl") ?: "",
                 contentText = doc.getString("contentText") ?: "",
@@ -81,7 +81,9 @@ class FirestoreNoteSource(
                     geohash = locationMap?.get("geohash") as? String ?: ""
                 ),
                 createdAt = createdAt?.toDate() ?: Date(),
-                expiresAt = expiresAt?.toDate() ?: Date()
+                expiresAt = expiresAt?.toDate() ?: Date(),
+                viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
+                likeCount = doc.getLong("likeCount")?.toInt() ?: 0
             )
         }
     }
@@ -170,7 +172,8 @@ class FirestoreNoteSource(
             // 1. 원본 업로드 (진행률은 원본 기준으로 표시)
             val originalTask = originalRef.putBytes(originalData)
             originalTask.addOnProgressListener { taskSnapshot ->
-                val progress = (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
+                val progress =
+                    (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
                 onProgress(progress)
             }.await()
             val originalUrl = originalRef.downloadUrl.await().toString()
@@ -204,6 +207,7 @@ class FirestoreNoteSource(
             emptyList()
         }
     }
+
     suspend fun getVisibleNotes(
         lat: Double,
         lng: Double,
@@ -215,13 +219,23 @@ class FirestoreNoteSource(
         // 2. 내 위치 주변(5km 반경) 쪽지 가져오기
         val nearbyNotes = getNotesByLocation(precision5Geohash)
 
-        // 3. 내가 쓴 쪽지들만 따로 가져오기 (작성자 ID 기준)
+        // 3. 내 쪽지도 '현재 지도 범위(Geohash)' 내에 있는 것만 가져오기
         val myNotes = if (myUid.isNotEmpty()) {
-            db.collection(collectionPath)
-                .whereEqualTo("authorId", myUid) // 👈 여기서 내 쪽지를 따로 긁어와야 함
-                .get()
-                .await()
-                .documents.mapNotNull { mapDocumentToNote(it) }
+            try {
+                db.collection(collectionPath)
+                    .whereEqualTo("authorId", myUid)
+                    .whereGreaterThanOrEqualTo("location.geohash", precision5Geohash) // 경로 수정
+                    .whereLessThanOrEqualTo(
+                        "location.geohash",
+                        precision5Geohash + "\uf8ff"
+                    )
+                    .get()
+                    .await()
+                    .documents.mapNotNull { mapDocumentToNote(it) }
+            } catch (e: Exception) {
+                Log.e("Firestore", "myNotes 쿼리 실패(인덱스 확인 필요): ${e.message}")
+                emptyList()
+            }
         } else emptyList()
 
         // 4. 두 리스트를 합치기 + 중복 제거 + 만료 시간 체크
@@ -230,7 +244,6 @@ class FirestoreNoteSource(
         return (nearbyNotes + myNotes)
             .distinctBy { it.id } // 중복된 쪽지 제거
             .filter { it.expiresAt.time > currentTime } // 만료되지 않은 것만 필터링
-            .sortedByDescending { it.createdAt } // 최신순 정렬
     }
 
     // FirestoreNoteSource.kt 클래스 내부 하단에 추가
