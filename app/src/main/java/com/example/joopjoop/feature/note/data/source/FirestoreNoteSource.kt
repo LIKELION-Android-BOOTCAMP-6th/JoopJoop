@@ -1,6 +1,7 @@
 package com.example.joopjoop.feature.note.data.source
 
 import android.util.Log
+import com.example.joopjoop.core.common.util.LocationUtil.getGeohash
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
@@ -8,13 +9,16 @@ import com.google.firebase.Timestamp
 import com.google.firebase.Timestamp.now
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
+import okio.`-DeprecatedOkio`.source
 import java.util.Date
 
 
 class FirestoreNoteSource(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
+    private val storage: FirebaseStorage = FirebaseStorage.getInstance()
     private val collectionPath = "notes"
 
     // 현재 이 함수는 모든 쪽지를 쿼리
@@ -150,6 +154,127 @@ class FirestoreNoteSource(
         documentRef.set(noteData).await()
 
         return generatedId // 생성된 ID 반환
+    }
+
+    suspend fun uploadImage(
+        originalData: ByteArray,    // 원본 데이터
+        thumbnailData: ByteArray,   // 썸네일 데이터
+        fileName: String,
+        onProgress: (Float) -> Unit
+    ): Pair<String, String>? { // 두 개의 URL을 반환하도록 변경
+        return try {
+            // 경로를 각각 다르게 설정 (폴더 분리)
+            val originalRef = storage.reference.child("notes/images/$fileName.jpg")
+            val thumbnailRef = storage.reference.child("notes/thumbnails/${fileName}_thumb.jpg")
+
+            // 1. 원본 업로드 (진행률은 원본 기준으로 표시)
+            val originalTask = originalRef.putBytes(originalData)
+            originalTask.addOnProgressListener { taskSnapshot ->
+                val progress = (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
+                onProgress(progress)
+            }.await()
+            val originalUrl = originalRef.downloadUrl.await().toString()
+
+            // 2. 썸네일 업로드
+            thumbnailRef.putBytes(thumbnailData).await()
+            val thumbnailUrl = thumbnailRef.downloadUrl.await().toString()
+
+            // 두 URL을 묶어서 반환
+            Pair(originalUrl, thumbnailUrl)
+
+        } catch (e: Exception) {
+            Log.e("PhotoDebug", "업로드 중 에러: ${e.message}")
+            null
+        }
+    }
+
+    suspend fun getNotesByAuthor(authorId: String): List<Note> {
+        return try {
+            val snapshot = db.collection(collectionPath)
+                .whereEqualTo("authorId", authorId)
+                .whereGreaterThan("expiresAt", Timestamp.now()) // 만료 전인 것만
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { doc ->
+                mapDocumentToNote(doc) // 중복 코드 없이 깔끔하게 호출
+            }
+        } catch (e: Exception) {
+            Log.e("FirestoreNoteSource", "getNotesByAuthor Error: ${e.message}")
+            emptyList()
+        }
+    }
+    suspend fun getVisibleNotes(
+        lat: Double,
+        lng: Double,
+        myUid: String
+    ): List<Note> {
+        // 1. 좌표를 Geohash 문자열로 변환
+        val precision5Geohash = getGeohash(lat, lng).take(5)
+
+        // 2. 내 위치 주변(5km 반경) 쪽지 가져오기
+        val nearbyNotes = getNotesByLocation(precision5Geohash)
+
+        // 3. 내가 쓴 쪽지들만 따로 가져오기 (작성자 ID 기준)
+        val myNotes = if (myUid.isNotEmpty()) {
+            db.collection(collectionPath)
+                .whereEqualTo("authorId", myUid) // 👈 여기서 내 쪽지를 따로 긁어와야 함
+                .get()
+                .await()
+                .documents.mapNotNull { mapDocumentToNote(it) }
+        } else emptyList()
+
+        // 4. 두 리스트를 합치기 + 중복 제거 + 만료 시간 체크
+        val currentTime = System.currentTimeMillis()
+
+        return (nearbyNotes + myNotes)
+            .distinctBy { it.id } // 중복된 쪽지 제거
+            .filter { it.expiresAt.time > currentTime } // 만료되지 않은 것만 필터링
+            .sortedByDescending { it.createdAt } // 최신순 정렬
+    }
+
+    // FirestoreNoteSource.kt 클래스 내부 하단에 추가
+
+    private fun mapDocumentToNote(doc: com.google.firebase.firestore.DocumentSnapshot): Note? {
+        return try {
+            val data = doc.data ?: return null
+
+            // 1. location 맵 데이터 추출
+            val locationMap = data["location"] as? Map<String, Any>
+
+            // 2. 개별 필드 추출
+            val lat = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0
+            val lng = (locationMap?.get("longitude") as? Number)?.toDouble() ?: 0.0
+            val addr = locationMap?.get("address") as? String ?: "알 수 없는 위치"
+            val hash = locationMap?.get("geohash") as? String ?: ""
+
+            val createdAt = doc.getTimestamp("createdAt")?.toDate() ?: Date()
+            val expiresAt = doc.getTimestamp("expiresAt")?.toDate() ?: Date()
+
+            // 3. Note 객체 생성 및 반환
+            Note(
+                id = doc.id,
+                authorId = doc.getString("authorId") ?: "",
+                userNickname = doc.getString("userNickname") ?: "익명",
+                contentText = doc.getString("contentText") ?: "",
+                category = doc.getString("category") ?: "일상",
+                imageUrl = doc.getString("imageUrl"),
+                thumbnailUrl = doc.getString("thumbnailUrl"),
+                location = NoteLocation(
+                    latitude = lat,
+                    longitude = lng,
+                    address = addr,
+                    geohash = hash
+                ),
+                createdAt = createdAt,
+                expiresAt = expiresAt,
+                viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
+                likeCount = doc.getLong("likeCount")?.toInt() ?: 0
+            )
+        } catch (e: Exception) {
+            Log.e("FirestoreNoteSource", "Mapping Error: ${e.message}")
+            null
+        }
     }
 
     // 조회수 증가

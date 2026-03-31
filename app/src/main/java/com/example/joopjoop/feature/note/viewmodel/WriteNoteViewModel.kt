@@ -19,6 +19,7 @@ import com.example.joopjoop.data.location.LocationProvider
 import com.example.joopjoop.feature.note.ui.write.WriteNoteUiState
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,9 +27,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.tasks.await
 import java.util.Date
 import kotlinx.coroutines.withContext
 import java.util.Locale
+import java.util.UUID
 import kotlin.coroutines.resume
 
 class WriteNoteViewModel(

@@ -27,30 +27,8 @@ class NoteRepositoryImpl(
         fileName: String,
         onProgress: (Float) -> Unit
     ): Pair<String, String>? { // 두 개의 URL을 반환하도록 변경
-        return try {
-            // 경로를 각각 다르게 설정 (폴더 분리)
-            val originalRef = storage.reference.child("notes/images/$fileName.jpg")
-            val thumbnailRef = storage.reference.child("notes/thumbnails/${fileName}_thumb.jpg")
+        return source.uploadImage(originalData, thumbnailData, fileName, onProgress)
 
-            // 1. 원본 업로드 (진행률은 원본 기준으로 표시)
-            val originalTask = originalRef.putBytes(originalData)
-            originalTask.addOnProgressListener { taskSnapshot ->
-                val progress = (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
-                onProgress(progress)
-            }.await()
-            val originalUrl = originalRef.downloadUrl.await().toString()
-
-            // 2. 썸네일 업로드
-            thumbnailRef.putBytes(thumbnailData).await()
-            val thumbnailUrl = thumbnailRef.downloadUrl.await().toString()
-
-            // 두 URL을 묶어서 반환
-            Pair(originalUrl, thumbnailUrl)
-
-        } catch (e: Exception) {
-            Log.e("PhotoDebug", "업로드 중 에러: ${e.message}")
-            null
-        }
     }
 
     // 주변 쪽지 탐색
@@ -63,6 +41,14 @@ class NoteRepositoryImpl(
 
         // 2. Source에 구현된 위치 쿼리 호출
         return source.getNotesByLocation(centerGeohash)
+    }
+
+    override suspend fun getVisibleNotes(
+        lat: Double,
+        lng: Double,
+        myUid: String
+    ): List<Note> {
+        return source.getVisibleNotes(lat, lng, myUid)
     }
 
     // 쪽지 상세 데이터 가져오기

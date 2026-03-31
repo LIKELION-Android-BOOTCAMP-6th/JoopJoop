@@ -12,6 +12,8 @@ import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.data.location.LocationProvider
 import com.example.joopjoop.feature.note.ui.list.NoteItem
 import com.example.joopjoop.feature.note.ui.list.NoteListUiState
+import com.firebase.geofire.util.GeoUtils.distance
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -131,14 +133,14 @@ class NoteListViewModel(
         val myLng = _uiState.value.myLongitude
         val currentTime = System.currentTimeMillis()
 
+        // 1. 현재 로그인한 내 ID 가져오기
+        val myUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            // [수정 포인트] getNotes() 대신 위치 기반 쿼리 사용!
-            // 이제 DB에서 내 주변(약 5km) 데이터만 쏙 골라옴
-            val nearbyNotes = repository.getNotesByLocation(myLat, myLng)
+            val allVisibleNotes = repository.getVisibleNotes(myLat, myLng, myUid)
 
-            val notes = nearbyNotes
+            val notes = allVisibleNotes
                 .filter { note ->
                     // 유효기간이 남은 쪽지만 필터링
                     note.expiresAt.time > currentTime
@@ -166,68 +168,28 @@ class NoteListViewModel(
                         endLat = note.location.latitude,
                         endLng = note.location.longitude
                     )
-
-                    // 쪽지 객체와 계산된 거리(Float)를 Pair로 묶어서 반환 (이후 sortedBy에서 사용)
-                    note to distanceInMeters
+                    // 내 쪽지 여부
+                    val isMine = note.authorId == myUid
+                    // 쪽지 객체와 계산된 거리(Float)//내 쪽지 여부를 묶어서 반환
+                    Triple(note, distanceInMeters, isMine)
                 }
                 .sortedBy { it.second } // 거리순 정렬
-                .map { (note, distanceInMeters) ->
+                .map { (note, distanceInMeters, isMine) ->
                     // VO(Note)를 UI 전용 모델(NoteItem)로 변환
                     NoteItem(
                         id = note.id,
                         content = note.contentText,
-                        thumbnailUrl = note.thumbnailUrl, // 썸네일 경로 전달
+                        thumbnailUrl = note.thumbnailUrl,
                         // 거리 포맷팅 (1km 이상은 km로 표시)
                         distance = if (distanceInMeters >= 1000) "${(distanceInMeters / 1000).toInt()}km"
                         else "${distanceInMeters.toInt()}m",
-                        // 30m 이내일 때만 줍기(열람) 활성화
-                        isWithinRange = distanceInMeters <= 30f,
+                        // 내 쪽지거나 30m 이내일 때만 줍기(열람) 활성화
+                        isWithinRange = isMine || distanceInMeters <= 30f,
                         latitude = note.location.latitude,
                         longitude = note.location.longitude,
                     )
                 }
             _uiState.update { it.copy(notes = notes, isLoading = false) }
-        }
-    }
-
-    // AndroidViewModel을 상속받아야 getApplication() 사용 가능
-    class NoteWriteViewModel(application: Application, private val repository: NoteRepository)
-        : AndroidViewModel(application) {
-
-        fun uploadNote(imageUri: Uri) { // 갤러리에서 선택한 Uri를 인자로 받음
-            viewModelScope.launch {
-                // 1. context 에러 해결: getApplication() 사용
-                val processor = ImageProcessor(getApplication())
-
-                // 2. 이미지 가공 수행
-                val originalBytes = processor.processOriginal(imageUri)
-                val thumbBytes = processor.processThumbnail(imageUri)
-
-                if (originalBytes != null && thumbBytes != null) {
-                    // Firebase Storage 업로드 로직 시작
-                    val fileName = UUID.randomUUID().toString()
-                    val storage = FirebaseStorage.getInstance().reference
-
-                    try {
-                        val originalUrl = storage.child("notes/images/$fileName.jpg")
-                            .putBytes(originalBytes).await().storage.downloadUrl.await().toString()
-
-                        val thumbUrl = storage.child("notes/thumbnails/${fileName}_thumb.jpg")
-                            .putBytes(thumbBytes).await().storage.downloadUrl.await().toString()
-
-                        // 3. Firestore 저장 (request 필드명 확인)
-                        val request = Note(
-                            contentText = "입력받은 텍스트", // 👈 여기서 content 에러가 난다면 변수명을 확인하세요
-                            imageUrl = originalUrl,
-                            thumbnailUrl = thumbUrl,
-                            // ... 나머지 필드
-                        )
-                        repository.createNote(request)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-            }
         }
     }
 }
