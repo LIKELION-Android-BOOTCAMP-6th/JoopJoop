@@ -212,7 +212,7 @@ fun NoteDetail(
             ) {
                 JoopJoopImage(
                     model = uiState.imageUrl,
-                    contentDescription = "쪽지 이미지",
+                    contentDescription = "쪽지 원본 이미지",
                     modifier = Modifier.fillMaxSize()
                 )
             }

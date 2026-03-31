@@ -187,18 +187,34 @@ class FakeNoteRepository : NoteRepository {
 
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 
-    override suspend fun uploadImage(processedData: ByteArray, fileName: String, onProgress: (Float) -> Unit): String? {
+    override suspend fun uploadImage(
+        originalData: ByteArray,    // 원본 데이터
+        thumbnailData: ByteArray,   // 썸네일 데이터
+        fileName: String,
+        onProgress: (Float) -> Unit
+    ): Pair<String, String>? { // 두 개의 URL을 반환하도록 변경
         return try {
-            val storageRef = storage.reference.child("notes/$fileName.jpg")
+            // 경로를 각각 다르게 설정 (폴더 분리)
+            val originalRef = storage.reference.child("notes/images/$fileName.jpg")
+            val thumbnailRef = storage.reference.child("notes/thumbnails/${fileName}_thumb.jpg")
 
-            // 1. 이미지 업로드 (ImageProcessor가 만든 ByteArray 사용)
-            storageRef.putBytes(processedData).await()
+            // 1. 원본 업로드 (진행률은 원본 기준으로 표시)
+            val originalTask = originalRef.putBytes(originalData)
+            originalTask.addOnProgressListener { taskSnapshot ->
+                val progress = (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
+                onProgress(progress)
+            }.await()
+            val originalUrl = originalRef.downloadUrl.await().toString()
 
-            // 2. 업로드 완료 후 이미지의 '진짜 주소(URL)' 가져오기
-            val downloadUrl = storageRef.downloadUrl.await()
-            downloadUrl.toString() // 이 URL을 Firestore의 imageUri 필드에 저장하면 됩니다!
+            // 2. 썸네일 업로드
+            thumbnailRef.putBytes(thumbnailData).await()
+            val thumbnailUrl = thumbnailRef.downloadUrl.await().toString()
+
+            // 두 URL을 묶어서 반환
+            Pair(originalUrl, thumbnailUrl)
+
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("PhotoDebug", "업로드 중 에러: ${e.message}")
             null
         }
     }

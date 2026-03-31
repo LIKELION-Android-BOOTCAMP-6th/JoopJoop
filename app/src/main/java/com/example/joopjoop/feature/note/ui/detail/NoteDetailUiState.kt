@@ -9,7 +9,7 @@ data class NoteDetailUiState(
     val likeCount: Int = 0,             // 좋아요 수
     val imageUrl: String? = null,       // 메인 이미지
     val thumbnailUrl: String? = null,   // 썸네일 이미지
-    val contentText: String = "",           // 쪽지 본문
+    val contentText: String = "",       // 쪽지 본문
     val isLiked: Boolean = false,       // 좋아요 눌렀는지
     val isBookmarked: Boolean = false,  // 스크랩 눌렀는지
     val isLoading: Boolean = false,

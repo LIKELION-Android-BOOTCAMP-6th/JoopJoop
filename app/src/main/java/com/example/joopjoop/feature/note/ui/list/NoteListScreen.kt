@@ -202,7 +202,7 @@ fun NoteCard(item: NoteItem, onClick: () -> Unit = {}) {
                 !item.thumbnailUrl.isNullOrBlank() -> { // thumbnailUrl이 있으면 노출
                     JoopJoopImage(
                         model = item.thumbnailUrl,
-                        contentDescription = "쪽지 썸neil",
+                        contentDescription = "쪽지 썸네일",
                         modifier = Modifier.fillMaxSize()
                     )
                 }
