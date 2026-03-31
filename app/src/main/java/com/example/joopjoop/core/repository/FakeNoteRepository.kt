@@ -104,6 +104,7 @@ class FakeNoteRepository : NoteRepository {
         )
         // 리스트 맨 앞에 추가하여 최신순 유지
         _allFakeNotes.add(0, newNote)
+        return newId
     }
 
     override suspend fun getNotesByLocation(
@@ -222,6 +223,11 @@ class FakeNoteRepository : NoteRepository {
             Log.e("PhotoDebug", "업로드 중 에러: ${e.message}")
             null
         }
+    }
+
+    // 쪽지 수정
+    override suspend fun editNote(noteId: String, request: Note) {
+        // todo :: 수정 로직 추가
     }
 
     // 쪽지 삭제

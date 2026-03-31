@@ -1,6 +1,5 @@
 package com.example.joopjoop.feature.note.viewmodel
 
-import android.os.Process.myUid
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -1,6 +1,7 @@
 package com.example.joopjoop.feature.note.data.source
 
 import android.util.Log
+import com.example.joopjoop.core.common.util.LocationUtil.getGeohash
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap

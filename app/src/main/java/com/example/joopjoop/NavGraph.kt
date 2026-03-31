@@ -343,7 +343,6 @@ fun RootNavHost() {
 fun MainNavHost(
     mainNavController: NavHostController,
     rootNavController: NavController,
-    mapViewModel: MapViewModel,
     modifier: Modifier = Modifier
 ) {
     // Context와 AppContainer를 미리 가져옵니다.
