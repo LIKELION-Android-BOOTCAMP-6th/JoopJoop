@@ -91,7 +91,7 @@ class SettingViewModel(
 
             try {
                 // ImageProcessor로 이미지 압축 (ByteArray 추출)
-                val compressedBytes = imageProcessor.processOriginal(imageUri)
+                val compressedBytes = imageProcessor.processProfile(imageUri)
 
                 if (compressedBytes == null) {
                     _settingEvent.emit(SettingEvent.Error("이미지 가공 실패"))
