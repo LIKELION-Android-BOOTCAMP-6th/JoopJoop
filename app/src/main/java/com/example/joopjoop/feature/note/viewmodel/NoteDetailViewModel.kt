@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.note.viewmodel
 
+import android.os.Process.myUid
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -186,6 +187,7 @@ class NoteDetailViewModel(
 
     // 삭제 버튼 클릭 처리
     fun deleteNote(noteId: String, onSuccess: () -> Unit) {
+        val myId = currentUserId ?: return
         viewModelScope.launch {
             try {
                 val isSuccess = repository.deleteNote(noteId)
