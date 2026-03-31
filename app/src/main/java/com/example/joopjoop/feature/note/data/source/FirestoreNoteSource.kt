@@ -6,6 +6,7 @@ import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
 import com.google.firebase.Timestamp
+import com.google.firebase.Timestamp.now
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -56,6 +57,11 @@ class FirestoreNoteSource(
         return snapshot.documents.mapNotNull { doc ->
             val createdAt = doc.getTimestamp("createdAt")
             val expiresAt = doc.getTimestamp("expiresAt")
+
+            // 2. 이제 Timestamp끼리 비교가 가능합니다.
+            if (expiresAt != null && expiresAt.compareTo(now()) < 0) {
+                return@mapNotNull null
+            }
 
             // 'location'이라는 내부 Map 꺼내기
             val data = doc.data ?: throw Exception("데이터가 없습니다.")

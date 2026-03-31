@@ -17,7 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import com.example.joopjoop.core.common.util.JoopJoopImage
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.TextPrimary
@@ -42,7 +42,7 @@ fun MyNoteGridItem(
         ) {
             if (!note.imageUrl.isNullOrEmpty()) {
                 // [Case A] 이미지가 있는 경우
-                AsyncImage(
+                JoopJoopImage(
                     model = note.imageUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,

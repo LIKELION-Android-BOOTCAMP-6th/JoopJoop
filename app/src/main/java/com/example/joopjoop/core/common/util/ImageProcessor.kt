@@ -24,6 +24,11 @@ class ImageProcessor(private val context: Context) {
         return resizeAndCompress(uri, targetWidth = 200)
     }
 
+    // 프로필 전용 가공
+    fun processProfile(uri: Uri): ByteArray? {
+        return resizeAndCompress(uri, targetWidth = 400)
+    }
+
     //실제 리사이징 및 압축 로직
     private fun resizeAndCompress(uri: Uri, targetWidth: Int): ByteArray? {
         return try {
