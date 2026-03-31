@@ -1,11 +1,15 @@
 package com.example.joopjoop.core.common.util
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.example.joopjoop.R
 
@@ -25,16 +29,40 @@ fun JoopJoopImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop
 ) {
-    AsyncImage(
+    SubcomposeAsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
             .data(model)
-            .crossfade(true) // 자연스러운 페이드인 효과
+            .crossfade(true)
             .build(),
         contentDescription = contentDescription,
         modifier = modifier,
         contentScale = contentScale,
-        // 로딩 및 에러 시 기본 프로필 아이콘 표시
-        placeholder = painterResource(id = R.drawable.ic_image),
-        error = painterResource(id = R.drawable.ic_image)
+        // 로딩 중
+        loading = {
+            Box(
+                modifier = Modifier.matchParentSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        },
+        // 에러 시
+        error = {
+            Image(
+                painter = painterResource(id = R.drawable.ic_image),
+                contentDescription = contentDescription,
+                modifier = Modifier.matchParentSize(),
+                contentScale = contentScale
+            )
+        },
+        // 성공 시
+        success = { state ->
+            Image(
+                painter = state.painter,
+                contentDescription = contentDescription,
+                modifier = Modifier.matchParentSize(),
+                contentScale = contentScale
+            )
+        }
     )
 }
