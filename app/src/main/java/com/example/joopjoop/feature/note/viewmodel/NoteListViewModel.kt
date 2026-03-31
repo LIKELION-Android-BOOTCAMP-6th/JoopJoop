@@ -7,9 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.common.util.LocationUtil
+import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.data.location.LocationProvider
-import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.ui.list.NoteItem
 import com.example.joopjoop.feature.note.ui.list.NoteListUiState
 import com.google.firebase.storage.FirebaseStorage
@@ -216,10 +216,10 @@ class NoteListViewModel(
                             .putBytes(thumbBytes).await().storage.downloadUrl.await().toString()
 
                         // 3. Firestore 저장 (request 필드명 확인)
-                        val request = NoteRequest(
-                            content = "입력받은 텍스트", // 👈 여기서 content 에러가 난다면 변수명을 확인하세요
-                            imageUri = originalUrl,
-                            thumbnailUri = thumbUrl,
+                        val request = Note(
+                            contentText = "입력받은 텍스트", // 👈 여기서 content 에러가 난다면 변수명을 확인하세요
+                            imageUrl = originalUrl,
+                            thumbnailUrl = thumbUrl,
                             // ... 나머지 필드
                         )
                         repository.createNote(request)

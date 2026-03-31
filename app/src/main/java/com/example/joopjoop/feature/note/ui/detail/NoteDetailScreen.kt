@@ -191,7 +191,7 @@ fun NoteDetail(
                     fontSize = 12.sp
                 )
                 Text(
-                    text = uiState.location,
+                    text = uiState.address,
                     color = TextSecondary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
@@ -200,7 +200,7 @@ fun NoteDetail(
         }
 
         // 2. 이미지 영역 (사진이 있을 때만 노출)
-        val isImageAdded = !uiState.imageUri.isNullOrBlank()
+        val isImageAdded = !uiState.imageUrl.isNullOrBlank()
         if (isImageAdded) {
             Spacer(modifier = Modifier.height(12.dp))
             Box(
@@ -211,7 +211,7 @@ fun NoteDetail(
                     .background(BgDark)
             ) {
                 JoopJoopImage(
-                    model = uiState.imageUri,
+                    model = uiState.imageUrl,
                     contentDescription = "쪽지 이미지",
                     modifier = Modifier.fillMaxSize()
                 )
@@ -224,7 +224,7 @@ fun NoteDetail(
 
         // 3. 본문 텍스트 영역
         Text(
-            text = uiState.content,
+            text = uiState.contentText,
             color = TextSecondary,
             fontSize = 14.sp,
             lineHeight = 22.sp
@@ -269,7 +269,7 @@ fun NoteDetail(
     val scrollState = rememberScrollState()
     var showDeleteDialog by remember { mutableStateOf(false) }  // 쪽지 삭제시 다이얼로그
 
-    val isImageAdded = !uiState.imageUri.isNullOrBlank()
+    val isImageAdded = !uiState.imageUrl.isNullOrBlank()
     if (isImageAdded) {
         Spacer(modifier = Modifier.height(12.dp))
         Box(
@@ -280,7 +280,7 @@ fun NoteDetail(
                 .background(BgDark)
         ) {
             JoopJoopImage(
-                model = uiState.imageUri,
+                model = uiState.imageUrl,
                 contentDescription = "쪽지 이미지",
                 modifier = Modifier.fillMaxSize()
             )
@@ -293,7 +293,7 @@ fun NoteDetail(
 
     // 3. 본문 텍스트 영역
     Text(
-        text = uiState.content,
+        text = uiState.contentText,
         color = TextSecondary,
         fontSize = 14.sp,
         lineHeight = 22.sp
@@ -346,7 +346,7 @@ fun NoteDetail(
                 )
                 // 위치
                 Text(
-                    text = uiState.location,
+                    text = uiState.address,
                     color = TextSecondary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
@@ -358,7 +358,7 @@ fun NoteDetail(
         val isImageAdded = uiState.imageUrl != null
         val blurRadius = if (isImageAdded) 0.dp else 16.dp
         // 메인 이미지 카드
-        if (!uiState.imageUri.isNullOrBlank()) {
+        if (!uiState.imageUrl.isNullOrBlank()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -367,7 +367,7 @@ fun NoteDetail(
                     .background(BgDark)
             ) {
                 JoopJoopImage(
-                    model = uiState.imageUri,
+                    model = uiState.imageUrl,
                     contentDescription = "쪽지 이미지",
                     modifier = Modifier.fillMaxSize()
                 )

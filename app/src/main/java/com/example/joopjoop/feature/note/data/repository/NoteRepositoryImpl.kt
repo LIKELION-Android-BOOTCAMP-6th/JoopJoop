@@ -5,7 +5,6 @@ import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.core.repository.NoteRepository
-import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await

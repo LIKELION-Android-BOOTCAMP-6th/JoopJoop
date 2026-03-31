@@ -4,7 +4,6 @@ import android.util.Log
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
-import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore

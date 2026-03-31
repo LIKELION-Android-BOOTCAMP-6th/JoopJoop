@@ -43,7 +43,7 @@ class NoteDetailViewModel(
         // noteId가 비어있는지 확인 로그를 찍어보세요!
         Log.d("NoteDetail", "전달받은 noteId: '$noteId'")
 
-        if (_uiState.value.isLoading || _uiState.value.content.isNotEmpty()) {
+        if (_uiState.value.isLoading || _uiState.value.contentText.isNotEmpty()) {
             Log.d("NoteDetail", "이미 로딩 중이거나 데이터가 있어 호출을 무시합니다.")
             return
         }
