@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.joopjoop.R
+import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
@@ -68,8 +69,17 @@ fun SettingRoute(
     val context = LocalContext.current
 
     val viewModel: SettingViewModel = viewModel(
-        factory = AuthViewModelFactory(authRepository, notificationViewModel)
+        factory = AuthViewModelFactory(authRepository, notificationViewModel,
+            imageProcessor = ImageProcessor(context)
+        )
     )
+
+    val galleryLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        // 사용자가 사진을 선택하면 ViewModel의 함수 호출
+        uri?.let { viewModel.updateProfileImage(it) }
+    }
 
     // 상태 수집
     val currentUser by viewModel.currentUser.collectAsState()
@@ -82,11 +92,11 @@ fun SettingRoute(
                     onNavigateToLogin()
                 }
                 is SettingEvent.UpdateSuccess -> {
-                    // 💡 성공 토스트 알림
-                    Toast.makeText(context, "닉네임이 변경되었습니다.", Toast.LENGTH_SHORT).show()
+                    // 성공 토스트 알림
+                    Toast.makeText(context, "프로필이 변경되었습니다.", Toast.LENGTH_SHORT).show()
                 }
                 is SettingEvent.Error -> {
-                    // 💡 에러 메시지 토스트 알림
+                    // 에러 메시지 토스트 알림
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
             }
@@ -99,6 +109,7 @@ fun SettingRoute(
         onCheckNickname = { viewModel.checkNicknameAvailability(it) }, // 중복 확인 호출
         onNicknameChanged = { viewModel.onNicknameChanged() }, // 타이핑 시 상태 리셋
         onUpdateNickname = { viewModel.updateNickname(it) },
+        onProfileEditClick = { galleryLauncher.launch("image/*") },
         onBackClick = onBackClick,
         onLogoutClick = { viewModel.logout() }
     )
@@ -264,19 +275,29 @@ fun SettingScreen(
                                 .background(Color.Gray),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_person),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(70.dp)
-                            )
+                            // 이미지 URL이 있으면 사진을 보여주고, 없으면 기본 아이콘을 보여줌
+                            if (user?.profileImageUrl.isNullOrEmpty()) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_person),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(70.dp)
+                                )
+                            } else {
+                                coil.compose.AsyncImage(
+                                    model = user?.profileImageUrl,
+                                    contentDescription = "Profile Image",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                )
+                            }
                         }
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
                                 .background(OrangePrimary, CircleShape)
                                 .border(2.dp, BgDark, CircleShape)
-                                .clickable { onProfileEditClick() },
+                                .clickable { onProfileEditClick() }, // 💡 여기서 콜백 호출!
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -304,7 +325,7 @@ fun SettingScreen(
                             tint = OrangePrimary,
                             modifier = Modifier
                                 .size(18.dp)
-                                .clip(CircleShape) // 💡 클릭 영역을 둥글게 (시각적 피드백용)
+                                .clip(CircleShape) // 클릭 영역을 둥글게 (시각적 피드백용)
                                 .clickable {
                                     newNickname = user?.nickname ?: "" // 현재 이름 미리 채워두기
                                     onNicknameChanged()              // 중복 확인 상태 초기화

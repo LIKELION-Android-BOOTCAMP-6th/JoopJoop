@@ -129,7 +129,8 @@ fun RootNavHost() {
 //                    factory = appContainer.authViewModelFactory
                         factory = AuthViewModelFactory(
                             authRepository = appContainer.authRepository,
-                            notificationViewModel = notificationViewModel
+                            notificationViewModel = notificationViewModel,
+                            imageProcessor = appContainer.imageProcessor
                         )
                     )
 
