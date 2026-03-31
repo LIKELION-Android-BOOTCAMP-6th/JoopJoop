@@ -159,6 +159,38 @@ class MapViewModel(
         }
     }
 
+    fun refreshCurrentLocation(onSuccess: (LatLng) -> Unit) {
+        viewModelScope.launch {
+            // 로딩 바
+            _uiState.update { it.copy(isLoading = true) }
+
+            try {
+                val location = locationProvider.getCurrentLocation()
+                if (location != null) {
+                    val newLatLng = LatLng(location.latitude, location.longitude)
+
+                    // 사용자 위치 값만 업데이트
+                    _uiState.update { state ->
+                        state.copy(
+                            currentUserLocation = newLatLng,
+                            isLoading = false
+                        )
+                    }
+                    // UI 쪽에 새 좌표 전달 (카메라 이동용)
+                    onSuccess(newLatLng)
+                } else {
+                    _uiState.update {
+                        it.copy(isLoading = false, errorMessage = "위치를 가져올 수 없습니다.")
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isLoading = false, errorMessage = e.message)
+                }
+            }
+        }
+    }
+
     // F-MAP-01/02: 권한 및 사용자 위치 업데이트
     fun onLocationUpdated(location: LatLng) {
         _uiState.update { it.copy(currentUserLocation = location) }
