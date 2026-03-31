@@ -377,6 +377,12 @@ fun SettingScreen(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            SettingActionRow(
+                iconId = R.drawable.ic_person,
+                title = stringResource(R.string.membership),
+                onClick = onLogoutClick
+            )
         }
     }
 }
@@ -401,7 +407,9 @@ fun SettingActionRow(
             Icon(
                 painter = painterResource(id = iconId),
                 contentDescription = null,
-                tint = if (textColor == TextPrimary) OrangePrimary else textColor,
+                tint = if (iconId == R.drawable.ic_person) Color(0xFFD32F2F)
+                else if (textColor == TextPrimary) OrangePrimary
+                else textColor,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))

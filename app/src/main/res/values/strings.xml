@@ -42,4 +42,7 @@
     <string name="setting_section_title">설정</string>
     <string name="notification_setting">알림 설정</string>
     <string name="logout">로그아웃</string>
+    <string name="membership">회원탈퇴</string>
+
+
 </resources>
