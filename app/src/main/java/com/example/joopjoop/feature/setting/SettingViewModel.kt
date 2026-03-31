@@ -3,6 +3,7 @@ package com.example.joopjoop.feature.setting.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.model.User
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.auth.data.model.AuthResult
@@ -16,7 +17,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingViewModel(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val imageProcessor: ImageProcessor
 ) : ViewModel() {
 
     // 현재 사용자 정보 (AuthRepository의 Flow를 관찰하여 실시간 반영)
@@ -82,49 +84,49 @@ class SettingViewModel(
         }
     }
 
-//    // 프로필 사진 변경
-//    fun updateProfileImage(imageUri: android.net.Uri) {
-//        viewModelScope.launch {
-//            _isLoading.value = true
-//
-//            try {
-//                // ImageProcessor로 이미지 압축 (ByteArray 추출)
-//                val compressedBytes = imageProcessor.processOriginal(imageUri)
-//
-//                if (compressedBytes == null) {
-//                    _settingEvent.emit(SettingEvent.Error("이미지 가공 실패"))
-//                    return@launch
-//                }
-//
-//                // 압축된 데이터를 서버에 업로드 (ByteArray 기반 업로드)
-//                // authRepository에 uploadProfileImage(ByteArray) 함수가 있다고 가정합니다.
-//                val uploadResult = authRepository.uploadProfileImage(compressedBytes)
-//
-//                when (uploadResult) {
-//                    is AuthResult.Success<*> -> {
-//                        val newUrl = uploadResult.data
-//                        // 3. Firestore 프로필 URL 업데이트
-//                        val currentNickname = currentUser.value?.nickname ?: ""
-//                        authRepository.updateProfile(
-//                            newNickname = currentNickname,
-//                            newImageUrl = newUrl as String?
-//                        )
-//                        _settingEvent.emit(SettingEvent.UpdateSuccess)
-//                    }
-//
-//                    is AuthResult.Failure -> {
-//                        _settingEvent.emit(SettingEvent.Error("업로드 실패: ${uploadResult.exception.message}"))
-//                    }
-//
-//                    else -> {}
-//                }
-//            } catch (e: Exception) {
-//                _settingEvent.emit(SettingEvent.Error("오류 발생: ${e.message}"))
-//            } finally {
-//                _isLoading.value = false
-//            }
-//        }
-//    }
+    // 프로필 사진 변경
+    fun updateProfileImage(imageUri: android.net.Uri) {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            try {
+                // ImageProcessor로 이미지 압축 (ByteArray 추출)
+                val compressedBytes = imageProcessor.processProfile(imageUri)
+
+                if (compressedBytes == null) {
+                    _settingEvent.emit(SettingEvent.Error("이미지 가공 실패"))
+                    return@launch
+                }
+
+                // 압축된 데이터를 서버에 업로드 (ByteArray 기반 업로드)
+                // authRepository에 uploadProfileImage(ByteArray) 함수가 있다고 가정합니다.
+                val uploadResult = authRepository.uploadProfileImage(compressedBytes)
+
+                when (uploadResult) {
+                    is AuthResult.Success<*> -> {
+                        val newUrl = uploadResult.data
+                        // 3. Firestore 프로필 URL 업데이트
+                        val currentNickname = currentUser.value?.nickname ?: ""
+                        authRepository.updateProfile(
+                            newNickname = currentNickname,
+                            newImageUrl = newUrl as String?
+                        )
+                        _settingEvent.emit(SettingEvent.UpdateSuccess)
+                    }
+
+                    is AuthResult.Failure -> {
+                        _settingEvent.emit(SettingEvent.Error("업로드 실패: ${uploadResult.exception.message}"))
+                    }
+
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                _settingEvent.emit(SettingEvent.Error("오류 발생: ${e.message}"))
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 
     /**
      * 로그아웃 실행

@@ -7,6 +7,7 @@ import com.example.joopjoop.feature.auth.data.model.UserResponse
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
 import com.google.firebase.Firebase
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -45,11 +46,14 @@ class AuthRepositoryImpl(
             val uid = authSource.getCurrentUserId() ?: throw Exception("로그인 정보 없음")
 
             // Firestore 유저 문서의 nickname 필드 업데이트
-            userSource.updateUser(uid, newNickname)
+            userSource.updateUser(uid, newNickname, newImageUrl)
 
             // 캐시(StateFlow) 업데이트
             // 현재 캐시된 유저 정보를 복사해서 닉네임만 갈아끼움
-            _currentUser.value = _currentUser.value?.copy(nickname = newNickname)
+            _currentUser.value = _currentUser.value?.copy(
+                nickname = newNickname,
+                profileImageUrl = newImageUrl ?: ""
+            )
 
             AuthResult.Success(Unit)
         } catch (e: Exception) {
@@ -61,24 +65,24 @@ class AuthRepositoryImpl(
         return userSource.isNicknameAvailable(nickname)
     }
 
-//    override suspend fun uploadProfileImage(imageBytes: ByteArray): AuthResult<String> {
-//        return try {
-//            val uid = getCurrentUid() ?: return AuthResult.Failure(Exception("로그인 정보가 없습니다."))
-//
-//            // 1. Storage 참조 생성 (경로: profiles/유저ID.jpg)
-//            val storageRef = Firebase.storage.reference.child("profiles/$uid.jpg")
-//
-//            // 2. ByteArray 데이터 업로드
-//            storageRef.putBytes(imageBytes).await()
-//
-//            // 3. 업로드된 파일의 공개 URL 가져오기
-//            val downloadUrl = storageRef.downloadUrl.await().toString()
-//
-//            AuthResult.Success(downloadUrl)
-//        } catch (e: Exception) {
-//            AuthResult.Failure(e)
-//        }
-//    }
+    override suspend fun uploadProfileImage(imageBytes: ByteArray): AuthResult<String> {
+        return try {
+            val uid = getCurrentUid() ?: return AuthResult.Failure(Exception("로그인 정보가 없습니다."))
+
+            // 1. Storage 참조 생성 (경로: profiles/유저ID.jpg)
+            val storageRef = Firebase.storage.reference.child("profiles/$uid.jpg")
+
+            // 2. ByteArray 데이터 업로드
+            storageRef.putBytes(imageBytes).await()
+
+            // 3. 업로드된 파일의 공개 URL 가져오기
+            val downloadUrl = storageRef.downloadUrl.await().toString()
+
+            AuthResult.Success(downloadUrl)
+        } catch (e: Exception) {
+            AuthResult.Failure(e)
+        }
+    }
 
     override suspend fun signUp(
         email: String,

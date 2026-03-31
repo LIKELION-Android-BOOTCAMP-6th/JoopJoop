@@ -2,6 +2,7 @@ package com.example.joopjoop.feature.auth.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 import com.example.joopjoop.feature.setting.viewmodel.SettingViewModel
@@ -10,7 +11,8 @@ import com.example.joopjoop.feature.setting.viewmodel.SettingViewModel
 // 인증 및 설정용 통합 팩토리로 사용중
 class AuthViewModelFactory(
     private val authRepository: AuthRepository,
-    private val notificationViewModel: NotificationViewModel // 알림 viewmodel
+    private val notificationViewModel: NotificationViewModel, // 알림 viewmodel
+    private val imageProcessor: ImageProcessor // 이미지
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -27,7 +29,7 @@ class AuthViewModelFactory(
             }
             // Logout
             modelClass.isAssignableFrom(SettingViewModel::class.java) -> {
-                SettingViewModel(authRepository) as T
+                SettingViewModel(authRepository, imageProcessor) as T
             }
 
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

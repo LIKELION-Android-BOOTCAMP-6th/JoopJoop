@@ -28,10 +28,10 @@ interface AuthRepository {
     // 사용 가능 = true, 사용불가능 = false
     suspend fun isNicknameAvailable(nickname: String): Boolean
 
-//    // 프로필 사진 변경
-//    // imageBytes ImageProcessor로 압축된 이미지 데이터
-//    // 성공 시 업로드된 이미지의 다운로드 URL (String) 반환
-//    suspend fun uploadProfileImage(imageBytes: ByteArray): AuthResult<String>
+    // 프로필 사진 변경
+    // imageBytes ImageProcessor로 압축된 이미지 데이터
+    // 성공 시 업로드된 이미지의 다운로드 URL (String) 반환
+    suspend fun uploadProfileImage(imageBytes: ByteArray): AuthResult<String>
     
 
     // 이메일 회원가입 실행
