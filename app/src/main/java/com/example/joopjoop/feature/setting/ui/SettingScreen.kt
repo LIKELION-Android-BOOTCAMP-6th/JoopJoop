@@ -110,6 +110,7 @@ fun SettingRoute(
         onNicknameChanged = { viewModel.onNicknameChanged() }, // 타이핑 시 상태 리셋
         onUpdateNickname = { viewModel.updateNickname(it) },
         onProfileEditClick = { galleryLauncher.launch("image/*") },
+        onDeleteProfileClick = { viewModel.deleteProfileImage() },
         onBackClick = onBackClick,
         onLogoutClick = { viewModel.logout() }
     )
@@ -125,12 +126,56 @@ fun SettingScreen(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
     onProfileEditClick: () -> Unit = {},
+    onDeleteProfileClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
     var isNotificationEnabled by remember { mutableStateOf(true) }
     var showDialog by remember { mutableStateOf(false) }
+    var showImageDialog by remember { mutableStateOf(false) }
     var newNickname by remember { mutableStateOf(user?.nickname ?: "") }
 
+    // 프로필 이미지 관리 다이얼로그 추가
+    if (showImageDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showImageDialog = false },
+            title = { Text("프로필 사진 설정", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text(
+                        "갤러리에서 사진 선택",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onProfileEditClick()
+                                showImageDialog = false
+                            }
+                            .padding(vertical = 12.dp),
+                        color = TextPrimary
+                    )
+                    Text(
+                        "기본 이미지로 변경",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onDeleteProfileClick()
+                                showImageDialog = false
+                            }
+                            .padding(vertical = 12.dp),
+                        color = Color.Red // 삭제는 빨간색으로 강조
+                    )
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                Text(
+                    "취소",
+                    modifier = Modifier.clickable { showImageDialog = false },
+                    color = TextSecondary
+                )
+            },
+            containerColor = BgDark
+        )
+    }
     // 닉네임 수정 팝업창
     if (showDialog) {
         androidx.compose.material3.AlertDialog(
@@ -297,7 +342,7 @@ fun SettingScreen(
                                 .size(36.dp)
                                 .background(OrangePrimary, CircleShape)
                                 .border(2.dp, BgDark, CircleShape)
-                                .clickable { onProfileEditClick() }, // 💡 여기서 콜백 호출!
+                                .clickable { showImageDialog = true }, // 바로 갤러리 안 가고 다이얼로그 띄우기
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(

@@ -74,6 +74,8 @@ class NoteDetailViewModel(
                 }
 
                 if (noteData != null) {
+                    Log.d("NoteDetailDebug", "DB에서 온 닉네임: ${noteData.userNickname}")
+                    Log.d("NoteDetailDebug", "DB에서 온 프로필 URL: '${noteData.profileImageUrl}'")
                     // 데이터가 있을 때만 조회수를 증가
                     // 조회수 +1 요청
                     val serverLikeCount = noteData.likeCount
@@ -81,6 +83,7 @@ class NoteDetailViewModel(
                     _uiState.update {
                         it.copy(
                             userNickName = noteData.userNickname,
+                            profileImageUrl = noteData.profileImageUrl,
                             createdAt = formatDate(noteData.createdAt),
                             viewCount = noteData.viewCount,
                             likeCount = maxOf(0, serverLikeCount),

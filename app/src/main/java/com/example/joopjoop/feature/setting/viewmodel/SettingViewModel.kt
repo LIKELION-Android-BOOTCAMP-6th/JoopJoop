@@ -128,6 +128,23 @@ class SettingViewModel(
         }
     }
 
+    fun deleteProfileImage() {
+        viewModelScope.launch {
+            val result = authRepository.deleteProfileImage()
+            when (result) {
+                is AuthResult.Success<*> -> {
+                    _settingEvent.emit(SettingEvent.UpdateSuccess)
+                }
+                is AuthResult.Failure -> {
+                    _settingEvent.emit(SettingEvent.Error(result.exception.message ?: "삭제 실패"))
+                }
+                else -> {
+                    // 아무것도 하지 않거나, 필요하다면 로딩 상태 처리를 합니다.
+                }
+            }
+        }
+    }
+
     /**
      * 로그아웃 실행
      */
