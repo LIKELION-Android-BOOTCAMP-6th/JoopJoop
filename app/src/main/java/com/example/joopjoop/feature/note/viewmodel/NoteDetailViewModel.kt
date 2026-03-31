@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.note.viewmodel
 
+import android.os.Process.myUid
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -39,11 +40,11 @@ class NoteDetailViewModel(
 
     // 특정 쪽지의 상세 데이터를 가져옴
     fun loadNoteDetail(noteId: String) {
-        // noteId가 비어있는지 먼저 확인 로그를 찍어보세요!
+        // noteId가 비어있는지 확인 로그를 찍어보세요!
         Log.d("NoteDetail", "전달받은 noteId: '$noteId'")
 
-        if (noteId.isEmpty()) {
-            Log.e("NoteDetail", "Error: noteId가 비어있습니다!")
+        if (_uiState.value.isLoading || _uiState.value.content.isNotEmpty()) {
+            Log.d("NoteDetail", "이미 로딩 중이거나 데이터가 있어 호출을 무시합니다.")
             return
         }
         viewModelScope.launch {
@@ -75,7 +76,6 @@ class NoteDetailViewModel(
                 if (noteData != null) {
                     // 데이터가 있을 때만 조회수를 증가
                     // 조회수 +1 요청
-                    repository.incrementViewCount(noteId)
                     val serverLikeCount = noteData.likeCount
 
                     _uiState.update {
@@ -125,6 +125,8 @@ class NoteDetailViewModel(
                 }
 
                 val noteData = repository.getNoteDetail(noteId)
+                Log.d("NoteDetailDebug", "DB에서 가져온 이미지 URL: ${noteData?.imageUrl}")
+                Log.d("NoteDetailDebug", "쪽지 작성자 ID: ${noteData?.authorId}")
                 if (noteData != null) {
                     _uiState.update { state ->
                         state.copy(

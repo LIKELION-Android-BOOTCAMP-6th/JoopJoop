@@ -1,9 +1,11 @@
 package com.example.joopjoop.feature.note.data.repository
 
+import android.util.Log
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.core.repository.NoteRepository
+import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
@@ -11,8 +13,6 @@ import kotlinx.coroutines.tasks.await
 class NoteRepositoryImpl(
     private val source: FirestoreNoteSource,
 ) : NoteRepository {
-
-
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 
     // 이건 fireStore에서 모든 쪽지를 긁어오는 것처럼 보입니다.
@@ -20,21 +20,35 @@ class NoteRepositoryImpl(
 //    override suspend fun getNotes(): List<Note> {
 //        return source.getNotes()
 //    }
-        override suspend fun uploadImage(processedData: ByteArray, fileName: String): String? {
-            return try {
-                val storageRef = storage.reference.child("notes/$fileName.jpg")
 
-                // 이미지 업로드
-                storageRef.putBytes(processedData).await()
+    override suspend fun uploadImage(
+        processedData: ByteArray,
+        fileName: String,
+        onProgress: (Float) -> Unit
+    ): String? {
+        return try {
+            val storageRef = storage.reference.child("notes/$fileName.jpg")
+            val uploadTask = storageRef.putBytes(processedData)
 
-                // 업로드 완료 후 이미지 url 가져오기
-                val downloadUrl = storageRef.downloadUrl.await()
-                downloadUrl.toString() // 이 URL을 Firestore의 imageUri 필드에 저장하면 됩니다!
-            } catch (e: Exception) {
-                e.printStackTrace()
-                null
-            }
+            uploadTask.addOnProgressListener { taskSnapshot ->
+                val transferred = taskSnapshot.bytesTransferred.toDouble()
+                val total = taskSnapshot.totalByteCount.toDouble()
+
+                val progress = if (total > 0) (transferred / total).toFloat() else 0f
+                onProgress(progress)
+            }.await()
+
+            // 이미지 업로드
+            storageRef.putBytes(processedData).await()
+            val downloadUrl = storageRef.downloadUrl.await().toString()
+            downloadUrl
+
+        } catch (e: Exception) {
+            Log.e("PhotoDebug", "Storage 업로드 중 에러: ${e.message}")
+            e.printStackTrace()
+            null
         }
+    }
 
     // 주변 쪽지 탐색
     override suspend fun getNotesByLocation(
@@ -69,12 +83,12 @@ class NoteRepositoryImpl(
     }
 
     // 좋아요 추가
-    override suspend fun addLike(noteId: String, userId: String){
+    override suspend fun addLike(noteId: String, userId: String) {
         source.addLike(noteId, userId)
     }
 
     // 좋아요 취소
-    override suspend fun removeLike(noteId: String, userId: String){
+    override suspend fun removeLike(noteId: String, userId: String) {
         source.removeLike(noteId, userId)
     }
 

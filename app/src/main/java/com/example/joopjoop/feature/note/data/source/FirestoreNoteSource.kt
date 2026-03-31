@@ -1,8 +1,10 @@
 package com.example.joopjoop.feature.note.data.source
 
+import android.util.Log
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
+import com.example.joopjoop.feature.note.data.model.NoteRequest
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -76,8 +78,11 @@ class FirestoreNoteSource(
 
     // 쪽지 상세 데이터 조회
     suspend fun getNoteDetail(noteId: String): Note {
-        val doc = db.collection(collectionPath).document(noteId).get().await()
+        val docRef = db.collection(collectionPath).document(noteId)
+        // 조회 요청 - 조회수 +1
+        docRef.update("viewCount", FieldValue.increment(1)).await()
 
+        val doc = docRef.get().await()
         // 문서 데이터 전체를 Map으로 가져옵니다.
         val data = doc.data ?: throw Exception("데이터가 없습니다.")
 

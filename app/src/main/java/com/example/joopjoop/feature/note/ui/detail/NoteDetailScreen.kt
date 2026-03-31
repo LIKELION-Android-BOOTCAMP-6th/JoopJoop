@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.note.ui.detail
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.showToast
@@ -71,7 +73,9 @@ fun NoteDetailScreen(
 
     // 화면 진입 시 데이터 불러오기
     LaunchedEffect(noteId) {
-        viewModel.loadNoteDetail(noteId)
+        if (noteId.isNotEmpty()) {
+            viewModel.loadNoteDetail(noteId)
+        }
     }
 
     // 에러 메시지 감시 및 토스트 출력
@@ -98,16 +102,27 @@ fun NoteDetailScreen(
 //                DetailBottomBar(navController)
 //            }
         ) { innerPadding ->
-            if (uiState.isLoading) {
-                LoadingScreen(Modifier.padding(innerPadding))
-            } else {
-                NoteDetail(
-                    uiState = uiState,
-                    navController = navController,
-                    modifier = Modifier.padding(innerPadding),
-                    viewModel = viewModel,
-                    noteId = noteId
-                )
+            Box(modifier = Modifier.padding(innerPadding)) {
+                when {
+                    uiState.isLoading -> {
+                        // 로딩 중일 때는 로딩 컴포저블만 표시
+                        LoadingScreen()
+                    }
+
+                    uiState.errorMessage != null -> {
+                        // 에러 발생 시 처리 (예: 빈 화면 또는 에러 문구)
+                    }
+
+                    else -> {
+                        // 로딩이 완료된 후에만 실제 상세 내용을 그림
+                        NoteDetail(
+                            uiState = uiState,
+                            navController = navController,
+                            viewModel = viewModel,
+                            noteId = noteId
+                        )
+                    }
+                }
             }
         }
     }
@@ -130,8 +145,120 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
     }
 }
 
-
 @Composable
+fun NoteDetail(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    uiState: NoteDetailUiState = NoteDetailUiState(),
+    viewModel: NoteDetailViewModel,
+    noteId: String = "1"
+) {
+    val scrollState = rememberScrollState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(BgDarkest)
+            .verticalScroll(scrollState)
+            .padding(horizontal = 16.dp)
+    ) {
+        // 1. 유저 정보 영역
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                modifier = Modifier.size(40.dp).clip(CircleShape).background(BgDark),
+                painter = painterResource(id = R.drawable.baseline_person_24),
+                contentDescription = null,
+                tint = TextTertiary
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text(
+                    text = uiState.userNickName,
+                    color = TextPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "${uiState.createdAt} 조회 ${uiState.viewCount} 좋아요 ${uiState.likeCount}",
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
+                Text(
+                    text = uiState.location,
+                    color = TextSecondary,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
+        // 2. 이미지 영역 (사진이 있을 때만 노출)
+        val isImageAdded = !uiState.imageUri.isNullOrBlank()
+        if (isImageAdded) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(BgDark)
+            ) {
+                JoopJoopImage(
+                    model = uiState.imageUri,
+                    contentDescription = "쪽지 이미지",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+        } else {
+            // 사진 없을 때 간격
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // 3. 본문 텍스트 영역
+        Text(
+            text = uiState.content,
+            color = TextSecondary,
+            fontSize = 14.sp,
+            lineHeight = 22.sp
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // 4. 하단 버튼 (수정/삭제 또는 좋아요/스크랩)
+        NoteDetailBottomButton(
+            uiState = uiState,
+            onEdit = { viewModel.editNote(noteId) },
+            onDelete = { showDeleteDialog = true },
+            onLikeClick = { viewModel.toggleLike(noteId) },
+            onBookmarkClick = { viewModel.toggleBookmark(noteId) }
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
+    } // Column 끝
+
+    // 5. 삭제 확인 다이얼로그 (Column 바깥)
+    if (showDeleteDialog) {
+        DeleteNoteDialog(
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                viewModel.deleteNote(noteId) {
+                    showDeleteDialog = false
+                    navController.popBackStack()
+                }
+            }
+        )
+    }
+}
+
+/*@Composable
 fun NoteDetail(
     modifier: Modifier = Modifier,
     navController: NavController,
@@ -142,7 +269,39 @@ fun NoteDetail(
     val scrollState = rememberScrollState()
     var showDeleteDialog by remember { mutableStateOf(false) }  // 쪽지 삭제시 다이얼로그
 
-    Column(
+    val isImageAdded = !uiState.imageUri.isNullOrBlank()
+    if (isImageAdded) {
+        Spacer(modifier = Modifier.height(12.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(12.dp))
+                .background(BgDark)
+        ) {
+            JoopJoopImage(
+                model = uiState.imageUri,
+                contentDescription = "쪽지 이미지",
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+    } else {
+        // 사진 없을 때 간격
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    // 3. 본문 텍스트 영역
+    Text(
+        text = uiState.content,
+        color = TextSecondary,
+        fontSize = 14.sp,
+        lineHeight = 22.sp
+    )
+
+    Spacer(modifier = Modifier.height(32.dp))}
+
+    *//*Column(
         modifier = modifier
             .fillMaxSize()
             .background(BgDarkest)
@@ -187,7 +346,7 @@ fun NoteDetail(
                 )
                 // 위치
                 Text(
-                    text = uiState.address,
+                    text = uiState.location,
                     color = TextSecondary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
@@ -199,7 +358,26 @@ fun NoteDetail(
         val isImageAdded = uiState.imageUrl != null
         val blurRadius = if (isImageAdded) 0.dp else 16.dp
         // 메인 이미지 카드
-        Column(
+        if (!uiState.imageUri.isNullOrBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f) // 사진이 있을 때만 정사각형 비율 유지
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(BgDark)
+            ) {
+                JoopJoopImage(
+                    model = uiState.imageUri,
+                    contentDescription = "쪽지 이미지",
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+        } else {
+            // 사진이 없을 때 유저 정보와 본문 사이의 최소한의 여백만 추가
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        *//**//*Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f) // 정사각형 비율
@@ -215,6 +393,13 @@ fun NoteDetail(
             ) {
                 val isImageAdded = !uiState.imageUrl.isNullOrBlank()
                 if (isImageAdded) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(BgDark)
+                    ){
                     JoopJoopImage(
                         model = uiState.imageUrl,
                         contentDescription = "쪽지 이미지",
@@ -242,7 +427,7 @@ fun NoteDetail(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(20.dp))*//**//*
 
         // 본문 텍스트 영역
         Text(
@@ -250,7 +435,7 @@ fun NoteDetail(
             color = TextSecondary,
             fontSize = 14.sp,
             lineHeight = 22.sp
-        )
+        )*//*
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -275,7 +460,7 @@ fun NoteDetail(
             }
         )
     }
-}
+}*/
 
 @Composable
 fun DeleteNoteDialog(
