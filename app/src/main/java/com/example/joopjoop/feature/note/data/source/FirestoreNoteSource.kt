@@ -218,7 +218,7 @@ class FirestoreNoteSource(
         // 3. 내가 쓴 쪽지들만 따로 가져오기 (작성자 ID 기준)
         val myNotes = if (myUid.isNotEmpty()) {
             db.collection(collectionPath)
-                .whereEqualTo("authorId", myUid) // 👈 여기서 내 쪽지를 따로 긁어와야 함
+                .whereEqualTo("authorId", myUid)
                 .get()
                 .await()
                 .documents.mapNotNull { mapDocumentToNote(it) }
@@ -232,8 +232,6 @@ class FirestoreNoteSource(
             .filter { it.expiresAt.time > currentTime } // 만료되지 않은 것만 필터링
             .sortedByDescending { it.createdAt } // 최신순 정렬
     }
-
-    // FirestoreNoteSource.kt 클래스 내부 하단에 추가
 
     private fun mapDocumentToNote(doc: com.google.firebase.firestore.DocumentSnapshot): Note? {
         return try {

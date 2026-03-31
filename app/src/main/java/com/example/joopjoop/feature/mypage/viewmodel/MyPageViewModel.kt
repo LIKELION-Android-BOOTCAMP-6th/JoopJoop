@@ -44,6 +44,8 @@ class MyPageViewModel(
     // 현재 세션의 유저 ID (실제로는 Auth에서 가져와야 함)
     // 2. 현재 로그인된 실제 유저 ID 저장 변수
     private var currentUserId: String = ""
+    fun getCurrentUid(): String = currentUserId
+
 
     init {
         // 3. 초기화 시점에 실제 UID를 가져옴
@@ -143,5 +145,8 @@ class MyPageViewModel(
             loadMyPosts(userId)
             loadMyScraps(userId)
         }
+    }
+    fun getCurrentUserId(): String {
+        return currentUserId
     }
 }

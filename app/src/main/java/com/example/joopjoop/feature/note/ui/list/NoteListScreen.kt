@@ -112,7 +112,7 @@ fun NoteList(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "주변에 쪽지가 없어요",
+                        text = "주변에 쪽지가 없어요 \n 처음으로 발자국을 남겨보세요",
                         color = TextTertiary,
                         fontSize = 14.sp
                     )
