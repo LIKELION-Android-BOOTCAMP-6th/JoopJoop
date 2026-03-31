@@ -19,11 +19,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog // [추가] 회원탈퇴 / 닉네임 수정 다이얼로그 import
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.ImageProcessor
+import com.example.joopjoop.core.model.User
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
@@ -57,7 +63,6 @@ import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextPrimary
 import com.example.joopjoop.ui.theme.TextSecondary
 import com.example.joopjoop.ui.theme.TextTertiary
-import com.example.joopjoop.core.model.User
 
 @Composable
 fun SettingRoute(
@@ -81,9 +86,8 @@ fun SettingRoute(
         uri?.let { viewModel.updateProfileImage(it) }
     }
 
-    // 상태 수집
     val currentUser by viewModel.currentUser.collectAsState()
-    val isNicknameAvailable by viewModel.isNicknameAvailable.collectAsState() // 중복 확인 상태
+    val isNicknameAvailable by viewModel.isNicknameAvailable.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.settingEvent.collect { event ->
@@ -94,6 +98,7 @@ fun SettingRoute(
                 is SettingEvent.UpdateSuccess -> {
                     // 성공 토스트 알림
                     Toast.makeText(context, "프로필이 변경되었습니다.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "닉네임이 변경되었습니다.", Toast.LENGTH_SHORT).show()
                 }
                 is SettingEvent.Error -> {
                     // 에러 메시지 토스트 알림
@@ -105,66 +110,85 @@ fun SettingRoute(
 
     SettingScreen(
         user = currentUser,
-        isNicknameAvailable = isNicknameAvailable, // 💡 전달
-        onCheckNickname = { viewModel.checkNicknameAvailability(it) }, // 중복 확인 호출
-        onNicknameChanged = { viewModel.onNicknameChanged() }, // 타이핑 시 상태 리셋
+        isNicknameAvailable = isNicknameAvailable,
+        onCheckNickname = { viewModel.checkNicknameAvailability(it) },
+        onNicknameChanged = { viewModel.onNicknameChanged() },
         onUpdateNickname = { viewModel.updateNickname(it) },
         onProfileEditClick = { galleryLauncher.launch("image/*") },
         onBackClick = onBackClick,
-        onLogoutClick = { viewModel.logout() }
+        onLogoutClick = { viewModel.logout() },
+
+        // [추가] 회원 탈퇴 실제 로직 연결 자리
+        // 아직 탈퇴 API/함수가 없으면 일단 비워두고,
+        // 나중에 viewModel.withdraw() 같은 걸 연결하면 된다.
+        onWithdrawalClick = {
+            // TODO: 회원 탈퇴 API 연결
+        }
     )
 }
 
 @Composable
 fun SettingScreen(
     user: User?,
-    isNicknameAvailable: Boolean?, // 💡 추가
-    onCheckNickname: (String) -> Unit, // 💡 추가
-    onNicknameChanged: () -> Unit, // 💡 추가
+    isNicknameAvailable: Boolean?,
+    onCheckNickname: (String) -> Unit,
+    onNicknameChanged: () -> Unit,
     onUpdateNickname: (String) -> Unit,
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
     onProfileEditClick: () -> Unit = {},
-    onLogoutClick: () -> Unit = {}
+    onLogoutClick: () -> Unit = {},
+    onWithdrawalClick: () -> Unit = {} // [추가] 회원 탈퇴 전용 콜백 분리
 ) {
-    var isNotificationEnabled by remember { mutableStateOf(true) }
-    var showDialog by remember { mutableStateOf(false) }
+    var isNotificationEnabled by remember { mutableStateOf(true) } // [수정] showDialog 하나만 쓰던 것을 용도별로 분리
+    var showNicknameDialog by remember { mutableStateOf(false) }     // 닉네임 수정 다이얼로그
+    var showWithdrawalDialog by remember { mutableStateOf(false) }   // 회원 탈퇴 다이얼로그
     var newNickname by remember { mutableStateOf(user?.nickname ?: "") }
 
-    // 닉네임 수정 팝업창
-    if (showDialog) {
-        androidx.compose.material3.AlertDialog(
+    // -----------------------------
+    // [수정] 닉네임 수정 다이얼로그
+    // 기존 showDialog -> showNicknameDialog 로 이름 변경
+    // -----------------------------
+    if (showNicknameDialog) {
+        AlertDialog(
             onDismissRequest = {
-                showDialog = false
+                showNicknameDialog = false
                 onNicknameChanged()
             },
-            title = { Text("닉네임 수정", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    text = "닉네임 수정",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 Column {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        androidx.compose.material3.TextField(
+                        TextField(
                             value = newNickname,
                             onValueChange = {
                                 newNickname = it
-                                onNicknameChanged() // 글자 바뀔 때마다 "확인" 다시 하게 리셋
+                                onNicknameChanged() // [기존 유지] 입력 시 중복 확인 상태 초기화
                             },
                             placeholder = { Text("새 닉네임 입력") },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
-                            colors = androidx.compose.material3.TextFieldDefaults.colors(
+                            colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
                                 focusedIndicatorColor = OrangePrimary
                             )
                         )
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        // 💡 중복 확인 버튼
-                        androidx.compose.material3.Button(
+
+                        Button(
                             onClick = { onCheckNickname(newNickname) },
-                            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                            colors = ButtonDefaults.buttonColors(
                                 containerColor = OrangePrimary
                             ),
                             shape = RoundedCornerShape(8.dp)
@@ -173,13 +197,14 @@ fun SettingScreen(
                         }
                     }
 
-                    // 💡 중복 확인 결과 메시지
                     val message = when (isNicknameAvailable) {
                         true -> "사용 가능한 닉네임입니다."
                         false -> "이미 존재하는 닉네임입니다."
                         else -> ""
                     }
-                    val messageColor = if (isNicknameAvailable == true) Color.Green else Color.Red
+
+                    val messageColor =
+                        if (isNicknameAvailable == true) Color.Green else Color.Red
 
                     if (message.isNotEmpty()) {
                         Text(
@@ -193,10 +218,10 @@ fun SettingScreen(
             },
             confirmButton = {
                 Text(
-                    "변경",
+                    text = "변경",
                     modifier = Modifier.clickable(enabled = isNicknameAvailable == true) {
                         onUpdateNickname(newNickname)
-                        showDialog = false
+                        showNicknameDialog = false
                     },
                     color = if (isNicknameAvailable == true) OrangePrimary else Color.Gray,
                     fontWeight = FontWeight.Bold
@@ -204,8 +229,56 @@ fun SettingScreen(
             },
             dismissButton = {
                 Text(
-                    "취소",
-                    modifier = Modifier.clickable { showDialog = false },
+                    text = "취소",
+                    modifier = Modifier.clickable {
+                        showNicknameDialog = false
+                    },
+                    color = TextSecondary
+                )
+            },
+            containerColor = BgDark
+        )
+    }
+
+    // -----------------------------
+    // [추가] 회원 탈퇴 확인 다이얼로그
+    // membership 행 클릭 시 이 다이얼로그가 뜸
+    // -----------------------------
+    if (showWithdrawalDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showWithdrawalDialog = false
+            },
+            title = {
+                Text(
+                    text = "회원 탈퇴",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "정말 회원 탈퇴하시겠습니까?",
+                    color = TextSecondary
+                )
+            },
+            confirmButton = {
+                Text(
+                    text = "탈퇴",
+                    modifier = Modifier.clickable {
+                        showWithdrawalDialog = false
+                        onWithdrawalClick() // [추가] 실제 탈퇴 로직 호출
+                    },
+                    color = Color(0xFFD32F2F),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            dismissButton = {
+                Text(
+                    text = "취소",
+                    modifier = Modifier.clickable {
+                        showWithdrawalDialog = false
+                    },
                     color = TextSecondary
                 )
             },
@@ -237,6 +310,7 @@ fun SettingScreen(
                         modifier = Modifier.size(24.dp)
                     )
                 }
+
                 Text(
                     text = stringResource(R.string.setting_title),
                     color = TextPrimary,
@@ -264,7 +338,6 @@ fun SettingScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Profile Image with Edit Button
                     Box(contentAlignment = Alignment.BottomEnd) {
                         Box(
                             modifier = Modifier
@@ -292,6 +365,7 @@ fun SettingScreen(
                                 )
                             }
                         }
+
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
@@ -318,7 +392,9 @@ fun SettingScreen(
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
+
                         Spacer(modifier = Modifier.width(8.dp))
+
                         Icon(
                             painter = painterResource(id = R.drawable.ic_edit),
                             contentDescription = "Edit Nickname",
@@ -326,13 +402,15 @@ fun SettingScreen(
                             modifier = Modifier
                                 .size(18.dp)
                                 .clip(CircleShape) // 클릭 영역을 둥글게 (시각적 피드백용)
+                                .clip(CircleShape)
                                 .clickable {
-                                    newNickname = user?.nickname ?: "" // 현재 이름 미리 채워두기
-                                    onNicknameChanged()              // 중복 확인 상태 초기화
-                                    showDialog = true                // 다이얼로그 띄우기!
+                                    newNickname = user?.nickname ?: ""
+                                    onNicknameChanged()
+                                    showNicknameDialog = true //showDialog ->showNicknameDialog
                                 }
                         )
                     }
+
                     Text(
                         text = user?.email ?: "이메일",
                         color = TextSecondary,
@@ -350,9 +428,9 @@ fun SettingScreen(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Simplified Notification Setting Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -368,13 +446,16 @@ fun SettingScreen(
                         tint = OrangePrimary,
                         modifier = Modifier.size(24.dp)
                     )
+
                     Spacer(modifier = Modifier.width(16.dp))
+
                     Text(
                         text = stringResource(R.string.notification_setting),
                         color = TextPrimary,
                         fontSize = 16.sp
                     )
                 }
+
                 Switch(
                     checked = isNotificationEnabled,
                     onCheckedChange = { isNotificationEnabled = it },
@@ -390,7 +471,7 @@ fun SettingScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Logout
+            // 로그아웃
             SettingActionRow(
                 iconId = R.drawable.ic_logout,
                 title = stringResource(R.string.logout),
@@ -399,10 +480,13 @@ fun SettingScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+
             SettingActionRow(
                 iconId = R.drawable.ic_person,
                 title = stringResource(R.string.membership),
-                onClick = onLogoutClick
+                onClick = {
+                    showWithdrawalDialog = true
+                }
             )
         }
     }
@@ -433,13 +517,16 @@ fun SettingActionRow(
                 else textColor,
                 modifier = Modifier.size(24.dp)
             )
+
             Spacer(modifier = Modifier.width(16.dp))
+
             Text(
                 text = title,
                 color = textColor,
                 fontSize = 16.sp
             )
         }
+
         Icon(
             painter = painterResource(id = R.drawable.ic_arrow_right),
             contentDescription = null,
@@ -454,14 +541,15 @@ fun SettingActionRow(
 fun SettingScreenPreview() {
     JoopJoopTheme {
         SettingScreen(
-            user = null,                // 테스트용 유저 데이터 (null 가능)
-            isNicknameAvailable = null, // 중복 확인 전 상태
-            onCheckNickname = {},       // 빈 함수
-            onNicknameChanged = {},     // 빈 함수
-            onUpdateNickname = {},      // 빈 함수
+            user = null,
+            isNicknameAvailable = null,
+            onCheckNickname = {},
+            onNicknameChanged = {},
+            onUpdateNickname = {},
             onBackClick = {},
             onProfileEditClick = {},
-            onLogoutClick = {}
+            onLogoutClick = {},
+            onWithdrawalClick = {} // [추가] 프리뷰용 빈 함수
         )
     }
 }
