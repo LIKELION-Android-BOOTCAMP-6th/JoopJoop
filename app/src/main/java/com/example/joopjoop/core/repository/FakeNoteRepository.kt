@@ -10,6 +10,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
+import okio.`-DeprecatedOkio`.source
 import java.util.Date
 
 class FakeNoteRepository : NoteRepository {
@@ -58,20 +59,18 @@ class FakeNoteRepository : NoteRepository {
 
     private val firestoreSource = FirestoreNoteSource()
     override suspend fun getNoteDetail(noteId: String): Note? {
-//        return _allFakeNotes.find { it.noteId == noteId }
         return try {
             Log.d("UIDebug", "Repository: Firestore에 데이터 요청 중... ID: $noteId")
 
-            // 🌟 진짜 Firestore 소스 호출
+            // Firestore 소스 호출
             val remoteNote = firestoreSource.getNoteDetail(noteId)
 
             Log.d("UIDebug", "Repository: 서버에서 읽어온 숫자 = ${remoteNote.likeCount}")
 
-            // 인터페이스가 Note? 를 원하므로 remoteNote(Note)를 그대로 반환해도 됩니다.
             remoteNote
         } catch (e: Exception) {
             Log.e("UIDebug", "Repository 에러 발생: ${e.message}")
-            // 에러 시 null을 줘서 앱이 죽지 않게 방어합니다.
+            // 에러 시 null을 줘서 앱이 죽지 않게 방어
             null
         }
     }
@@ -108,6 +107,14 @@ class FakeNoteRepository : NoteRepository {
         // 리스트 맨 앞에 추가하여 최신순 유지
         _allFakeNotes.add(0, newNote)
         return newId
+    }
+
+    override suspend fun getVisibleNotes(
+        lat: Double,
+        lng: Double,
+        myUid: String
+    ): List<Note> {
+        return getVisibleNotes(lat, lng, myUid)
     }
 
     override suspend fun incrementViewCount(noteId: String) {
