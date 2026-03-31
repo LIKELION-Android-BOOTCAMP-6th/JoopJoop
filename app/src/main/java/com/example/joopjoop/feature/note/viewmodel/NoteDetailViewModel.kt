@@ -1,6 +1,5 @@
 package com.example.joopjoop.feature.note.viewmodel
 
-import android.os.Process.myUid
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -40,7 +39,7 @@ class NoteDetailViewModel(
     }
 
     // 특정 쪽지의 상세 데이터를 가져옴
-    fun loadNoteDetail(noteId: String) {
+    fun loadNoteDetail(noteId: String, forceRefresh: Boolean = false) {
         // noteId가 비어있는지 확인 로그를 찍어보세요!
         Log.d("NoteDetail", "전달받은 noteId: '$noteId'")
 
@@ -50,6 +49,7 @@ class NoteDetailViewModel(
                 return
             }
         }
+
         viewModelScope.launch {
             try {
                 // 로딩 시작
@@ -182,11 +182,6 @@ class NoteDetailViewModel(
                 Log.e("jay", "스크랩 작업 중 오류 발생: ${e.message}")
             }
         }
-    }
-
-    // 수정 버튼 클릭 처리
-    fun editNote(noteId: String) {
-        // todo :: 수정 로직 추가
     }
 
     // 삭제 버튼 클릭 처리
