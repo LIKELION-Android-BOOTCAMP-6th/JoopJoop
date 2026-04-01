@@ -444,6 +444,7 @@ class FirestoreNoteSource(
         return try {
             val snapshot = db.collection(collectionPath)
                 .whereEqualTo("authorId", uid)
+                .whereEqualTo("isActive", true)
                 .count()
                 .get(AggregateSource.SERVER)
                 .await()
