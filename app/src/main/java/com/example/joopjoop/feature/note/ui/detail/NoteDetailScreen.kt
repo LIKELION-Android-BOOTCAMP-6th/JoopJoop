@@ -259,13 +259,19 @@ fun NoteDetail(
         Spacer(modifier = Modifier.height(40.dp))
     } // Column 끝
 
-    // 5. 삭제 확인 다이얼로그 (Column 바깥)
+    // 쪽지 삭제 다이얼로그 분기처리
     if (showDeleteDialog) {
         DeleteNoteDialog(
-            onDismiss = { showDeleteDialog = false },
-            onConfirm = {
+            onDismiss = { showDeleteDialog = false },   // 다이얼로그 삭제 취소
+            onConfirm = {   // 다이얼로그 삭제 확인 버튼
                 viewModel.deleteNote(noteId) {
                     showDeleteDialog = false
+
+                    // 뒤로 가기 전에 이전화면의 savedStateHandle에 삭제 신호 보내기
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("IS_NOTE_DELETED", true)
+
                     navController.popBackStack()
                 }
             }

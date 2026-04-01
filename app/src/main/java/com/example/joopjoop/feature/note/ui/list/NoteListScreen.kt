@@ -26,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.JoopJoopImage
 import com.example.joopjoop.core.model.Note
@@ -56,6 +58,23 @@ fun NoteListScreen(
     viewModel: MapViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // savedStateHandle에 저장된 신호(쪽지 삭제) 받기
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val isNoteDeleted =
+        navBackStackEntry?.savedStateHandle?.get<Boolean>("IS_NOTE_DELETED") ?: false
+
+    // 쪽지 신호 감지시 쪽지 재검색
+    LaunchedEffect(isNoteDeleted) {
+        if (isNoteDeleted) {
+            // 현재 내 위치를 기준으로 다시 로드 (viewModel에 현재 위치 정보가 있다고 가정)
+            uiState.currentUserLocation?.let { location ->
+                viewModel.loadNotes(location)
+            }
+            // 위 작업 후 마무리 (안바꾸면 계속 새로고침하게됨)
+            navController.currentBackStackEntry?.savedStateHandle?.set("IS_NOTE_DELETED", false)
+        }
+    }
 
     JoopJoopTheme {
         Scaffold(
