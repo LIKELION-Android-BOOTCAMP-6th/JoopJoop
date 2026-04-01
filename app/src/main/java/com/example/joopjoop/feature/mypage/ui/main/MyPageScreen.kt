@@ -79,7 +79,7 @@ fun MyPageContent(
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
             // [F-MY-01] 프로필 (AuthRepository 기반 데이터)
-            ProfileHeader(user = uiState.user)
+            ProfileHeader(user = uiState.user, noteCount = uiState.noteCount)
 
             // 2. 탭 선택 바
             MyPageTabRow(
@@ -117,7 +117,7 @@ fun MyPageTopAppBar(onSettingClick: () -> Unit) {
 }
 
 @Composable
-fun ProfileHeader(user: User?) {
+fun ProfileHeader(user: User?, noteCount: Int) {
     LaunchedEffect(user) {
         android.util.Log.d("UI_DATA", "현재 UI에 전달된 유저: $user")
     }
@@ -147,7 +147,7 @@ fun ProfileHeader(user: User?) {
                 color = TextPrimary
             )
             Text(
-                text = "게시물 ${user?.noteCount ?: 0}",
+                text = "게시물 $noteCount", // user?.noteCount 대신 전달받은 noteCount 사용
                 color = OrangePrimary
             )
         }

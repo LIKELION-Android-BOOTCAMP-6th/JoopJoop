@@ -34,7 +34,7 @@ class AppContainer(context: Context) {
     // 리포지토리 구현체 주입
     // 인터페이스 타입으로 선언하여 외부(ViewModel)에서는 구현체를 몰라도 되게 함
     val authRepository: AuthRepository by lazy {
-        AuthRepositoryImpl(firebaseAuthSource, firestoreUserSource)
+        AuthRepositoryImpl(firebaseAuthSource, firestoreUserSource, firestoreNoteSource)
     }
 
     // Note 리포지토리

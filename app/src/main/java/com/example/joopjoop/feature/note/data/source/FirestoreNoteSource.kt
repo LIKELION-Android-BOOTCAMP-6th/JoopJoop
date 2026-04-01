@@ -8,6 +8,7 @@ import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.AggregateSource
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
@@ -436,5 +437,21 @@ class FirestoreNoteSource(
             .document(noteId)
             .set(updatedNote)
             .await()
+    }
+
+    // 특정 유저의 게시물 개수 조회
+    suspend fun getUserNoteCount(uid: String): Int {
+        return try {
+            val snapshot = db.collection(collectionPath)
+                .whereEqualTo("authorId", uid)
+                .count()
+                .get(AggregateSource.SERVER)
+                .await()
+
+            snapshot.count.toInt()
+        } catch (e: Exception) {
+            Log.e("FirestoreNoteSource", "개수 조회 실패: ${e.message}")
+            0
+        }
     }
 }

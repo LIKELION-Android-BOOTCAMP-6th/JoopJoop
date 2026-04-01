@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.mypage.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.joopjoop.core.repository.MyPageRepository
@@ -64,9 +65,21 @@ class MyPageViewModel(
     fun loadUserProfile(userId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
+
+            // 1. 기존 유저 정보 가져오기
             val result = myPageRepository.getUserProfile(userId)
+            val user = result.getOrNull()
+            Log.d("MyPageVM", "유저 정보 가져옴: ${user?.nickname}")
+
+            // 2. 게시물 개수 따로 가져오기
+            // 만약 repository가 다르다면 주입받아서 사용하세요.
+            val noteCount = authRepository.getUserNoteCount(userId)
+            Log.d("MyPageVM", "가져온 게시물 개수: $noteCount")
+
+            // 3. UI State 업데이트 (user 객체에 개수를 copy해서 넣어줌)
             _uiState.update { it.copy(
-                user = result.getOrNull(),
+                user = user?.copy(noteCount = noteCount), // User 클래스에 noteCount 필드가 있어야 함
+                noteCount = noteCount,
                 isLoading = false
             )}
         }

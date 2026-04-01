@@ -1,11 +1,13 @@
 package com.example.joopjoop.feature.auth.data.repository
 
+import android.util.Log
 import com.example.joopjoop.core.model.User
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.auth.data.model.AuthResult
 import com.example.joopjoop.feature.auth.data.model.UserResponse
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
+import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.Firebase
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.CoroutineScope
@@ -19,6 +21,7 @@ import kotlinx.coroutines.tasks.await
 class AuthRepositoryImpl(
     private val authSource: FirebaseAuthSource, // 사용자 인증 데이터
     private val userSource: FirestoreUserSource, // 사용자 데이터
+    private val noteSource: FirestoreNoteSource,
     // 필요 시 외부 스코프를 주입받거나 내부에서 정의 (여기서는 단순화를 위해 GlobalScope 대신 내부 스코프 활용)
     externalScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : AuthRepository {
@@ -168,6 +171,12 @@ class AuthRepositoryImpl(
             // 실패(비번 틀림, 없는 계정 등)하면 에러와 함께 failure를 반환합니다.
             AuthResult.Failure(e)
         }
+    }
+
+    // 사용자가 쓴 쪽지 수
+    override suspend fun getUserNoteCount(uid: String): Int {
+        // 직접 쿼리하지 않고 전문가(NoteSource)에게 물어봅니다.
+        return noteSource.getUserNoteCount(uid)
     }
 
     override suspend fun logout(): AuthResult<Unit> {
