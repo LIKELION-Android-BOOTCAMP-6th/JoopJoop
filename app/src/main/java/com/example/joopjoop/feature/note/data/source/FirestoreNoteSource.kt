@@ -48,6 +48,7 @@ class FirestoreNoteSource(
     suspend fun getNotesByLocation(centerGeohash: String): List<Note> {
         // 5자리 Geohash 접두사로 시작하는 문서들만 쿼리
         val snapshot = db.collection(collectionPath)
+            .whereEqualTo("isActive", true)     // 삭제 처리 안된 것만 검색
             .orderBy("location.geohash")
             .startAt(centerGeohash)
             .endAt(centerGeohash + "\uf8ff")
@@ -74,6 +75,7 @@ class FirestoreNoteSource(
                 profileImageUrl = doc.getString("profileImageUrl") ?: "",
                 contentText = doc.getString("contentText") ?: "",
                 category = doc.getString("category") ?: "일상",
+                isActive = doc.getBoolean("isActive") ?: true,
                 thumbnailUrl = doc.getString("thumbnailUrl") ?: "",
                 location = NoteLocation(
                     address = locationMap?.get("address") as? String ?: "위치 정보 없음",
@@ -92,6 +94,7 @@ class FirestoreNoteSource(
     // 쪽지 상세 데이터 조회
     suspend fun getNoteDetail(noteId: String): Note {
         val docRef = db.collection(collectionPath).document(noteId)
+
         // 조회 요청 - 조회수 +1
         docRef.update("viewCount", FieldValue.increment(1)).await()
 
@@ -226,6 +229,7 @@ class FirestoreNoteSource(
             try {
                 db.collection(collectionPath)
                     .whereEqualTo("authorId", myUid)
+                    .whereEqualTo("isActive", true)
                     .whereGreaterThanOrEqualTo("location.geohash", precision5Geohash) // 경로 수정
                     .whereLessThanOrEqualTo(
                         "location.geohash",
@@ -398,8 +402,18 @@ class FirestoreNoteSource(
     }
 
     // 쪽지 삭제
-    suspend fun deleteNote(noteId: String) {
-        db.collection(collectionPath).document(noteId).delete().await()
+    suspend fun deleteNote(noteId: String): Boolean {
+        return try {
+            db.collection(collectionPath)
+                .document(noteId)
+                .update("isActive", false)
+                .await()
+            true
+        } catch (e: Exception) {
+            // 실패 시 에러 처리 (로그 기록 등)
+            Log.e("Firestore", "쪽지 삭제 실패 : ${e.localizedMessage}", e)
+            false
+        }
     }
 
     // 수정한 쪽지 제출

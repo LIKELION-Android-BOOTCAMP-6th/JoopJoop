@@ -207,7 +207,8 @@ class FakeNoteRepository : NoteRepository {
             // 1. 원본 업로드 (진행률은 원본 기준으로 표시)
             val originalTask = originalRef.putBytes(originalData)
             originalTask.addOnProgressListener { taskSnapshot ->
-                val progress = (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
+                val progress =
+                    (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
                 onProgress(progress)
             }.await()
             val originalUrl = originalRef.downloadUrl.await().toString()
@@ -226,9 +227,15 @@ class FakeNoteRepository : NoteRepository {
     }
 
     // 쪽지 삭제
-    override suspend fun deleteNote(noteId: String) {
-        val db: FirebaseFirestore = FirebaseFirestore.getInstance()
-        db.collection("notes").document(noteId).delete().await()
+    override suspend fun deleteNote(noteId: String): Boolean {
+        return try {
+            val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+            db.collection("notes").document(noteId).delete().await()
+            true
+        } catch (e: Exception) {
+            Log.e("Firestore", "쪽지 삭제 실패 : ${e.localizedMessage}", e)
+            false
+        }
     }
 
     override suspend fun submitEditedNote(

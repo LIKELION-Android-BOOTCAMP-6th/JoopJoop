@@ -126,8 +126,8 @@ class NoteRepositoryImpl(
     }
 
     // 쪽지 삭제
-    override suspend fun deleteNote(noteId: String) {
-        source.deleteNote(noteId)
+    override suspend fun deleteNote(noteId: String): Boolean {
+        return source.deleteNote(noteId)
     }
 
     // 수정한 쪽지 제출

@@ -50,7 +50,7 @@ interface NoteRepository {
     suspend fun uploadImage(originalData: ByteArray, thumbnailData: ByteArray, fileName: String, onProgress: (Float) -> Unit): Pair<String, String>?
 
     // 쪽지 삭제
-    suspend fun deleteNote(noteId: String)
+    suspend fun deleteNote(noteId: String): Boolean
 
     // 수정한 쪽지 제출
     suspend fun submitEditedNote(noteId: String, updatedNote: Note)
