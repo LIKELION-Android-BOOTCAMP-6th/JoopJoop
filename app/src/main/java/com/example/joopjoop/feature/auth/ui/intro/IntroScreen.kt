@@ -90,20 +90,13 @@ fun IntroScreen(
                 textAlign = TextAlign.Center,
                 lineHeight = 24.sp
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(50.dp))
             Text(
                 text = stringResource(R.string.app_name),
                 color = TextPrimary,
                 fontSize = 64.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 4.sp
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = stringResource(R.string.sub_name),
-                color = TextPrimary,
-                fontSize = 34.sp,
-                fontWeight = FontWeight.Black
             )
         }
 
