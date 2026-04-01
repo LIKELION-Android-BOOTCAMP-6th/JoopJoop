@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.auth.ui.login
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -64,6 +66,7 @@ fun LoginRoute(
 //    )
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     // 권한 요청용 런처
     val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -88,6 +91,18 @@ fun LoginRoute(
                 notificationViewModel.startPeriodicNotification()
                 onLoginSuccess()
             }
+        }
+    }
+
+    // 로그인 실패(에러 메시지) 감지
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            // 토스트 띄우기
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+
+            // 에러 메시지 초기화 (ViewModel에 함수 생성 필요)
+            // 이걸 안 하면 화면 회전 시 토스트가 또 뜸
+            viewModel.clearErrorMessage()
         }
     }
     // POST_NOTIFICATIONS는 **Android 13(API 33) 이상부터 위험 권한으로 분류되어 확인 필요

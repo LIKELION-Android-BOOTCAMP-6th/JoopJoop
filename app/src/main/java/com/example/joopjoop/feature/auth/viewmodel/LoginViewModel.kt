@@ -67,11 +67,25 @@ class LoginViewModel(
                     Log.d("LoginViewModel", "로그인 성공! 유저 이메일: ${result.data.email}")
                 }
                 is AuthResult.Failure -> {
+                    val message = result.exception.message ?: ""
                     // 실패 시: 로딩 끄고, 에러 메시지 업데이트
+                    val friendlyMessage = when {
+                        // Firebase나 서버에서 내려오는 에러 메시지 키워드에 따라 분기
+                        message.contains("auth credential is incorrect") -> "이메일 또는 비밀번호가 일치하지 않습니다."
+
+                        // 2. 이메일 형식이 잘못된 경우
+                        message.contains("invalid email") -> "유효한 이메일 형식이 아닙니다."
+
+                        // 3. 네트워크 연결 끊김 등 기타
+                        message.contains("network") -> "네트워크 연결을 확인해주세요."
+
+                        else -> "로그인에 실패했습니다. 다시 시도해주세요."
+                    }
+
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = result.exception.message ?: "로그인에 실패했습니다."
+                            errorMessage = friendlyMessage // 가공된 메시지 삽입
                         )
                     }
                     Log.e("LoginViewModel", "로그인 실패: ${result.exception.message}")
@@ -81,5 +95,9 @@ class LoginViewModel(
                 }
             }
         }
+    }
+    // 에러 메시지를 다 보여준 후 초기화하기 위한 함수 (추가 권장)
+    fun clearErrorMessage() {
+        _uiState.update { it.copy(errorMessage = null) }
     }
 }
