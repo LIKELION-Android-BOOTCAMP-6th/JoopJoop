@@ -19,9 +19,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.joopjoop.core.common.policy.DistancePolicy
+import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.common.util.PermissionManager
 import com.example.joopjoop.core.designsystem.components.JoopJoopDialog
 import com.example.joopjoop.feature.map.ui.components.CurrentLocationButton
@@ -29,11 +32,15 @@ import com.example.joopjoop.feature.map.ui.components.NearbyNoteCard
 import com.example.joopjoop.feature.map.ui.components.NoteMarker
 import com.example.joopjoop.feature.map.ui.components.SearchNoteButton
 import com.example.joopjoop.feature.map.viewmodel.MapViewModel
+import com.example.joopjoop.ui.theme.BgElevated
+import com.example.joopjoop.ui.theme.OrangePrimary
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.rememberCameraPositionState
 
 // 메인 지도 화면 컴포넌트
@@ -107,6 +114,42 @@ fun MapScreen(
                 zoomControlsEnabled = false      // UI 단순화를 위해 줌 컨트롤 숨김
             )
         ) {
+            // 사용자 위치가 있을 때만 원을 그립니다.
+            uiState.currentUserLocation?.let { userPos ->
+                val myGeohash = LocationUtil.getGeohash(userPos.latitude, userPos.longitude).take(5)
+                val area = LocationUtil.getGeohashBounds(myGeohash)
+
+                // 격자 그리기 (area가 정상적으로 계산되었을 때만)
+                if (area.size >= 4) {
+                    Polygon(
+                        points = area,
+                        fillColor = Color.Transparent,
+                        strokeColor = Color.Red.copy(alpha = 0.5f),
+                        strokeWidth = 5f
+                    )
+                }
+
+                // 1. [탐색 범위] 5km (DistancePolicy.SEARCH_RADIUS_METERS)
+                // 넓은 영역이므로 배경 테마와 어울리는 은은한 컬러를 사용합니다.
+                Circle(
+                    center = userPos,
+                    radius = DistancePolicy.SEARCH_RADIUS_METERS.toDouble(), // 5000.0
+                    fillColor = BgElevated.copy(alpha = 0.15f), // 테마의 Elevated 배경색 활용
+                    strokeColor = BgElevated.copy(alpha = 0.3f),
+                    strokeWidth = 2f
+                )
+
+                // 2. [줍기 가능 범위] 100m (DistancePolicy.PICKABLE_RADIUS_METERS)
+                // 브랜드 메인 컬러인 OrangePrimary를 사용하여 강조합니다.
+                Circle(
+                    center = userPos,
+                    radius = DistancePolicy.PICKABLE_RADIUS_METERS.toDouble(), // 100.0
+                    fillColor = OrangePrimary.copy(alpha = 0.2f), // 메인 주황색
+                    strokeColor = OrangePrimary, // 테두리는 선명하게
+                    strokeWidth = 4f
+                )
+            }
+
             // [기능] 상태에 따라 마커를 구분하여 그림 (4번 피드백 반영)
 
             // 줍기 가능 쪽지 (주황색 마커)

@@ -2,7 +2,7 @@ package com.example.joopjoop.core.common.policy
 
 // 쪽지 탐색 범위, 열람가능한 거리 정책
 object DistancePolicy {
-    const val SEARCH_RADIUS_METERS = 5000f
+    const val SEARCH_RADIUS_METERS = 2500f // 반지름
     const val PICKABLE_RADIUS_METERS = 100f
 
     fun isWithinPickableRange(distance: Float): Boolean {
