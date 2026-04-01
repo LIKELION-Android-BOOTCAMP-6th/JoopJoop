@@ -1,5 +1,7 @@
 package com.example.joopjoop
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,6 +47,10 @@ import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 import com.example.joopjoop.feature.setting.ui.SettingRoute
 import com.example.joopjoop.ui.theme.BgDarkest
 import kotlinx.coroutines.delay
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 
 // Routes 정의
 object Routes {
@@ -190,20 +196,58 @@ fun RootNavHost() {
             }
 
             composable(Routes.WRITE) {
-                // AppContainer 내부에서 이미 FusedLocationClient를 주입한 팩토리를 가져옵니다.
-                val viewModel: WriteNoteViewModel = viewModel(
-                    factory = appContainer.noteViewModelFactory
-                )
+                val context = LocalContext.current
 
-                LaunchedEffect(Unit) {
-                    // 노트 작성 진입시 상황에 따라 위치 값 검색 여부
-                    viewModel.prepareNewNote()
+                // 1. 권한 상태를 '상태(State)'로 관리 (매우 중요!)
+                var hasPermission by remember {
+                    val locationPermissions = arrayOf(
+                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                    mutableStateOf(
+                        locationPermissions.all {
+                            androidx.core.content.ContextCompat.checkSelfPermission(context, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                        }
+                    )
                 }
 
-                WriteNoteScreen(
-                    navController = rootNavController,
-                    viewModel = viewModel
-                )
+                // 2. 권한 요청 런처
+                val launcher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestMultiplePermissions()
+                ) { permissions ->
+                    // 권한 허용 여부에 따라 '상태' 업데이트 -> UI가 자동으로 다시 그려짐
+                    hasPermission = permissions.values.all { it }
+                    if (!hasPermission) {
+                        rootNavController.popBackStack()
+                    }
+                }
+
+                // 3. 조건부 화면 렌더링
+                if (hasPermission) {
+                    // [권한 있음] 이제 이 블록이 실행됩니다!
+                    val viewModel: WriteNoteViewModel = viewModel(
+                        factory = appContainer.noteViewModelFactory
+                    )
+
+                    LaunchedEffect(Unit) {
+                        viewModel.prepareNewNote()
+                    }
+
+                    WriteNoteScreen(
+                        navController = rootNavController,
+                        viewModel = viewModel
+                    )
+                } else {
+                    // [권한 없음] 처음에 여기 들어왔다가, 허용하는 순간 위쪽 if문으로 갈아탑니다.
+                    LaunchedEffect(Unit) {
+                        launcher.launch(arrayOf(
+                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION
+                        ))
+                    }
+
+                    Box(modifier = Modifier.fillMaxSize().background(BgDarkest))
+                }
             }
 
             composable(
