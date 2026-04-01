@@ -86,6 +86,8 @@ fun RootNavHost() {
     val context = LocalContext.current
     val appContainer = (context.applicationContext as JoopJoopApplication).container
 
+    val notificationViewModel: NotificationViewModel = viewModel()
+
     // MainViewModel을 통해 로그인 상태 구독
     val mainViewModel: MainViewModel = viewModel(
         factory = appContainer.mainViewModelFactory
@@ -99,6 +101,9 @@ fun RootNavHost() {
 
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn == true) {
+            // 자동 로그인 시에도 알림 작업이 등록되도록 호출
+            notificationViewModel.startPeriodicNotification()
+
             delay(300) // 화면 전환 전 로딩 애니메이션이 자연스럽게 끝나도록 약간 지연
             rootNavController.navigate(Routes.MAIN) {
                 popUpTo(Routes.AUTH) { inclusive = true }
