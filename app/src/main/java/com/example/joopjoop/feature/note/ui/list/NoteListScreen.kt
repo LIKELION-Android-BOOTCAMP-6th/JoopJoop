@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -170,8 +169,7 @@ fun ListTopBar(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(BgDarkest)
-            .statusBarsPadding(),
+            .background(BgDarkest),
         contentAlignment = Alignment.Center
     )
     {

@@ -1,5 +1,6 @@
 package com.example.joopjoop
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ fun MainScreen(rootNavController: NavController, mapViewModel: MapViewModel) {
 
     Scaffold(
         containerColor = BgDarkest, // 번쩍임을 없애기 위해 검은 배경으로 변경
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             BottomNavigation(mainNavController, rootNavController)
         }

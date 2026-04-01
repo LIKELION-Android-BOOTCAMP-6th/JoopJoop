@@ -3,6 +3,7 @@ package com.example.joopjoop
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,9 +17,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Edge-to-Edge 설정 (상태바까지 화면 확장 - 선택 사항)
-        // WindowCompat.setDecorFitsSystemWindows(window, false)
-//        enableEdgeToEdge()
+        enableEdgeToEdge()
 
         setContent {
             JoopJoopTheme {

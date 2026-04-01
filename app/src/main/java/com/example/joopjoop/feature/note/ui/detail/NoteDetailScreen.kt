@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -93,10 +92,6 @@ fun NoteDetailScreen(
             topBar = {
                 DetailTopBar(navController)
             },
-            // 바텀네비게이션바 삭제
-//            bottomBar = {
-//                DetailBottomBar(navController)
-//            }
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
                 when {
@@ -568,7 +563,6 @@ fun DetailTopBar(navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp)
-            .statusBarsPadding()
             .background(BgDarkest),
         verticalAlignment = Alignment.CenterVertically
     ) {
