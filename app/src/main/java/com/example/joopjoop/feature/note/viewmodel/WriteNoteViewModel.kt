@@ -19,7 +19,6 @@ import com.example.joopjoop.data.location.LocationProvider
 import com.example.joopjoop.feature.note.ui.write.WriteNoteUiState
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
-import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,11 +26,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.tasks.await
-import java.util.Date
 import kotlinx.coroutines.withContext
+import java.util.Date
 import java.util.Locale
-import java.util.UUID
 import kotlin.coroutines.resume
 
 class WriteNoteViewModel(
@@ -101,7 +98,8 @@ class WriteNoteViewModel(
         viewModelScope.launch {
             authRepository.currentUser
                 .collect { user ->
-                    Log.d("WriteNoteDebug", """
+                    Log.d(
+                        "WriteNoteDebug", """
                 ┌────────────────────────────────────────────────────
                 │ 👤 현재 로그인 유저 정보 체크 (Auth)
                 ├────────────────────────────────────────────────────
@@ -109,7 +107,8 @@ class WriteNoteViewModel(
                 │ 🏷️ 닉네임: ${user?.nickname}
                 │ 🖼️ 이미지URL: '${user?.profileImageUrl}'  <-- 이게 비어있으면 저장도 비어서 됩니다!
                 └────────────────────────────────────────────────────
-            """.trimIndent())
+            """.trimIndent()
+                    )
                     _uiState.update { currentState ->
                         currentState.copy(
                             user = currentState.user.copy(
@@ -335,7 +334,7 @@ class WriteNoteViewModel(
                 val finalCreatedAt: Date
                 val finalExpiresAt: Date
                 val id: String
-                val finalStorageHours : Int
+                val finalStorageHours: Int
 
                 if (isEditMode) {
                     // [쪽지 수정] 기존 uiState에 저장된 값을 그대로 사용한다
@@ -373,6 +372,7 @@ class WriteNoteViewModel(
                     category = currentState.selectedCategory,
                     imageUrl = currentState.selectedImageUri,
                     thumbnailUrl = currentState.selectedThumbnailUri,
+                    isActive = true,
                     storageHours = finalStorageHours,
                     createdAt = finalCreatedAt,
                     expiresAt = finalExpiresAt,

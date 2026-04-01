@@ -1,5 +1,6 @@
 package com.example.joopjoop.core.model
 
+import com.google.firebase.firestore.PropertyName
 import java.util.Date
 
 data class Note(
@@ -14,7 +15,12 @@ data class Note(
     val viewCount: Int = 0,             // 조회수
     val likeCount: Int = 0,             // 좋아요
     val location: NoteLocation = NoteLocation(),    // 위치
+
+    // 수정할때 isActive로 필드 사용하고 있음에도 뷸구하고 active필드로 저장되는 이슈 때문에 사용
+    @get:PropertyName("isActive")
+    @PropertyName("isActive")
     val isActive: Boolean = true,       // 쪽지 노출 여부
+
     val storageHours: Int = 12,         // 보관 시간
     val createdAt: Date = Date(),       // 작성 시간
     val expiresAt: Date = Date()        // 만료 시간 (3, 6, 9 ,12 시간 더한 실제시간 저장)
