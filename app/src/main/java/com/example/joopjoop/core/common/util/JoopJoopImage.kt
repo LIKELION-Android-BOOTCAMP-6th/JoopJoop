@@ -6,9 +6,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.example.joopjoop.R
@@ -27,7 +29,8 @@ fun JoopJoopImage(
     model: Any?,
     contentDescription: String?,
     modifier: Modifier = Modifier,
-    contentScale: ContentScale = ContentScale.Crop
+    contentScale: ContentScale = ContentScale.Crop,
+    isBlurred: Boolean = false
 ) {
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
@@ -55,12 +58,14 @@ fun JoopJoopImage(
                 contentScale = contentScale
             )
         },
-        // 성공 시
+        // 2. 성공 시점에만 블러를 적용하도록 변경
         success = { state ->
             Image(
                 painter = state.painter,
                 contentDescription = contentDescription,
-                modifier = Modifier.matchParentSize(),
+                modifier = Modifier
+                    .matchParentSize()
+                    .then(if (isBlurred) Modifier.blur(10.dp) else Modifier),
                 contentScale = contentScale
             )
         }

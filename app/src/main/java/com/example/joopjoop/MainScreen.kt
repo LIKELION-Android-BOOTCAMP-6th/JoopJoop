@@ -7,10 +7,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.joopjoop.core.designsystem.components.BottomNavigation
+import com.example.joopjoop.feature.map.viewmodel.MapViewModel
 import com.example.joopjoop.ui.theme.BgDarkest
 
 @Composable
-fun MainScreen(rootNavController: NavController) {
+fun MainScreen(rootNavController: NavController, mapViewModel: MapViewModel) {
     // Main 내부에서만 사용할 네비게이션 컨트롤러
     val mainNavController = rememberNavController()
 
@@ -25,6 +26,7 @@ fun MainScreen(rootNavController: NavController) {
         MainNavHost(
             mainNavController = mainNavController,
             rootNavController = rootNavController,
+            mapViewModel = mapViewModel,
             modifier = Modifier.padding(innerPadding)
         )
     }

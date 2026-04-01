@@ -22,10 +22,10 @@ class NoteViewModelFactory(
                 NoteDetailViewModel(repository, authRepository) as T
             }
 
-            // NoteListViewModel 생성 (내 위치 기준 거리 계산 및 줍기 판정)
-            modelClass.isAssignableFrom(NoteListViewModel::class.java) -> {
-                NoteListViewModel(repository, locationProvider) as T
-            }
+//            // NoteListViewModel 생성 (내 위치 기준 거리 계산 및 줍기 판정)
+//            modelClass.isAssignableFrom(NoteListViewModel::class.java) -> {
+//                NoteListViewModel(repository, locationProvider) as T
+//            }
 
             // WriteNoteViewModel 생성 (작성 시 현재 위치 Geohash 생성)
             modelClass.isAssignableFrom(WriteNoteViewModel::class.java) -> {

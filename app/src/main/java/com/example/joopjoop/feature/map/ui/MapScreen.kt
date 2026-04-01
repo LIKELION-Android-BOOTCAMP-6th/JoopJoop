@@ -164,10 +164,11 @@ fun MapScreen(
             CurrentLocationButton(
                 onClick = {
                     if (PermissionManager.hasLocationPermission(context)) {
-                        uiState.currentUserLocation?.let { userPos ->
+                        // 위치와 카메라만 갱신 (쪽지 로딩은 하지 않음)
+                        viewModel.refreshCurrentLocation { freshPos ->
                             cameraPositionState.position =
-                                CameraPosition.fromLatLngZoom(userPos, 16f)
-                        } ?: viewModel.fetchCurrentLocationIfNeeded()
+                                CameraPosition.fromLatLngZoom(freshPos, 16f)
+                        }
                     } else {
                         viewModel.askPermissionWithGuide {
                             permissionLauncher.launch(PermissionManager.locationPermissions)

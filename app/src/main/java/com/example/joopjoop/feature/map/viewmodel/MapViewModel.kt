@@ -6,6 +6,7 @@ import com.example.joopjoop.core.common.policy.DistancePolicy
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.DialogState
 import com.example.joopjoop.core.model.Note
+import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.data.location.LocationProvider
 import com.example.joopjoop.feature.map.ui.MapUiState
@@ -17,7 +18,8 @@ import kotlinx.coroutines.launch
 
 class MapViewModel(
     private val noteRepository: NoteRepository,
-    private val locationProvider: LocationProvider
+    private val locationProvider: LocationProvider,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     // 관찰 가능한 상태 (Screen에서 이 state를 구독)
@@ -56,61 +58,90 @@ class MapViewModel(
     // F-MAP-06: 지도 중심 좌표를 기준으로 주변 쪽지를 가져옵니다.
     fun loadNotes(center: LatLng) {
         viewModelScope.launch {
-            // [1] 로딩 시작 + 현재 지도 중심 좌표 저장
-            _uiState.update { it.copy(isLoading = true, mapCenterLocation = center) }
+            // 로딩 시작 시점에 기존 리스트를 명시적으로 비움 (잔상 제거)
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    mapCenterLocation = center,
+                    pickableNotes = emptyList(), // 명시적 초기화
+                    distantNotes = emptyList()   // 명시적 초기화
+                )
+            }
+
+            val myUid = authRepository.getCurrentUid() ?: ""
 
             try {
                 // [2] Firestore에서 '근처 후보 쪽지' 조회 (Geohash 기반, 대략적인 범위)
-                val notes = noteRepository.getNotesByLocation(
+                val notes = noteRepository.getVisibleNotes(
                     center.latitude,
-                    center.longitude
+                    center.longitude,
+                    myUid
                 )
                 // [3] 현재 사용자 위치 가져오기 (거리 계산 기준점)
-                val userLocation = _uiState.value.currentUserLocation
-
-                // [예외 처리] 사용자 위치가 없으면 거리 계산 불가 → 결과 비움
-                if (userLocation == null) {
-                    _uiState.update {
-                        it.copy(
-                            pickableNotes = emptyList(),
-                            distantNotes = emptyList(),
-                            isLoading = false
-                        )
-                    }
-                    return@launch
-                }
+                val userLocation = _uiState.value.currentUserLocation ?: return@launch
 
                 // [4] 결과를 담을 리스트 (UI에서 바로 사용할 데이터)
                 val pickable = mutableListOf<Note>()
                 val distant = mutableListOf<Note>()
 
                 notes.forEach { note ->
-
-                    // 사용자 위치 ↔ 쪽지 위치 간 거리 계산 (단위: meter)
-                    val distance = LocationUtil.calculateDistance(
-                        userLocation.latitude,
-                        userLocation.longitude,
-                        note.location.latitude,
-                        note.location.longitude
+                    // [기준 1] 탐색 필터: 지도 중심(center) 기준 5km
+                    val distanceToCenter = LocationUtil.calculateDistance(
+                        center.latitude, center.longitude,
+                        note.location.latitude, note.location.longitude
                     )
 
-                    // [정책 1] 5km 탐색 범위 필터
-                    // → Geohash는 정확한 거리 보장이 안되므로 한 번 더 필터링
-                    if (!DistancePolicy.isWithinSearchRange(distance)) return@forEach
+                    // 정책(5km)을 벗어나면 다음 쪽지로 넘어감
+                    if (!DistancePolicy.isWithinSearchRange(distanceToCenter)) return@forEach
 
-                    // [정책 2] 100m 기준으로 열람 가능 여부 분리
-                    if (DistancePolicy.isWithinPickableRange(distance)) {
-                        pickable.add(note)
+                    // [기준 2] 열람 권한 & UI 거리: 내 위치(userLocation) 기준
+                    val distanceToUser = LocationUtil.calculateDistance(
+                        userLocation.latitude, userLocation.longitude,
+                        note.location.latitude, note.location.longitude
+                    )
+
+                    val distanceText = LocationUtil.getDistanceText(
+                        userLocation.latitude, userLocation.longitude,
+                        note.location.latitude, note.location.longitude
+                    )
+
+                    val updatedNote = note.copy(
+                        location = note.location.copy(distance = distanceText)
+                    )
+                    // [열람 조건] 100m 이내(Policy)이거나 내가 작성한 쪽지인가?
+                    val isPickable =
+                        DistancePolicy.isWithinPickableRange(distanceToUser) || note.authorId == myUid
+
+                    if (isPickable) {
+                        pickable.add(updatedNote)
                     } else {
-                        // 100m 초과 → 지도에는 보이지만 열람 불가
-                        distant.add(note)
+                        distant.add(updatedNote)
                     }
                 }
+
+                val sortedPickable = pickable.sortedBy {
+                    LocationUtil.calculateDistance(
+                        userLocation.latitude,
+                        userLocation.longitude,
+                        it.location.latitude,
+                        it.location.longitude
+                    )
+                }
+
+                val sortedDistant = distant.sortedBy {
+                    LocationUtil.calculateDistance(
+                        userLocation.latitude,
+                        userLocation.longitude,
+                        it.location.latitude,
+                        it.location.longitude
+                    )
+                }
+
                 // 최종 결과를 UI 상태에 반영
                 _uiState.update {
                     it.copy(
-                        pickableNotes = pickable,
-                        distantNotes = distant,
+                        pickableNotes = sortedPickable,
+                        distantNotes = sortedDistant,
                         isLoading = false,
                         errorMessage = null
                     )
@@ -123,6 +154,38 @@ class MapViewModel(
                         isLoading = false,
                         errorMessage = e.message ?: "loadNotes 오류"
                     )
+                }
+            }
+        }
+    }
+
+    fun refreshCurrentLocation(onSuccess: (LatLng) -> Unit) {
+        viewModelScope.launch {
+            // 로딩 바
+            _uiState.update { it.copy(isLoading = true) }
+
+            try {
+                val location = locationProvider.getCurrentLocation()
+                if (location != null) {
+                    val newLatLng = LatLng(location.latitude, location.longitude)
+
+                    // 사용자 위치 값만 업데이트
+                    _uiState.update { state ->
+                        state.copy(
+                            currentUserLocation = newLatLng,
+                            isLoading = false
+                        )
+                    }
+                    // UI 쪽에 새 좌표 전달 (카메라 이동용)
+                    onSuccess(newLatLng)
+                } else {
+                    _uiState.update {
+                        it.copy(isLoading = false, errorMessage = "위치를 가져올 수 없습니다.")
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isLoading = false, errorMessage = e.message)
                 }
             }
         }

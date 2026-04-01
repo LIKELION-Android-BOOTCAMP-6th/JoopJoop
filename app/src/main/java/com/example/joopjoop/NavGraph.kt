@@ -40,7 +40,6 @@ import com.example.joopjoop.feature.note.ui.detail.NoteDetailScreen
 import com.example.joopjoop.feature.note.ui.list.NoteListScreen
 import com.example.joopjoop.feature.note.ui.write.WriteNoteScreen
 import com.example.joopjoop.feature.note.viewmodel.NoteDetailViewModel
-import com.example.joopjoop.feature.note.viewmodel.NoteListViewModel
 import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 import com.example.joopjoop.feature.setting.ui.SettingRoute
@@ -85,6 +84,11 @@ fun RootNavHost() {
     val mainViewModel: MainViewModel = viewModel(
         factory = appContainer.mainViewModelFactory
     )
+
+    val mapViewModel: MapViewModel = viewModel(
+        factory = appContainer.mapViewModelFactory
+    )
+
     val isLoggedIn by mainViewModel.isLoggedIn.collectAsState()
 
     LaunchedEffect(isLoggedIn) {
@@ -169,19 +173,19 @@ fun RootNavHost() {
             // 2. 메인 그래프 (Main Graph)
             // 바텀 네비게이션이 존재하는 '그릇' 화면.
             composable(Routes.MAIN) {
-                MainScreen(rootNavController = rootNavController)
+                MainScreen(
+                    rootNavController = rootNavController,
+                    mapViewModel = mapViewModel
+                )
             }
 
             // 3. 서브 그래프 (Sub Graph / 상세 화면)
             // 바텀바가 보이지 않아야 하는 독립적인 상세 페이지
 
             composable(Routes.NOTE_LIST) {
-                val viewModel: NoteListViewModel = viewModel(
-                    factory = appContainer.noteViewModelFactory
-                )
                 NoteListScreen(
                     navController = rootNavController,
-                    viewModel = viewModel
+                    viewModel = mapViewModel
                 )
             }
 
@@ -290,6 +294,7 @@ fun RootNavHost() {
 fun MainNavHost(
     mainNavController: NavHostController,
     rootNavController: NavController,
+    mapViewModel: MapViewModel,
     modifier: Modifier = Modifier
 ) {
     // Context와 AppContainer를 미리 가져옵니다.
@@ -302,11 +307,6 @@ fun MainNavHost(
         modifier = modifier
     ) {
         composable(Routes.MAP) {
-            // 팩토리를 사용하여 MapViewModel 생성
-            val mapViewModel: MapViewModel = viewModel(
-                factory = appContainer.mapViewModelFactory
-            )
-
             // 실제 제작한 MapScreen으로 교체
             MapScreen(
                 viewModel = mapViewModel,
