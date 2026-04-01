@@ -62,7 +62,7 @@ fun NoteListScreen(
     // savedStateHandle에 저장된 신호(쪽지 삭제) 받기
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val isNoteDeleted =
-        navBackStackEntry?.savedStateHandle?.get<Boolean>("IS_NOTE_DELETED") ?: false
+        navBackStackEntry?.savedStateHandle?.get<Boolean>("SHOULD_REFRESH") ?: false
 
     // 쪽지 신호 감지시 쪽지 재검색
     LaunchedEffect(isNoteDeleted) {
@@ -72,7 +72,7 @@ fun NoteListScreen(
                 viewModel.loadNotes(location)
             }
             // 위 작업 후 마무리 (안바꾸면 계속 새로고침하게됨)
-            navController.currentBackStackEntry?.savedStateHandle?.set("IS_NOTE_DELETED", false)
+            navController.currentBackStackEntry?.savedStateHandle?.set("SHOULD_REFRESH", false)
         }
     }
 

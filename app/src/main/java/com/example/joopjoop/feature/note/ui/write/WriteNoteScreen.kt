@@ -94,7 +94,7 @@ fun WriteNoteScreen(
                 val contentResolver = context.contentResolver
                 val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 context.contentResolver.takePersistableUriPermission(it, takeFlags)
-            viewModel.onImageSelected(it, context)
+                viewModel.onImageSelected(it, context)
             } catch (e: Exception) {
                 Log.e("PhotoDebug", "URI 권한 획득 실패")
             }
@@ -143,7 +143,10 @@ fun WriteNoteScreen(
                 // 쪽지 수정시 note id 값 가져오기
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val noteId = navBackStackEntry?.arguments?.getString("noteId")
-                val title = if (noteId == null) stringResource(R.string.write_note_title) else stringResource(R.string.edit_note)
+                val title =
+                    if (noteId == null) stringResource(R.string.write_note_title) else stringResource(
+                        R.string.edit_note
+                    )
 
                 Text(
                     text = title,
@@ -359,8 +362,14 @@ fun WriteNoteScreen(
 
             // 4. 쪽지 남기기 버튼
             Button(
-
-                onClick = { viewModel.submitNote(context) }, // 이제 인자 없이 깔끔하게!
+                onClick = {
+                    viewModel.submitNote(context) {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("SHOULD_REFRESH", true)
+                        navController.popBackStack()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp),

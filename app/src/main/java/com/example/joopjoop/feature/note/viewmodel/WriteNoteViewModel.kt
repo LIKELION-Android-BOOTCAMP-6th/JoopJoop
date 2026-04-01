@@ -278,7 +278,7 @@ class WriteNoteViewModel(
      * 제출 시점에 최신 위치를 확인하기 위해 locationProvider를 활용합니다.
      * 기존의 중첩된 addOnSuccessListener(콜백) 구조를 제거하고 순차적인 코루틴 흐름으로 변경했습니다.
      */
-    fun submitNote(context: Context) {
+    fun submitNote(context: Context, success: () -> Boolean) {
         val currentState = _uiState.value
         if (currentState.noteContent.isBlank() || currentState.isSubmitting) return
 
@@ -292,6 +292,7 @@ class WriteNoteViewModel(
                 if (location != null && location.latitude != 0.0) {
                     // 2. 위치 획득 성공 시 기존 제출 로직(performSubmit) 실행
                     performSubmit(context, location.latitude, location.longitude)
+                    success()
                 } else {
                     _uiState.update {
                         it.copy(
