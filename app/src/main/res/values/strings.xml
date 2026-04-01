@@ -1,6 +1,6 @@
 <resources>
     <!-- 인트로 관련 -->
-    <string name="app_name">JoopJoop</string>
+    <string name="app_name">줍줍</string>
     <string name="sub_name">줍줍</string>
     <string name="app_description">산책과 주변 이슈들에 관심있어하는 사람들\n을 위한 쪽지 플랫폼</string>
     <string name="go_to_login">쪽지 확인하러 가기</string>
