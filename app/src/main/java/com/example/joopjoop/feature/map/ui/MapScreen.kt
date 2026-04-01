@@ -120,14 +120,24 @@ fun MapScreen(
                 zoomControlsEnabled = false      // UI 단순화를 위해 줌 컨트롤 숨김
             )
         ) {
-            uiState.currentUserLocation?.let { userPos ->
+            // 격자와 원을 그릴 기준점
+            // 1. 마지막으로 '탐색 버튼'을 누른 위치(mapCenterLocation)가 있다면 최우선
+            // 2. 없다면(초기 상태) 현재 내 위치(currentUserLocation)를 사용
+            val anchorLocation = uiState.mapCenterLocation ?: uiState.currentUserLocation
+
+            anchorLocation?.let { anchorPos ->
                 val searchRadius = DistancePolicy.SEARCH_RADIUS_METERS.toDouble()
 
-                // [핵심 해결 3] 로그가 제거된 순수 그리기 전용 격자 레이어
-                GeohashGridLayer(userPos)
+                // '탐색한 위치' 중심으로 격자가 그려짐
+                GeohashGridLayer(anchorPos)
 
-                // 2. 탐색 범위 시각화 (5km & 100m)
-                MapRangeCircles(userPos, searchRadius)
+                // 탐색 범위(5km) 원도 탐색 지점 중심으로 이동
+                // 줍기 가능 범위(100m)는 항상 '내 실제 위치' 기준이어야 하므로 분리가 필요
+                MapRangeCircles(
+                    anchorPos = anchorPos,
+                    userPos = uiState.currentUserLocation, // 내 위치도 같이 넘겨줌
+                    searchRadius = searchRadius
+                )
             }
 
             // [핵심 해결 4] 마커는 여기서 딱 한 번만 호출 (중복 제거)
@@ -211,7 +221,6 @@ fun MapScreen(
 
 
 // 로그 코드를 완전히 제거한 순수 격자 그리기 함수
-
 @Composable
 private fun GeohashGridLayer(userPos: LatLng) {
     val currentHash = LocationUtil.getGeohash(userPos.latitude, userPos.longitude).take(5)
@@ -249,23 +258,29 @@ private fun GeohashGridLayer(userPos: LatLng) {
 
 // 탐색 가능 범위(5km)와 줍기 가능 범위(100m)를 원으로 표시
 @Composable
-private fun MapRangeCircles(userPos: LatLng, searchRadius: Double) {
+private fun MapRangeCircles(
+    anchorPos: LatLng,      // 탐색 기준점 (카메라 중심)
+    userPos: LatLng?,       // 내 실제 위치
+    searchRadius: Double
+) {
     // 탐색 범위 (회색)
     Circle(
-        center = userPos,
+        center = anchorPos,
         radius = searchRadius,
         fillColor = BgElevated.copy(alpha = 0.15f),
         strokeColor = BgElevated.copy(alpha = 0.3f),
         strokeWidth = 2f
     )
     // 줍기 가능 범위 (주황색)
-    Circle(
-        center = userPos,
-        radius = DistancePolicy.PICKABLE_RADIUS_METERS.toDouble(),
-        fillColor = OrangePrimary.copy(alpha = 0.2f),
-        strokeColor = OrangePrimary,
-        strokeWidth = 4f
-    )
+    userPos?.let {
+        Circle(
+            center = it,
+            radius = DistancePolicy.PICKABLE_RADIUS_METERS.toDouble(),
+            fillColor = OrangePrimary.copy(alpha = 0.2f),
+            strokeColor = OrangePrimary,
+            strokeWidth = 4f
+        )
+    }
 }
 
 
