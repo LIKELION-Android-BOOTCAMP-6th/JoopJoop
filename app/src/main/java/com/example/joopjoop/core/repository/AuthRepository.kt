@@ -38,7 +38,9 @@ interface AuthRepository {
 
     //  특정 UID로 유저의 최신 정보를 단건 조회
     suspend fun getUserInfoByUid(uid: String): User?
-    
+
+    // 특정 유저가 작성한 게시물의 총 개수만 조회
+    suspend fun getUserNoteCount(uid: String): Int
 
     // 이메일 회원가입 실행
     // email은 사용자 이메일
