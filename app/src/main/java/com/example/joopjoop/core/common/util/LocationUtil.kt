@@ -4,6 +4,7 @@ package com.example.joopjoop.core.common.util
 import android.location.Location
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
+import com.google.android.gms.maps.model.LatLng
 
 object LocationUtil {
 
@@ -59,6 +60,50 @@ object LocationUtil {
             "${distance.toInt()}m"
         } else {
             String.format("%.1fkm", distance / 1000)
+        }
+    }
+
+    // geohash 격자 출력을 위해서 추가
+    fun getGeohashBounds(geohash: String): List<LatLng> {
+        if (geohash.isEmpty()) return emptyList()
+
+        return try {
+            val BASE32 = "0123456789bcdefghjkmnpqrstuvwxyz"
+            var isEven = true
+
+            // doubleArrayOf 에러 방지를 위해 명시적 생성
+            val latRange = doubleArrayOf(-90.0, 90.0)
+            val lonRange = doubleArrayOf(-180.0, 180.0)
+
+            for (char in geohash) {
+                val cd = BASE32.indexOf(char)
+                if (cd == -1) continue // 잘못된 문자 스킵
+
+                for (j in 4 downTo 0) {
+                    val mask = 1 shl j
+                    if (isEven) {
+                        // 경도(Longitude) 범위 좁히기
+                        val mid = (lonRange[0] + lonRange[1]) / 2
+                        if ((cd and mask) != 0) lonRange[0] = mid else lonRange[1] = mid
+                    } else {
+                        // 위도(Latitude) 범위 좁히기
+                        val mid = (latRange[0] + latRange[1]) / 2
+                        if ((cd and mask) != 0) latRange[0] = mid else latRange[1] = mid
+                    }
+                    isEven = !isEven
+                }
+            }
+
+            // 사각형의 네 꼭짓점 반환
+            listOf(
+                LatLng(latRange[0], lonRange[0]), // 남서
+                LatLng(latRange[1], lonRange[0]), // 북서
+                LatLng(latRange[1], lonRange[1]), // 북동
+                LatLng(latRange[0], lonRange[1]), // 남동
+                LatLng(latRange[0], lonRange[0])  // 닫기 (Polygon 연결용)
+            )
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 }
