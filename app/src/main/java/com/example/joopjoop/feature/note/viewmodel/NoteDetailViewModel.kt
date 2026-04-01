@@ -186,11 +186,14 @@ class NoteDetailViewModel(
 
     // 삭제 버튼 클릭 처리
     fun deleteNote(noteId: String, onSuccess: () -> Unit) {
-        val myId = currentUserId ?: return
         viewModelScope.launch {
             try {
-                repository.deleteNote(noteId)
-                onSuccess() // 삭제 성공 시 실행할 콜백 (화면 닫기 등)
+                val isSuccess = repository.deleteNote(noteId)
+                if (isSuccess) {
+                    onSuccess()
+                } else {
+                    _uiState.update { it.copy(errorMessage = "삭제에 실패했습니다.") }
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "삭제에 실패했습니다.") }
             }

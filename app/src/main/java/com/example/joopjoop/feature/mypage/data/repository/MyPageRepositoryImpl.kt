@@ -25,6 +25,7 @@ class MyPageRepositoryImpl(
             Log.d("MyPageRepo", "조회 시작 - 내 UID: $userId")
 
         val snapshot = firestore.collection("notes")
+            .whereEqualTo("isActive", true)
             .whereEqualTo("authorId", userId)
             .get()
             .await()
