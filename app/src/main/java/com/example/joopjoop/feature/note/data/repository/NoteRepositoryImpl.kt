@@ -1,25 +1,17 @@
 package com.example.joopjoop.feature.note.data.repository
 
 import android.util.Log
-import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 
 class NoteRepositoryImpl(
     private val source: FirestoreNoteSource,
 ) : NoteRepository {
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
-
-    // 이건 fireStore에서 모든 쪽지를 긁어오는 것처럼 보입니다.
-    // 아래에 getNotesByLocation 함수를 새로 만들겠습니다
-//    override suspend fun getNotes(): List<Note> {
-//        return source.getNotes()
-//    }
 
     // 반환 타입을 Pair<String, String>? 로 변경 (원본URL, 썸네일URL)
     override suspend fun uploadImage(
@@ -36,7 +28,8 @@ class NoteRepositoryImpl(
             // 1. 원본 업로드 (진행률은 원본 기준으로 표시)
             val originalTask = originalRef.putBytes(originalData)
             originalTask.addOnProgressListener { taskSnapshot ->
-                val progress = (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
+                val progress =
+                    (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
                 onProgress(progress)
             }.await()
             val originalUrl = originalRef.downloadUrl.await().toString()
@@ -54,24 +47,14 @@ class NoteRepositoryImpl(
         }
     }
 
-    // 주변 쪽지 탐색
+    // 함수명을 변경했습니다.
+    // 사용자 위치 중심으로 주변 쪽지 쿼리 ( 내 쪽지 포함 )
     override suspend fun getNotesByLocation(
-        lat: Double,
-        lng: Double
-    ): List<Note> {
-        // 1. Geohash 계산 (5자리)
-        val centerGeohash = LocationUtil.getGeohash(lat, lng).take(5)
-
-        // 2. Source에 구현된 위치 쿼리 호출
-        return source.getNotesByLocation(centerGeohash)
-    }
-
-    override suspend fun getVisibleNotes(
         lat: Double,
         lng: Double,
         myUid: String
     ): List<Note> {
-        return source.getVisibleNotes(lat, lng, myUid)
+        return source.getNotesByLocation(lat, lng, myUid)
     }
 
     // 쪽지 상세 데이터 가져오기

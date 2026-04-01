@@ -1,6 +1,5 @@
 package com.example.joopjoop.core.repository
 
-import android.net.Uri
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.Scrap
 
@@ -10,8 +9,8 @@ interface NoteRepository {
     // 아래에 getNotesByLocation 함수를 새로 만들겠습니다
 //    suspend fun getNotes(): List<Note>
 
-    //주변 쪽지 검색
-    suspend fun getNotesByLocation(lat: Double, lng: Double): List<Note>
+//    //주변 쪽지 검색
+//    suspend fun getNotesByLocation(lat: Double, lng: Double): List<Note>
 
     // 쪽지 상세 데이터 가져오기
     suspend fun getNoteDetail(noteId: String): Note? // null을 허용하도록 수정
@@ -20,7 +19,7 @@ interface NoteRepository {
     suspend fun createNote(request: Note)
 
     // 내 쪽지 + 내 주변 쪽지만 보이게 하기
-    suspend fun getVisibleNotes(lat: Double, lng: Double, myUid: String): List<Note>
+    suspend fun getNotesByLocation(lat: Double, lng: Double, myUid: String): List<Note>
 
     // 조회수 증가
     suspend fun incrementViewCount(noteId: String)
@@ -47,7 +46,12 @@ interface NoteRepository {
     suspend fun isNoteBookmarked(noteId: String, userId: String): Boolean
 
     // 이미지 업로드
-    suspend fun uploadImage(originalData: ByteArray, thumbnailData: ByteArray, fileName: String, onProgress: (Float) -> Unit): Pair<String, String>?
+    suspend fun uploadImage(
+        originalData: ByteArray,
+        thumbnailData: ByteArray,
+        fileName: String,
+        onProgress: (Float) -> Unit
+    ): Pair<String, String>?
 
     // 쪽지 삭제
     suspend fun deleteNote(noteId: String): Boolean

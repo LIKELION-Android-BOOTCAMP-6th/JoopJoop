@@ -10,8 +10,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
-import okio.`-DeprecatedOkio`.source
-import java.util.Date
 
 class FakeNoteRepository : NoteRepository {
     companion object {
@@ -20,42 +18,42 @@ class FakeNoteRepository : NoteRepository {
         private var isInitialized = false
     }
 
-    override suspend fun getNotesByLocation(lat: Double, lng: Double): List<Note> {
-        delay(500) // 네트워크 지연 시뮬레이션
-
-        if (!isInitialized) {
-            _allFakeNotes.addAll(FakeDataSource.getFakeNotes(lat, lng))
-            isInitialized = true
-        }
-
-        val centerGeohash = LocationUtil.getGeohash(lat, lng).take(5)
-        val now = Date()
-
-        return _allFakeNotes
-            .filter { note ->
-                // geohash 필터
-                note.location.geohash.startsWith(centerGeohash)
-                        // 활성화된 노트만
-                        && note.isActive
-                        // 만료되지 않은 노트만
-                        && note.expiresAt.after(now)
-            }
-            .map { note ->
-                // distance 계산 (Fake에서는 여기서 처리)
-                val distance = LocationUtil.getDistanceText(
-                    lat,
-                    lng,
-                    note.location.latitude,
-                    note.location.longitude
-                )
-                // 기존 Note 객체를 변경하지 않고, distance 값만 반영된 새로운 객체를 생성
-                note.copy(
-                    location = note.location.copy(
-                        distance = distance
-                    )
-                )
-            }
-    }
+//    override suspend fun getNotesByLocation(lat: Double, lng: Double): List<Note> {
+//        delay(500) // 네트워크 지연 시뮬레이션
+//
+//        if (!isInitialized) {
+//            _allFakeNotes.addAll(FakeDataSource.getFakeNotes(lat, lng))
+//            isInitialized = true
+//        }
+//
+//        val centerGeohash = LocationUtil.getGeohash(lat, lng).take(5)
+//        val now = Date()
+//
+//        return _allFakeNotes
+//            .filter { note ->
+//                // geohash 필터
+//                note.location.geohash.startsWith(centerGeohash)
+//                        // 활성화된 노트만
+//                        && note.isActive
+//                        // 만료되지 않은 노트만
+//                        && note.expiresAt.after(now)
+//            }
+//            .map { note ->
+//                // distance 계산 (Fake에서는 여기서 처리)
+//                val distance = LocationUtil.getDistanceText(
+//                    lat,
+//                    lng,
+//                    note.location.latitude,
+//                    note.location.longitude
+//                )
+//                // 기존 Note 객체를 변경하지 않고, distance 값만 반영된 새로운 객체를 생성
+//                note.copy(
+//                    location = note.location.copy(
+//                        distance = distance
+//                    )
+//                )
+//            }
+//    }
 
     private val firestoreSource = FirestoreNoteSource()
     override suspend fun getNoteDetail(noteId: String): Note? {
@@ -108,12 +106,12 @@ class FakeNoteRepository : NoteRepository {
         _allFakeNotes.add(0, newNote)
     }
 
-    override suspend fun getVisibleNotes(
+    override suspend fun getNotesByLocation(
         lat: Double,
         lng: Double,
         myUid: String
     ): List<Note> {
-        return getVisibleNotes(lat, lng, myUid)
+        return getNotesByLocation(lat, lng, myUid)
     }
 
     override suspend fun incrementViewCount(noteId: String) {

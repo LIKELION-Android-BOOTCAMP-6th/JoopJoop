@@ -27,6 +27,7 @@ import com.example.joopjoop.core.common.policy.DistancePolicy
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.common.util.PermissionManager
 import com.example.joopjoop.core.designsystem.components.JoopJoopDialog
+import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.feature.map.ui.components.CurrentLocationButton
 import com.example.joopjoop.feature.map.ui.components.NearbyNoteCard
 import com.example.joopjoop.feature.map.ui.components.NoteMarker
@@ -103,6 +104,11 @@ fun MapScreen(
     // --- [UI 레이아웃 조립] ---
     Box(modifier = Modifier.fillMaxSize()) {
 
+//        // 삭제 금지 - 원화
+//        // 로그 전용 함수 호출 (실제 쿼리 Geohash 수 로그 )
+//        GeohashDebugLogger(uiState.currentUserLocation)
+//
+
         // [레이어 1] 구글 지도 영역
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
@@ -114,66 +120,32 @@ fun MapScreen(
                 zoomControlsEnabled = false      // UI 단순화를 위해 줌 컨트롤 숨김
             )
         ) {
-            // 사용자 위치가 있을 때만 원을 그립니다.
-            uiState.currentUserLocation?.let { userPos ->
-                val myGeohash = LocationUtil.getGeohash(userPos.latitude, userPos.longitude).take(5)
-                val area = LocationUtil.getGeohashBounds(myGeohash)
+            // 격자와 원을 그릴 기준점
+            // 1. 마지막으로 '탐색 버튼'을 누른 위치(mapCenterLocation)가 있다면 최우선
+            // 2. 없다면(초기 상태) 현재 내 위치(currentUserLocation)를 사용
+            val anchorLocation = uiState.mapCenterLocation ?: uiState.currentUserLocation
 
-                // 격자 그리기 (area가 정상적으로 계산되었을 때만)
-                if (area.size >= 4) {
-                    Polygon(
-                        points = area,
-                        fillColor = Color.Transparent,
-                        strokeColor = Color.Red.copy(alpha = 0.5f),
-                        strokeWidth = 5f
-                    )
-                }
+            anchorLocation?.let { anchorPos ->
+                val searchRadius = DistancePolicy.SEARCH_RADIUS_METERS.toDouble()
 
-                // 1. [탐색 범위] 5km (DistancePolicy.SEARCH_RADIUS_METERS)
-                // 넓은 영역이므로 배경 테마와 어울리는 은은한 컬러를 사용합니다.
-                Circle(
-                    center = userPos,
-                    radius = DistancePolicy.SEARCH_RADIUS_METERS.toDouble(), // 5000.0
-                    fillColor = BgElevated.copy(alpha = 0.15f), // 테마의 Elevated 배경색 활용
-                    strokeColor = BgElevated.copy(alpha = 0.3f),
-                    strokeWidth = 2f
-                )
+                // '탐색한 위치' 중심으로 격자가 그려짐
+                GeohashGridLayer(anchorPos)
 
-                // 2. [줍기 가능 범위] 100m (DistancePolicy.PICKABLE_RADIUS_METERS)
-                // 브랜드 메인 컬러인 OrangePrimary를 사용하여 강조합니다.
-                Circle(
-                    center = userPos,
-                    radius = DistancePolicy.PICKABLE_RADIUS_METERS.toDouble(), // 100.0
-                    fillColor = OrangePrimary.copy(alpha = 0.2f), // 메인 주황색
-                    strokeColor = OrangePrimary, // 테두리는 선명하게
-                    strokeWidth = 4f
+                // 탐색 범위(5km) 원도 탐색 지점 중심으로 이동
+                // 줍기 가능 범위(100m)는 항상 '내 실제 위치' 기준이어야 하므로 분리가 필요
+                MapRangeCircles(
+                    anchorPos = anchorPos,
+                    userPos = uiState.currentUserLocation, // 내 위치도 같이 넘겨줌
+                    searchRadius = searchRadius
                 )
             }
 
-            // [기능] 상태에 따라 마커를 구분하여 그림 (4번 피드백 반영)
-
-            // 줍기 가능 쪽지 (주황색 마커)
-            uiState.pickableNotes.forEach { note ->
-                // key(note.id)를 사용하여 마커 렌더링 최적화 유지
-                key(note.id) {
-                    NoteMarker(
-                        note = note,
-                        isPickable = true,
-                        onClick = { onNavigateToNoteDetail(note.id) } // 클릭 시 ID 전달
-                    )
-                }
-            }
-
-            // 거리가 먼 쪽지 (회색 마커)
-            uiState.distantNotes.forEach { note ->
-                key(note.id) {
-                    NoteMarker(
-                        note = note,
-                        isPickable = false,
-                        onClick = { /*TODO 거리가 멀면 클릭 안되게 하거나 안내 메시지 */ }
-                    )
-                }
-            }
+            // [핵심 해결 4] 마커는 여기서 딱 한 번만 호출 (중복 제거)
+            NoteMarkers(
+                pickableNotes = uiState.pickableNotes,
+                distantNotes = uiState.distantNotes,
+                onNoteClick = onNavigateToNoteDetail
+            )
         }
 
         // [레이어 2] 상단 영역: 쪽지 탐색 버튼
@@ -244,5 +216,109 @@ fun MapScreen(
                 onDismiss = config.onDismiss
             )
         }
+    }
+}
+
+
+// 로그 코드를 완전히 제거한 순수 격자 그리기 함수
+@Composable
+private fun GeohashGridLayer(userPos: LatLng) {
+    val currentHash = LocationUtil.getGeohash(userPos.latitude, userPos.longitude).take(5)
+    val bounds = LocationUtil.getGeohashBounds(currentHash)
+
+    if (bounds.size >= 4) {
+        val sw = bounds[0]
+        val ne = bounds[2]
+        val latHeight = ne.latitude - sw.latitude
+        val lngWidth = ne.longitude - sw.longitude
+
+        val neighborHashes = mutableSetOf<String>()
+        for (i in -1..1) {
+            for (j in -1..1) {
+                val targetLat = sw.latitude + (latHeight * (i + 0.5))
+                val targetLng = sw.longitude + (lngWidth * (j + 0.5))
+                neighborHashes.add(LocationUtil.getGeohash(targetLat, targetLng).take(5))
+            }
+        }
+
+        neighborHashes.forEach { hash ->
+            val area = LocationUtil.getGeohashBounds(hash)
+            if (area.isNotEmpty()) {
+                Polygon(
+                    points = area,
+                    fillColor = Color.Red.copy(alpha = 0.02f), // 격자 투명도
+                    strokeColor = Color.Red.copy(alpha = 0.3f),
+                    strokeWidth = 2f
+                )
+            }
+        }
+    }
+}
+
+
+// 탐색 가능 범위(5km)와 줍기 가능 범위(100m)를 원으로 표시
+@Composable
+private fun MapRangeCircles(
+    anchorPos: LatLng,      // 탐색 기준점 (카메라 중심)
+    userPos: LatLng?,       // 내 실제 위치
+    searchRadius: Double
+) {
+    // 탐색 범위 (회색)
+    Circle(
+        center = anchorPos,
+        radius = searchRadius,
+        fillColor = BgElevated.copy(alpha = 0.15f),
+        strokeColor = BgElevated.copy(alpha = 0.3f),
+        strokeWidth = 2f
+    )
+    // 줍기 가능 범위 (주황색)
+    userPos?.let {
+        Circle(
+            center = it,
+            radius = DistancePolicy.PICKABLE_RADIUS_METERS.toDouble(),
+            fillColor = OrangePrimary.copy(alpha = 0.2f),
+            strokeColor = OrangePrimary,
+            strokeWidth = 4f
+        )
+    }
+}
+
+
+// 쪽지 마커들을 상태에 따라 렌더링
+@Composable
+private fun NoteMarkers(
+    pickableNotes: List<Note>,
+    distantNotes: List<Note>,
+    onNoteClick: (String) -> Unit
+) {
+    pickableNotes.forEach { note ->
+        key(note.id) {
+            NoteMarker(note = note, isPickable = true, onClick = { onNoteClick(note.id) })
+        }
+    }
+    distantNotes.forEach { note ->
+        key(note.id) {
+            NoteMarker(
+                note = note,
+                isPickable = false,
+                onClick = { /*TODO 거리가 멀면 클릭 안되게 하거나 안내 메시지 */ })
+        }
+    }
+}
+
+
+// 실제 Firestore 쿼리 범위를 로그로 출력하는 역할
+private fun GeohashDebugLogger(userLocation: LatLng?) {
+    userLocation?.let { userPos ->
+        val radius = DistancePolicy.SEARCH_RADIUS_METERS.toDouble()
+        val centerLoc = com.firebase.geofire.GeoLocation(userPos.latitude, userPos.longitude)
+        val queryBounds = com.firebase.geofire.GeoFireUtils.getGeoHashQueryBounds(centerLoc, radius)
+
+        android.util.Log.d("GeohashDebug", "-----------------------------------")
+        android.util.Log.d("GeohashDebug", "실제 쿼리 격자 개수: ${queryBounds.size}")
+        queryBounds.forEachIndexed { index, bound ->
+            android.util.Log.d("GeohashDebug", "격자 [$index]: ${bound.startHash} ~ ${bound.endHash}")
+        }
+        android.util.Log.d("GeohashDebug", "-----------------------------------")
     }
 }

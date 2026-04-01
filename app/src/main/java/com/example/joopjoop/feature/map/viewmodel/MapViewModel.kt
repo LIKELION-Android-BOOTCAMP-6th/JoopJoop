@@ -72,7 +72,7 @@ class MapViewModel(
 
             try {
                 // [2] Firestore에서 '근처 후보 쪽지' 조회 (Geohash 기반, 대략적인 범위)
-                val notes = noteRepository.getVisibleNotes(
+                val notes = noteRepository.getNotesByLocation(
                     center.latitude,
                     center.longitude,
                     myUid
@@ -85,7 +85,10 @@ class MapViewModel(
                 val distant = mutableListOf<Note>()
 
                 notes.forEach { note ->
-                    // [기준 1] 탐색 필터: 지도 중심(center) 기준 5km
+                    // 1. 내 쪽지 여부 먼저 확인 (가장 강력한 권한)
+                    val isMyNote = myUid.isNotEmpty() && note.authorId == myUid
+
+                    // 2. 거리 계산 (탐색 기준: 지도 중심)
                     val distanceToCenter = LocationUtil.calculateDistance(
                         center.latitude, center.longitude,
                         note.location.latitude, note.location.longitude
@@ -94,12 +97,13 @@ class MapViewModel(
                     // 정책(5km)을 벗어나면 다음 쪽지로 넘어감
                     if (!DistancePolicy.isWithinSearchRange(distanceToCenter)) return@forEach
 
-                    // [기준 2] 열람 권한 & UI 거리: 내 위치(userLocation) 기준
+                    // 3. 거리 계산 (열람 기준: 내 실제 위치)
                     val distanceToUser = LocationUtil.calculateDistance(
                         userLocation.latitude, userLocation.longitude,
                         note.location.latitude, note.location.longitude
                     )
 
+                    // 4. UI용 거리 텍스트 생성
                     val distanceText = LocationUtil.getDistanceText(
                         userLocation.latitude, userLocation.longitude,
                         note.location.latitude, note.location.longitude
@@ -108,9 +112,10 @@ class MapViewModel(
                     val updatedNote = note.copy(
                         location = note.location.copy(distance = distanceText)
                     )
-                    // [열람 조건] 100m 이내(Policy)이거나 내가 작성한 쪽지인가?
+
+                    // 열람 조건: 내 쪽지라면 거리 계산 무시하고 무조건 true!
                     val isPickable =
-                        DistancePolicy.isWithinPickableRange(distanceToUser) || note.authorId == myUid
+                        isMyNote || DistancePolicy.isWithinPickableRange(distanceToUser)
 
                     if (isPickable) {
                         pickable.add(updatedNote)
@@ -118,7 +123,7 @@ class MapViewModel(
                         distant.add(updatedNote)
                     }
                 }
-
+                // 사용자 거리순 정렬
                 val sortedPickable = pickable.sortedBy {
                     LocationUtil.calculateDistance(
                         userLocation.latitude,
