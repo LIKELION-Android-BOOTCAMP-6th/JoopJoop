@@ -1,17 +1,15 @@
 package com.example.joopjoop.feature.note.data.source
 
 import android.util.Log
-import com.example.joopjoop.core.common.util.LocationUtil.getGeohash
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
 import com.google.firebase.Timestamp
-import com.google.firebase.Timestamp.now
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
-import okio.`-DeprecatedOkio`.source
 import java.util.Date
 
 
@@ -21,72 +19,126 @@ class FirestoreNoteSource(
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
     private val collectionPath = "notes"
 
-    // 현재 이 함수는 모든 쪽지를 쿼리
-    suspend fun getNotes(): List<Note> {
-        val snapshot = db.collection(collectionPath).get().await()
-        return snapshot.documents.mapNotNull { doc ->
-            val lat = doc.getDouble("latitude") ?: 0.0
-            val lng = doc.getDouble("longitude") ?: 0.0
-            val timestamp = doc.getTimestamp("createdAt")
-            Note(
-                id = doc.id,
-                userNickname = doc.getString("authorName") ?: "",
-                createdAt = timestamp?.toDate() ?: Date(),
-                likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
-                viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
-                contentText = doc.getString("content") ?: "",
-                location = NoteLocation(
-                    latitude = lat,
-                    longitude = lng
-                )
-            )
+//    // 위치를 기반으로 쿼리
+//    suspend fun getNotesByLocation(centerGeohash: String): List<Note> {
+//        // 5자리 Geohash 접두사로 시작하는 문서들만 쿼리
+//        val snapshot = db.collection(collectionPath)
+//            .orderBy("location.geohash")
+//            .startAt(centerGeohash)
+//            .endAt(centerGeohash + "\uf8ff")
+//            .get()
+//            .await()
+//
+//        return snapshot.documents.mapNotNull { doc ->
+//            val createdAt = doc.getTimestamp("createdAt")
+//            val expiresAt = doc.getTimestamp("expiresAt")
+//
+//            // 2. 이제 Timestamp끼리 비교가 가능합니다.
+//            if (expiresAt != null && expiresAt.compareTo(now()) < 0) {
+//                return@mapNotNull null
+//            }
+//
+//            // 'location'이라는 내부 Map 꺼내기
+//            val data = doc.data ?: throw Exception("데이터가 없습니다.")
+//            val locationMap = data["location"] as? Map<String, Any>
+//
+//            Note(
+//                id = doc.id,
+//                authorId = doc.getString("authorId") ?: "",
+//                userNickname = doc.getString("userNickname") ?: "익명",
+//                profileImageUrl = doc.getString("profileImageUrl") ?: "",
+//                contentText = doc.getString("contentText") ?: "",
+//                category = doc.getString("category") ?: "일상",
+//                thumbnailUrl = doc.getString("thumbnailUrl") ?: "",
+//                location = NoteLocation(
+//                    address = locationMap?.get("address") as? String ?: "위치 정보 없음",
+//                    latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
+//                    longitude = (locationMap?.get("longitude") as? Number)?.toDouble() ?: 0.0,
+//                    geohash = locationMap?.get("geohash") as? String ?: ""
+//                ),
+//                createdAt = createdAt?.toDate() ?: Date(),
+//                expiresAt = expiresAt?.toDate() ?: Date(),
+//                viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
+//                likeCount = doc.getLong("likeCount")?.toInt() ?: 0
+//            )
+//        }
+//    }
+//    // 쪽지 탐색 쿼리 함수끼리 붙여놓기 위해 코드 내 위치만 이동시킴
+//    suspend fun getVisibleNotes(
+//        lat: Double,
+//        lng: Double,
+//        myUid: String
+//    ): List<Note> {
+//        // 1. 좌표를 Geohash 문자열로 변환
+//        val precision5Geohash = getGeohash(lat, lng).take(5)
+//
+//        // 2. 내 위치 주변(5km 반경) 쪽지 가져오기
+//        val nearbyNotes = getNotesByLocation(precision5Geohash)
+//
+//        // 3. 내 쪽지도 '현재 지도 범위(Geohash)' 내에 있는 것만 가져오기
+//        val myNotes = if (myUid.isNotEmpty()) {
+//            try {
+//                db.collection(collectionPath)
+//                    .whereEqualTo("authorId", myUid)
+//                    .whereGreaterThanOrEqualTo("location.geohash", precision5Geohash) // 경로 수정
+//                    .whereLessThanOrEqualTo(
+//                        "location.geohash",
+//                        precision5Geohash + "\uf8ff"
+//                    )
+//                    .get()
+//                    .await()
+//                    .documents.mapNotNull { mapDocumentToNote(it) }
+//            } catch (e: Exception) {
+//                Log.e("Firestore", "myNotes 쿼리 실패(인덱스 확인 필요): ${e.message}")
+//                emptyList()
+//            }
+//        } else emptyList()
+//
+//        // 4. 두 리스트를 합치기 + 중복 제거 + 만료 시간 체크
+//        val currentTime = System.currentTimeMillis()
+//
+//        return (nearbyNotes + myNotes)
+//            .distinctBy { it.id } // 중복된 쪽지 제거
+//            .filter { it.expiresAt.time > currentTime } // 만료되지 않은 것만 필터링
+//            .sortedByDescending { it.createdAt } // 최신순 정렬
+//    }
+
+    // 함수명을 변경했습니다.
+    // getVisibleNotes --> getNotesByLocation
+    // 사용자 위치 중심으로 주변 쪽지 쿼리 ( 내 쪽지 포함 )
+    suspend fun getNotesByLocation(
+        lat: Double,
+        lng: Double,
+        myUid: String
+    ): List<Note> {
+        // 1. 컴파일 에러 해결: GeoLocation 객체를 명확히 생성
+        val centerLoc = com.firebase.geofire.GeoLocation(lat, lng)
+        val radiusInMeters = 2500.0 // 반지름 2.5km (DistancePolicy 반영)
+
+        // 2. 9개 격자 범위 계산
+        val bounds =
+            com.firebase.geofire.GeoFireUtils.getGeoHashQueryBounds(centerLoc, radiusInMeters)
+
+        // 복합 인덱스 쿼리 조건 및 순서
+        val tasks = bounds.map { b ->
+            db.collection(collectionPath)
+                .whereEqualTo("isActive", true) // 삭제되지 않은 쪽지
+                .orderBy("location.geohash")
+                .startAt(b.startHash)    // 정렬 순서에 맞춰 시작점 지정
+                .endAt(b.endHash)        // 정렬 순서에 맞춰 끝점 지정
+                .get()
         }
-    }
+        val snapshots =
+            com.google.android.gms.tasks.Tasks.whenAllSuccess<QuerySnapshot>(tasks).await()
+        val currentTime = System.currentTimeMillis()
 
-
-    // 위치를 기반으로 쿼리
-    suspend fun getNotesByLocation(centerGeohash: String): List<Note> {
-        // 5자리 Geohash 접두사로 시작하는 문서들만 쿼리
-        val snapshot = db.collection(collectionPath)
-            .orderBy("location.geohash")
-            .startAt(centerGeohash)
-            .endAt(centerGeohash + "\uf8ff")
-            .get()
-            .await()
-
-        return snapshot.documents.mapNotNull { doc ->
-            val createdAt = doc.getTimestamp("createdAt")
-            val expiresAt = doc.getTimestamp("expiresAt")
-
-            // 2. 이제 Timestamp끼리 비교가 가능합니다.
-            if (expiresAt != null && expiresAt.compareTo(now()) < 0) {
-                return@mapNotNull null
+        return snapshots.flatMap { snapshot ->
+            snapshot.documents.mapNotNull { doc ->
+                val note = mapDocumentToNote(doc) ?: return@mapNotNull null // 맵핑
+                if (note.expiresAt.time <= currentTime) return@mapNotNull null // 쿼리에서 못 거른 시간 만료만 체크
+                note // 여기서 isPickable 계산 안 함! 뷰모델에 맡김.
             }
-
-            // 'location'이라는 내부 Map 꺼내기
-            val data = doc.data ?: throw Exception("데이터가 없습니다.")
-            val locationMap = data["location"] as? Map<String, Any>
-
-            Note(
-                id = doc.id,
-                authorId = doc.getString("authorId") ?: "",
-                userNickname = doc.getString("userNickname") ?: "익명",
-                profileImageUrl = doc.getString("profileImageUrl") ?: "",
-                contentText = doc.getString("contentText") ?: "",
-                category = doc.getString("category") ?: "일상",
-                thumbnailUrl = doc.getString("thumbnailUrl") ?: "",
-                location = NoteLocation(
-                    address = locationMap?.get("address") as? String ?: "위치 정보 없음",
-                    latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
-                    longitude = (locationMap?.get("longitude") as? Number)?.toDouble() ?: 0.0,
-                    geohash = locationMap?.get("geohash") as? String ?: ""
-                ),
-                createdAt = createdAt?.toDate() ?: Date(),
-                expiresAt = expiresAt?.toDate() ?: Date(),
-                viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
-                likeCount = doc.getLong("likeCount")?.toInt() ?: 0
-            )
-        }
+        }.distinctBy { it.id } // 중복제거
     }
 
     // 쪽지 상세 데이터 조회
@@ -210,45 +262,6 @@ class FirestoreNoteSource(
         }
     }
 
-    suspend fun getVisibleNotes(
-        lat: Double,
-        lng: Double,
-        myUid: String
-    ): List<Note> {
-        // 1. 좌표를 Geohash 문자열로 변환
-        val precision5Geohash = getGeohash(lat, lng).take(5)
-
-        // 2. 내 위치 주변(5km 반경) 쪽지 가져오기
-        val nearbyNotes = getNotesByLocation(precision5Geohash)
-
-        // 3. 내 쪽지도 '현재 지도 범위(Geohash)' 내에 있는 것만 가져오기
-        val myNotes = if (myUid.isNotEmpty()) {
-            try {
-                db.collection(collectionPath)
-                    .whereEqualTo("authorId", myUid)
-                    .whereGreaterThanOrEqualTo("location.geohash", precision5Geohash) // 경로 수정
-                    .whereLessThanOrEqualTo(
-                        "location.geohash",
-                        precision5Geohash + "\uf8ff"
-                    )
-                    .get()
-                    .await()
-                    .documents.mapNotNull { mapDocumentToNote(it) }
-            } catch (e: Exception) {
-                Log.e("Firestore", "myNotes 쿼리 실패(인덱스 확인 필요): ${e.message}")
-                emptyList()
-            }
-        } else emptyList()
-
-        // 4. 두 리스트를 합치기 + 중복 제거 + 만료 시간 체크
-        val currentTime = System.currentTimeMillis()
-
-        return (nearbyNotes + myNotes)
-            .distinctBy { it.id } // 중복된 쪽지 제거
-            .filter { it.expiresAt.time > currentTime } // 만료되지 않은 것만 필터링
-            .sortedByDescending { it.createdAt } // 최신순 정렬
-    }
-
     // FirestoreNoteSource.kt 클래스 내부 하단에 추가
     private fun mapDocumentToNote(doc: com.google.firebase.firestore.DocumentSnapshot): Note? {
         return try {
@@ -258,10 +271,13 @@ class FirestoreNoteSource(
             val locationMap = data["location"] as? Map<String, Any>
 
             // 2. 개별 필드 추출
-            val lat = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0
-            val lng = (locationMap?.get("longitude") as? Number)?.toDouble() ?: 0.0
-            val addr = locationMap?.get("address") as? String ?: "알 수 없는 위치"
-            val hash = locationMap?.get("geohash") as? String ?: ""
+            val noteLocation = NoteLocation(
+                geohash = locationMap?.get("geohash") as? String ?: "",
+                latitude = (locationMap?.get("latitude") as? Number)?.toDouble() ?: 0.0,
+                longitude = (locationMap?.get("longitude") as? Number)?.toDouble() ?: 0.0,
+                address = locationMap?.get("address") as? String ?: "",
+                distance = locationMap?.get("distance") as? String ?: ""
+            )
 
             val createdAt = doc.getTimestamp("createdAt")?.toDate() ?: Date()
             val expiresAt = doc.getTimestamp("expiresAt")?.toDate() ?: Date()
@@ -271,20 +287,18 @@ class FirestoreNoteSource(
                 id = doc.id,
                 authorId = doc.getString("authorId") ?: "",
                 userNickname = doc.getString("userNickname") ?: "익명",
+                profileImageUrl = doc.getString("profileImageUrl"), // 최상위에 위치
                 contentText = doc.getString("contentText") ?: "",
-                category = doc.getString("category") ?: "일상",
-                imageUrl = doc.getString("imageUrl"),
                 thumbnailUrl = doc.getString("thumbnailUrl"),
-                location = NoteLocation(
-                    latitude = lat,
-                    longitude = lng,
-                    address = addr,
-                    geohash = hash
-                ),
-                createdAt = createdAt,
-                expiresAt = expiresAt,
+                imageUrl = doc.getString("imageUrl"),
+                category = doc.getString("category") ?: "일상",
                 viewCount = doc.getLong("viewCount")?.toInt() ?: 0,
-                likeCount = doc.getLong("likeCount")?.toInt() ?: 0
+                likeCount = doc.getLong("likeCount")?.toInt() ?: 0,
+                location = noteLocation,
+                isActive = doc.getBoolean("isActive") ?: true,
+                storageHours = (doc.get("storageHours") as? Number)?.toInt() ?: 12,
+                createdAt = doc.getTimestamp("createdAt")?.toDate() ?: Date(),
+                expiresAt = doc.getTimestamp("expiresAt")?.toDate() ?: Date()
             )
         } catch (e: Exception) {
             Log.e("FirestoreNoteSource", "Mapping Error: ${e.message}")
