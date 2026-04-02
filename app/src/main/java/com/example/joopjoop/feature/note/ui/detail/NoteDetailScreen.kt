@@ -270,7 +270,7 @@ fun NoteDetail(
                     // 뒤로 가기 전에 이전화면의 savedStateHandle에 삭제 신호 보내기
                     navController.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set("IS_NOTE_DELETED", true)
+                        ?.set("SHOULD_REFRESH", true)
 
                     navController.popBackStack()
                 }
