@@ -3,6 +3,8 @@ package com.example.joopjoop.feature.note.ui.write
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -35,6 +37,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -105,6 +110,25 @@ fun WriteNoteScreen(
     val focusManager = LocalFocusManager.current
 
 
+    // --- 뒤로가기 로직 추가 ---
+    var backPressedTime by remember { mutableStateOf(0L) }
+
+    // 뒤로가기 동작을 처리하는 공통 함수
+    val handleBackNavigation = {
+        val currentTime = System.currentTimeMillis()
+        // 2초(2000ms) 이내에 다시 누르면 뒤로가기 실행
+        if (currentTime - backPressedTime < 2000) {
+            navController.popBackStack()
+        } else {
+            backPressedTime = currentTime
+            Toast.makeText(context, "내용이 저장되지 않고 메인화면으로 돌아갑니다", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 시스템 뒤로가기 버튼 처리 (하단 내비게이션 바/제스처)
+    BackHandler(enabled = true) {
+        handleBackNavigation()
+    }
     LaunchedEffect(uiState.isSubmitSuccess) {
         if (uiState.isSubmitSuccess) {
             navController.popBackStack()
@@ -130,7 +154,7 @@ fun WriteNoteScreen(
                         .align(Alignment.CenterStart)
                         .clip(RoundedCornerShape(12.dp))
                         // 람다 대신 navController를 직접 사용하여 뒤로가기 실행
-                        .clickable { navController.popBackStack() }
+                        .clickable { handleBackNavigation() }
                         .padding(8.dp)) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_arrow_back_24),
