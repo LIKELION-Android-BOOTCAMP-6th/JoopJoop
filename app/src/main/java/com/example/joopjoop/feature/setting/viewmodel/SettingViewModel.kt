@@ -51,7 +51,7 @@ class SettingViewModel(
 
     // [중복 확인 실행]
     fun checkNicknameAvailability(nickname: String) {
-        if (nickname.isBlank()) return
+        if (nickname.isBlank() || _isLoading.value) return
 
         viewModelScope.launch {
             _isLoading.value = true
@@ -63,6 +63,9 @@ class SettingViewModel(
     }
 
     fun updateNickname(newNickname: String) {
+        // 이미 로딩 중이면 함수를 실행하지 않고 바로 리턴
+        if (_isLoading.value) return
+
         viewModelScope.launch {
             _isLoading.value = true
             val result = authRepository.updateProfile(newNickname = newNickname)
@@ -86,6 +89,9 @@ class SettingViewModel(
 
     // 프로필 사진 변경
     fun updateProfileImage(imageUri: android.net.Uri) {
+        // 이미 로딩 중이면 함수를 실행하지 않고 바로 리턴
+        if (_isLoading.value) return
+
         viewModelScope.launch {
             _isLoading.value = true
 
@@ -95,6 +101,7 @@ class SettingViewModel(
 
                 if (compressedBytes == null) {
                     _settingEvent.emit(SettingEvent.Error("이미지 가공 실패"))
+                    _isLoading.value = false // 실패 시 로딩 해제
                     return@launch
                 }
 
@@ -129,7 +136,11 @@ class SettingViewModel(
     }
 
     fun deleteProfileImage() {
+        if (_isLoading.value) return // 중복 실행 방지
+
         viewModelScope.launch {
+            _isLoading.value = true // 삭제 중에도 로딩 상태를 활성화하여 이탈 방지
+
             val result = authRepository.deleteProfileImage()
             when (result) {
                 is AuthResult.Success<*> -> {
@@ -139,7 +150,7 @@ class SettingViewModel(
                     _settingEvent.emit(SettingEvent.Error(result.exception.message ?: "삭제 실패"))
                 }
                 else -> {
-                    // 아무것도 하지 않거나, 필요하다면 로딩 상태 처리를 합니다.
+                    _isLoading.value = false
                 }
             }
         }

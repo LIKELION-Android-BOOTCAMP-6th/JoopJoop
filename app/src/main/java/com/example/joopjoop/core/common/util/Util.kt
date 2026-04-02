@@ -18,7 +18,7 @@ import java.util.Locale
 // 시간 Date -> String 형변환
 fun formatDate(date: Date?): String {
     if (date == null) return ""
-    val formatter = SimpleDateFormat("M월 dd일", Locale.getDefault())
+    val formatter = SimpleDateFormat("M월 d일", Locale.getDefault())
     return formatter.format(date)
 }
 
