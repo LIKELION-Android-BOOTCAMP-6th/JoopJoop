@@ -133,6 +133,7 @@ fun ProfileHeader(user: User?, noteCount: Int) {
         JoopJoopImage(
             model = user?.profileImageUrl, // 하드코딩된 URL 삭제
             contentDescription = "프로필 이미지",
+            isProfile = true,
             modifier = Modifier
                 .size(80.dp)
                 .background(BgDark, CircleShape)
@@ -155,7 +156,6 @@ fun ProfileHeader(user: User?, noteCount: Int) {
         }
     }
 }
-
 
 @Composable
 fun MyPageTabRow(
