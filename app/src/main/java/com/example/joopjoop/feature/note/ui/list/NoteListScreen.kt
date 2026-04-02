@@ -114,6 +114,7 @@ fun NoteList(
         modifier = modifier
             .fillMaxSize()
             .background(BgDarkest)
+            .padding(10.dp, 0.dp)
     ) {
         // 로딩 화면 표시
         if (isLoading) {
@@ -148,9 +149,9 @@ fun NoteList(
             // 쪽지 리스트
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2), // 한 줄 두개씩
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 // 가까운 쪽지
                 items(pickableNotes, key = { it.id }) { note ->
@@ -338,11 +339,13 @@ fun NoteCard(item: Note, isLocked: Boolean, onClick: () -> Unit = {}) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             lineHeight = 16.sp,
+            modifier = Modifier.padding(10.dp, 0.dp)
         )
 
         // 거리 정보 표시 영역(아이콘 + 텍스트)
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(10.dp, 0.dp)
         ) {//나침반 화살표 아이콘(45도 회전, 수평 맞추기 위해 윗쪽으로 미세 조정)
             Icon(
                 painter = painterResource(id = R.drawable.baseline_navigation_24),
