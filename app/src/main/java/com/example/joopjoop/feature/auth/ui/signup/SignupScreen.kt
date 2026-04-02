@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.auth.ui.signup
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,12 +26,17 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,8 +69,29 @@ fun SignupRoute(
 //        factory = com.example.joopjoop.feature.auth.viewmodel.AuthViewModelFactory(appContainer.authRepository)
 //    )
 
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val seedingProgress by viewModel.seedingProgress.collectAsStateWithLifecycle()
+
+    LaunchedEffect(seedingProgress) {
+        seedingProgress?.let { (current, total) ->
+
+            when {
+                current == 0 -> {
+                    Toast.makeText(context, "시딩 시작!", Toast.LENGTH_SHORT).show()
+                }
+
+                current == total -> {
+                    Log.d("Seeding", "시딩 완료! 총 ${total}개 생성")
+                }
+
+                else -> {
+                    Log.d("Seeding", "진행중: $current / $total")
+                }
+            }
+        }
+    }
 
     // 에러 토스트 처리 로직
     androidx.compose.runtime.LaunchedEffect(uiState.errorMessage) {
@@ -90,6 +117,9 @@ fun SignupRoute(
         onPasswordVisibilityToggle = viewModel::togglePasswordVisibility,
         onDuplicationCheckClick = viewModel::checkNickname,
         onCreateAccountClick = viewModel::signUp,
+        onSecretSeedingClick = {
+            viewModel.runSeeding(context, cycle = 1) // 시드 생성기 싸이클횟수 선택. 현재 1싸이클 31개 생성
+        },
         onBackClick = onBackClick
     )
 }
@@ -105,7 +135,12 @@ fun SignupScreen(
     onBackClick: () -> Unit = {},
     onDuplicationCheckClick: () -> Unit = {},
     onCreateAccountClick: () -> Unit = {},
+    onSecretSeedingClick: () -> Unit = {} // 시딩 함수를 받도록 추가 (목업쪽지용)
 ) {
+    // 비밀 클릭 카운트 상태
+    var secretClickCount by remember { mutableStateOf(0) }
+    val context = LocalContext.current
+
     Scaffold(
         modifier = modifier
             .fillMaxSize()
@@ -332,7 +367,22 @@ fun SignupScreen(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
                             .size(24.dp)
-                            .clickable { onPasswordVisibilityToggle() }
+                            .clickable {
+                                // 목업쪽지 생성 스위치
+                                secretClickCount++
+                                if (secretClickCount >= 10) {
+                                    Toast.makeText(
+                                        context,
+                                        "개발자 모드: 시딩을 시작합니다.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    onSecretSeedingClick()
+                                    secretClickCount = 0 // 초기화
+                                } else {
+                                    // 일반적인 비밀번호 토글 동작
+                                    onPasswordVisibilityToggle()
+                                }
+                            }
                     )
                 },
                 visualTransformation = if (uiState.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),

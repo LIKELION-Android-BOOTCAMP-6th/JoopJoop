@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -6,6 +8,16 @@ plugins {
     // 보안 플러그인 적용 (local.properties를 자동으로 읽습니다)
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use {
+        localProperties.load(it)
+    }
+}
+val myApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
 
 android {
     namespace = "com.example.joopjoop"
@@ -21,6 +33,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "GEMINI_API_KEY", "\"$myApiKey\"")
     }
 
     buildTypes {
@@ -98,4 +111,7 @@ dependencies {
 
     // EXIF 메타데이터(이미지 방향 정보 등)를 읽기 위한 라이브러리
     implementation("androidx.exifinterface:exifinterface:1.3.7")
+
+    // Gemini SDK
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 }

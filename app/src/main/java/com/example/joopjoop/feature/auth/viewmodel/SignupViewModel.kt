@@ -1,10 +1,13 @@
 package com.example.joopjoop.feature.auth.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.joopjoop.core.common.util.mockupseeder.Seeder
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.auth.ui.signup.SignupUiState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +20,10 @@ class SignupViewModel(
 
     private val _uiState = MutableStateFlow(SignupUiState())
     val uiState: StateFlow<SignupUiState> = _uiState.asStateFlow()
+
+    // 목업 쪽지 시딩 관찰용
+    private val _seedingProgress = MutableStateFlow<Pair<Int, Int>?>(null) // (현재, 전체)
+    val seedingProgress = _seedingProgress.asStateFlow()
 
     // 닉네임 입력
     fun onNicknameInput(nickname: String) {
@@ -149,6 +156,20 @@ class SignupViewModel(
                 is com.example.joopjoop.feature.auth.data.model.AuthResult.Loading -> {
                     // 필요시 로딩 상태 UI 반영할 것
                 }
+            }
+        }
+    }
+
+    // 목업 데이터 시딩 함수
+    fun runSeeding(context: Context, cycle: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+
+            val seeder = Seeder()
+
+            _seedingProgress.value = 0 to 0
+
+            seeder.seedFullSeoul(context, cycle) { current, total ->
+                _seedingProgress.value = current to total
             }
         }
     }
