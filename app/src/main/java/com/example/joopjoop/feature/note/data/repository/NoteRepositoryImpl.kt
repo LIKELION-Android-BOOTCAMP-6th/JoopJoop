@@ -6,6 +6,10 @@ import com.example.joopjoop.core.model.Scrap
 import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 
 class NoteRepositoryImpl(
@@ -13,39 +17,97 @@ class NoteRepositoryImpl(
 ) : NoteRepository {
     private val storage: FirebaseStorage = FirebaseStorage.getInstance()
 
-    // 반환 타입을 Pair<String, String>? 로 변경 (원본URL, 썸네일URL)
     override suspend fun uploadImage(
-        originalData: ByteArray,    // 원본 데이터
-        thumbnailData: ByteArray,   // 썸네일 데이터
+        originalData: ByteArray,
+        thumbnailData: ByteArray,
         fileName: String,
         onProgress: (Float) -> Unit
-    ): Pair<String, String>? { // 두 개의 URL을 반환하도록 변경
+    ): Pair<String, String>? {
         return try {
-            // 경로를 각각 다르게 설정 (폴더 분리)
             val originalRef = storage.reference.child("notes/images/$fileName.jpg")
             val thumbnailRef = storage.reference.child("notes/thumbnails/${fileName}_thumb.jpg")
 
-            // 1. 원본 업로드 (진행률은 원본 기준으로 표시)
-            val originalTask = originalRef.putBytes(originalData)
-            originalTask.addOnProgressListener { taskSnapshot ->
-                val progress =
-                    (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
-                onProgress(progress)
-            }.await()
-            val originalUrl = originalRef.downloadUrl.await().toString()
+            coroutineScope {   // ← 여기만 바뀐 것
+                val originalDeferred = async {
+                    Log.d("PhotoDebug", "원본 크기: ${originalData.size / 1024}KB")
+                    originalRef.putBytes(originalData)
+                        .addOnProgressListener { taskSnapshot ->
+                            val progress = (taskSnapshot.bytesTransferred.toDouble() /
+                                    taskSnapshot.totalByteCount.toDouble()).toFloat()
+                            onProgress(progress)
+                        }
+                        .await()
+                    originalRef.downloadUrl.await().toString()
+                }
 
-            // 2. 썸네일 업로드
-            thumbnailRef.putBytes(thumbnailData).await()
-            val thumbnailUrl = thumbnailRef.downloadUrl.await().toString()
+                val thumbnailDeferred = async {
+                    Log.d("PhotoDebug", "썸네일 크기: ${thumbnailData.size / 1024}KB")
+                    thumbnailRef.putBytes(thumbnailData).await()
+                    thumbnailRef.downloadUrl.await().toString()
+                }
 
-            // 두 URL을 묶어서 반환
-            Pair(originalUrl, thumbnailUrl)
+                Pair(originalDeferred.await(), thumbnailDeferred.await())
+            }
 
         } catch (e: Exception) {
             Log.e("PhotoDebug", "업로드 중 에러: ${e.message}")
             null
         }
     }
+
+    // 반환 타입을 Pair<String, String>? 로 변경 (원본URL, 썸네일URL)
+//    override suspend fun uploadImage(
+//        originalData: ByteArray,    // 원본 데이터
+//        thumbnailData: ByteArray,   // 썸네일 데이터
+//        fileName: String,
+//        onProgress: (Float) -> Unit
+//    ): Pair<String, String>? { // 두 개의 URL을 반환하도록 변경
+//        return try {
+//            // 경로를 각각 다르게 설정 (폴더 분리)
+//            val originalRef = storage.reference.child("notes/images/$fileName.jpg")
+//            val thumbnailRef = storage.reference.child("notes/thumbnails/${fileName}_thumb.jpg")
+//
+//            // 원본과 썸네일 동시 업로드
+//            val originalDeferred = CoroutineScope(Dispatchers.IO).async {
+//                originalRef.putBytes(originalData)
+//                    .addOnProgressListener { taskSnapshot ->
+//                        val progress = (taskSnapshot.bytesTransferred.toDouble() /
+//                                taskSnapshot.totalByteCount.toDouble()).toFloat()
+//                        onProgress(progress)
+//                    }
+//                    .await()
+//                originalRef.downloadUrl.await().toString()
+//            }
+//
+//            val thumbnailDeferred = CoroutineScope(Dispatchers.IO).async {
+//                thumbnailRef.putBytes(thumbnailData).await()
+//                thumbnailRef.downloadUrl.await().toString()
+//            }
+//
+//            /*// 1. 원본 업로드 (진행률은 원본 기준으로 표시)
+//            val originalTask = originalRef.putBytes(originalData)
+//            originalTask.addOnProgressListener { taskSnapshot ->
+//                val progress =
+//                    (taskSnapshot.bytesTransferred.toDouble() / taskSnapshot.totalByteCount.toDouble()).toFloat()
+//                onProgress(progress)
+//            }.await()
+//            val originalUrl = originalRef.downloadUrl.await().toString()
+//
+//            // 2. 썸네일 업로드
+//            thumbnailRef.putBytes(thumbnailData).await()
+//            val thumbnailUrl = thumbnailRef.downloadUrl.await().toString()
+//*/
+//            val originalUrl = originalDeferred.await()
+//            val thumbnailUrl = thumbnailDeferred.await()
+//
+//            // 두 URL을 묶어서 반환
+//            Pair(originalUrl, thumbnailUrl)
+//
+//        } catch (e: Exception) {
+//            Log.e("PhotoDebug", "업로드 중 에러: ${e.message}")
+//            null
+//        }
+//    }
 
     // 함수명을 변경했습니다.
     // 사용자 위치 중심으로 주변 쪽지 쿼리 ( 내 쪽지 포함 )

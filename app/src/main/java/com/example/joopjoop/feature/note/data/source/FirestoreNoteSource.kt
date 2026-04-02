@@ -14,6 +14,8 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 import java.util.Date
 
@@ -217,7 +219,7 @@ class FirestoreNoteSource(
         documentRef.set(noteData).await()
     }
 
-    suspend fun uploadImage(
+    /*suspend fun uploadImage(
         originalData: ByteArray,    // 원본 데이터
         thumbnailData: ByteArray,   // 썸네일 데이터
         fileName: String,
@@ -248,7 +250,7 @@ class FirestoreNoteSource(
             Log.e("PhotoDebug", "업로드 중 에러: ${e.message}")
             null
         }
-    }
+    }*/
 
     suspend fun getNotesByAuthor(authorId: String): List<Note> {
         return try {

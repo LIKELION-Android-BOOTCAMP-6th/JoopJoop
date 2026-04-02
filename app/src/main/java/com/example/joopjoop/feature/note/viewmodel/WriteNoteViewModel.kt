@@ -40,6 +40,9 @@ class WriteNoteViewModel(
 
     private val _uiState = MutableStateFlow(WriteNoteUiState())
     val uiState: StateFlow<WriteNoteUiState> = _uiState.asStateFlow()
+
+    private val _uploadProgress = MutableStateFlow(0f)
+    val uploadProgress: StateFlow<Float> = _uploadProgress.asStateFlow()
     private var editingNoteId: String? = null   // 쪽지 수정하기 위한 노트 id
 
     val categories = listOf("일상", "감성", "추억", "맛집")
@@ -173,53 +176,43 @@ class WriteNoteViewModel(
 
         viewModelScope.launch {
             try {
-                // 1. 이미지 가공 (원본과 썸네일 ByteArray 생성)
-                val (originalData, thumbData) = withContext(Dispatchers.IO) {
+                // 가공 + 업로드 모두 IO 안으로 이동
+                val urls = withContext(Dispatchers.IO) {
                     val processor = ImageProcessor(context)
                     val original = processor.processOriginal(uri)
                     val thumb = processor.processThumbnail(uri)
-                    original to thumb
-                }
 
-                if (originalData == null || thumbData == null) {
-                    _uiState.update {
-                        it.copy(
-                            isImageUploading = false,
-                            errorMessage = "이미지 가공 실패"
-                        )
+                    if (original == null || thumb == null) {
+                        return@withContext null
                     }
-                    return@launch
+                    val timestamp = System.currentTimeMillis()
+                    val fileName = "note_${timestamp}"
+
+                    repository.uploadImage(
+                        originalData = original,
+                        thumbnailData = thumb,
+                        fileName = fileName,
+                        onProgress = { progress ->
+                            // UI 업데이트를 위해 다시 메인으로
+                            _uploadProgress.value = progress  // StateFlow는 직접 업데이트
+                        }
+                    )
                 }
-
-                val timestamp = System.currentTimeMillis()
-                val fileName = "note_$timestamp"
-
-                // 2. 수정된 Repository 함수 호출 (원본/썸네일 동시 업로드)
-                val urls = repository.uploadImage(
-                    originalData = originalData,
-                    thumbnailData = thumbData,
-                    fileName = fileName,
-                    onProgress = { progress ->
-                        // 원본 업로드 진행률을 UI에 반영
-                        _uiState.update { it.copy(uploadProgress = progress) }
-                    }
-                )
 
                 if (urls != null) {
-                    // 3. 반환받은 Pair에서 원본(first)과 썸네일(second) URL 추출
                     val (originalUrl, thumbnailUrl) = urls
-
                     _uiState.update {
                         it.copy(
-                            selectedImageUri = originalUrl,    // 원본 URL 저장
-                            selectedThumbnailUri = thumbnailUrl, // 썸네일 URL 저장
+                            selectedImageUri = originalUrl,
+                            selectedThumbnailUri = thumbnailUrl,
                             isImageUploading = false,
                             uploadProgress = 1f
                         )
                     }
-                    Log.d("PhotoDebug", "업로드 성공 - 원본: $originalUrl, 썸네일: $thumbnailUrl")
                 } else {
-                    _uiState.update { it.copy(isImageUploading = false, errorMessage = "서버 전송 실패") }
+                    _uiState.update {
+                        it.copy(isImageUploading = false, errorMessage = "이미지 가공 실패 또는 서버 전송 실패")
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update {
@@ -228,6 +221,7 @@ class WriteNoteViewModel(
             }
         }
     }
+
 
     fun onImageRemoved() {
         _uiState.update {
