@@ -39,12 +39,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.JoopJoopImage
 import com.example.joopjoop.core.common.util.OnSingleClickListener
@@ -169,7 +172,7 @@ fun NoteDetail(
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(55.dp)
                     .clip(CircleShape)
                     .background(BgDark),
                 contentAlignment = Alignment.Center
@@ -184,7 +187,7 @@ fun NoteDetail(
                     )
                 } else {
                     // 이미지가 있으면 서버에서 불러오기
-                    coil.compose.AsyncImage(
+                    AsyncImage(
                         model = uiState.profileImageUrl,
                         contentDescription = "작성자 프로필",
                         modifier = Modifier.fillMaxSize(),
@@ -192,25 +195,41 @@ fun NoteDetail(
                     )
                 }
             }
+
             Spacer(modifier = Modifier.width(12.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = uiState.userNickName,
                     color = TextPrimary,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    // 2. 폰트 패딩 제거 및 행간 고정
+                    style = TextStyle(
+                        platformStyle = PlatformTextStyle(includeFontPadding = false),
+                        lineHeight = 16.sp
+                    )
                 )
                 Text(
-                    text = "${uiState.createdAt} 조회 ${uiState.viewCount} 좋아요 ${uiState.likeCount}",
+                    text = "${uiState.createdAt}  조회수 ${uiState.viewCount}  좋아요 ${uiState.likeCount}",
                     color = TextSecondary,
-                    fontSize = 12.sp
+                    fontSize = 13.sp,
+                    // 2. 폰트 패딩 제거 및 행간 고정
+                    style = TextStyle(
+                        platformStyle = PlatformTextStyle(includeFontPadding = false),
+                        lineHeight = 13.sp
+                    )
                 )
                 Text(
                     text = uiState.address,
                     color = TextSecondary,
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    // 2. 폰트 패딩 제거 및 행간 고정
+                    style = TextStyle(
+                        platformStyle = PlatformTextStyle(includeFontPadding = false),
+                        lineHeight = 13.sp
+                    )
                 )
             }
         }
