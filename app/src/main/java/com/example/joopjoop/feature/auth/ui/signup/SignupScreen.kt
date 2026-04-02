@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -68,7 +69,7 @@ fun SignupRoute(
     // 에러 토스트 처리 로직
     androidx.compose.runtime.LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { message ->
-            Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT)
+            Toast.makeText(context, message, Toast.LENGTH_SHORT)
                 .show()
             viewModel.consumeErrorEvent()
         }
@@ -106,7 +107,9 @@ fun SignupScreen(
     onCreateAccountClick: () -> Unit = {},
 ) {
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .statusBarsPadding(),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Box(
@@ -148,7 +151,7 @@ fun SignupScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(150.dp)
                     .clip(RoundedCornerShape(24.dp))
                     .background(
                         brush = Brush.verticalGradient(

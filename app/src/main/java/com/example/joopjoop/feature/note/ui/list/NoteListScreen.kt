@@ -81,7 +81,9 @@ fun NoteListScreen(
 
     JoopJoopTheme {
         Scaffold(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
             containerColor = BgDarkest,
             topBar = { ListTopBar(navController) },
 //            bottomBar = { ListBottomBar(navController) } // 바텀네비게이션바 삭제
@@ -173,8 +175,7 @@ fun ListTopBar(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(BgDarkest)
-            .statusBarsPadding(),
+            .background(BgDarkest),
         contentAlignment = Alignment.Center
     )
     {
