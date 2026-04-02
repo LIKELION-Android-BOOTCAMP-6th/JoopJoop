@@ -23,6 +23,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.JoopJoopImage
+import com.example.joopjoop.core.common.util.OnSingleClickListener
 import com.example.joopjoop.core.common.util.showToast
 import com.example.joopjoop.feature.note.viewmodel.NoteDetailViewModel
 import com.example.joopjoop.ui.theme.BgDark
@@ -562,26 +565,33 @@ fun NoteDetailBottomButton(
 
 @Composable
 fun DetailTopBar(navController: NavController) {
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp)
+            .fillMaxWidth()
+            .padding(8.dp, 0.dp)
             .background(BgDarkest),
-        verticalAlignment = Alignment.CenterVertically
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.baseline_arrow_back_24),
-            contentDescription = null,
-            tint = TextPrimary,
-            modifier = Modifier
-                .size(24.dp)
-                .clickable {
+        // 뒤로가기 아이콘
+        IconButton(
+            onClick = {
+                OnSingleClickListener.onclick {
                     navController.previousBackStackEntry
                         ?.savedStateHandle
                         ?.set("SHOULD_REFRESH", true)
                     navController.popBackStack()
                 }
-        )
+            },
+            modifier = Modifier.align(Alignment.CenterStart)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_back),
+                contentDescription = "Back",
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.size(24.dp)
+            )
+        }
         Text(
             text = "쪽지 상세",
             color = TextPrimary,
