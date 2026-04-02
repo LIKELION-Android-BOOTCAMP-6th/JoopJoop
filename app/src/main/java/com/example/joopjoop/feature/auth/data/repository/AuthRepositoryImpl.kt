@@ -7,7 +7,6 @@ import com.example.joopjoop.feature.auth.data.model.AuthResult
 import com.example.joopjoop.feature.auth.data.model.UserResponse
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
-import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.Firebase
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.CoroutineScope
@@ -199,8 +198,7 @@ class AuthRepositoryImpl(
 
             userSource.deactivateUser(uid)
             noteSource.deactivateUserNotes(uid)
-            noteSource.deleteUserInteractions(uid)    // [추가] likes / scraps 삭
-            authSource.deleteUser()
+            noteSource.deleteUserInteractions(uid)    // [추가] likes / scraps 삭제            authSource.deleteUser()
 
             _currentUser.value = null
 
