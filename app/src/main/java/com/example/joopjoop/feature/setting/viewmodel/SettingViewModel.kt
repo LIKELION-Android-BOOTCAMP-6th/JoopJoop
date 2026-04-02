@@ -136,10 +136,8 @@ class SettingViewModel(
     }
 
     fun deleteProfileImage() {
-        if (_isLoading.value) return // 중복 실행 방지
 
         viewModelScope.launch {
-            _isLoading.value = true // 삭제 중에도 로딩 상태를 활성화하여 이탈 방지
 
             val result = authRepository.deleteProfileImage()
             when (result) {
