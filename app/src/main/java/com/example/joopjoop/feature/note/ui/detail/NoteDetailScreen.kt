@@ -578,7 +578,12 @@ fun DetailTopBar(navController: NavController) {
             tint = TextPrimary,
             modifier = Modifier
                 .size(24.dp)
-                .clickable { navController.popBackStack() }
+                .clickable {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("SHOULD_REFRESH", true)
+                    navController.popBackStack()
+                }
         )
         Text(
             text = "쪽지 상세",

@@ -10,6 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,10 +50,6 @@ import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 import com.example.joopjoop.feature.setting.ui.SettingRoute
 import com.example.joopjoop.ui.theme.BgDarkest
 import kotlinx.coroutines.delay
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
 
 // Routes 정의
 object Routes {
@@ -211,7 +210,10 @@ fun RootNavHost() {
                     )
                     mutableStateOf(
                         locationPermissions.all {
-                            androidx.core.content.ContextCompat.checkSelfPermission(context, it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                            androidx.core.content.ContextCompat.checkSelfPermission(
+                                context,
+                                it
+                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
                         }
                     )
                 }
@@ -245,13 +247,19 @@ fun RootNavHost() {
                 } else {
                     // [권한 없음] 처음에 여기 들어왔다가, 허용하는 순간 위쪽 if문으로 갈아탑니다.
                     LaunchedEffect(Unit) {
-                        launcher.launch(arrayOf(
-                            android.Manifest.permission.ACCESS_FINE_LOCATION,
-                            android.Manifest.permission.ACCESS_COARSE_LOCATION
-                        ))
+                        launcher.launch(
+                            arrayOf(
+                                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                android.Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
                     }
 
-                    Box(modifier = Modifier.fillMaxSize().background(BgDarkest))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(BgDarkest)
+                    )
                 }
             }
 
@@ -366,7 +374,8 @@ fun MainNavHost(
                 onNavigateToNoteDetail = { noteId ->
                     // 쪽지 상세 화면으로 이동 (Routes.NOTE_DETAIL 형태에 맞춰 argument 전달)
                     rootNavController.navigate("noteDetail/$noteId")
-                }
+                },
+                navController = rootNavController
             )
         }
 
