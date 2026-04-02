@@ -61,12 +61,12 @@ fun NoteListScreen(
 
     // savedStateHandle에 저장된 신호(쪽지 삭제) 받기
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val isNoteDeleted =
+    val isNoteRefresh =
         navBackStackEntry?.savedStateHandle?.get<Boolean>("SHOULD_REFRESH") ?: false
 
     // 쪽지 신호 감지시 쪽지 재검색
-    LaunchedEffect(isNoteDeleted) {
-        if (isNoteDeleted) {
+    LaunchedEffect(isNoteRefresh) {
+        if (isNoteRefresh) {
             // 현재 내 위치를 기준으로 다시 로드 (viewModel에 현재 위치 정보가 있다고 가정)
             uiState.currentUserLocation?.let { location ->
                 viewModel.loadNotes(location)

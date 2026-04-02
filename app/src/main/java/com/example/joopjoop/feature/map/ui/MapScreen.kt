@@ -3,6 +3,7 @@ package com.example.joopjoop.feature.map.ui
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.joopjoop.core.common.policy.DistancePolicy
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.common.util.PermissionManager
@@ -50,7 +53,8 @@ import com.google.maps.android.compose.rememberCameraPositionState
 fun MapScreen(
     viewModel: MapViewModel,
     onNavigateToNoteList: () -> Unit, // ← 리스트 화면 이동을 위한 콜백
-    onNavigateToNoteDetail: (String) -> Unit // 상세 이동 콜백
+    onNavigateToNoteDetail: (String) -> Unit, // 상세 이동 콜백
+    navController: NavController
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -98,6 +102,24 @@ fun MapScreen(
                 // 사용자가 다이얼로그에서 '동의하기'를 눌렀을 때만 실제 시스템 팝업을 호출
                 permissionLauncher.launch(PermissionManager.locationPermissions)
             }
+        }
+    }
+
+    // savedStateHandle에 저장된 신호(쪽지 삭제) 받기
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val isNoteRefresh =
+        navBackStackEntry?.savedStateHandle?.get<Boolean>("SHOULD_REFRESH") ?: false
+
+    // 쪽지 신호 감지시 쪽지 재검색
+    LaunchedEffect(isNoteRefresh) {
+        Log.d("jay", "=============== isNoteRefresh: $isNoteRefresh")
+        if (isNoteRefresh) {
+            // 현재 내 위치를 기준으로 다시 로드 (viewModel에 현재 위치 정보가 있다고 가정)
+            uiState.currentUserLocation?.let { location ->
+                viewModel.loadNotes(location)
+            }
+            // 위 작업 후 마무리 (안바꾸면 계속 새로고침하게됨)
+            navController.currentBackStackEntry?.savedStateHandle?.set("SHOULD_REFRESH", false)
         }
     }
 
