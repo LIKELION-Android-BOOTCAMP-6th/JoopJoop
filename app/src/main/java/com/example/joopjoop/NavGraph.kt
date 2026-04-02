@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -112,11 +113,12 @@ fun RootNavHost() {
     Scaffold(
         containerColor = BgDarkest,
         contentWindowInsets = WindowInsets(0)
-    ) { _ -> // 여기 언더바 에러시 무시하세요. 사용하지 않지만 필요합니다. 빌드 문제없음 - 원화
+    ) { innerPadding -> // contentWindowInsets = WindowInsets(0) 때문에 padding 적용은 안됨 빨간줄 회피를 위한 코드
         Box( // 번쩍임을 없애기 위해 검은 배경을 깔아둠
             modifier = Modifier
                 .fillMaxSize()
                 .background(BgDarkest)
+                .padding(innerPadding)
         ) {
             // isLoggedIn == null → 로그인 상태 로딩 중 (IntroScreen에서 로딩 UI 처리)
 //    if (isLoggedIn == null) return
@@ -331,99 +333,79 @@ fun RootNavHost() {
                         viewModel = viewModel
                     )
                 }
-
-                // 설정 화면 주소 등록
-                composable(Routes.SETTINGS) {
-                    // SettingRoute를 호출하여 의존성(Repository, ViewModel)을 주입합니다.
-                    SettingRoute(
-                        authRepository = appContainer.authRepository,
-                        notificationViewModel = viewModel(), // 필요 시 appContainer에서 가져올 수도 있음.
-                        onNavigateToLogin = {
-                            // 로그아웃 성공 시 AUTH 화면으로 이동하며 스택 정리
-                            rootNavController.navigate(Routes.AUTH) {
-                                popUpTo(Routes.MAIN) { inclusive = true }
-                            }
-                        },
-                        onBackClick = {
-                            OnSingleClickListener.onclick {
-                                rootNavController.popBackStack()
-                            }
-                        }
-                    )
-                }
             }
         }
     }
+}
 
-    /**
-     * 메인 내부 네비게이션 (MainNavHost)
-     * MainScreen(Scaffold)의 안쪽 영역에서 MAP/MYPAGE만 교체하는 역할
-     */
-    @Composable
-    fun MainNavHost(
-        mainNavController: NavHostController,
-        rootNavController: NavController,
-        mapViewModel: MapViewModel,
-        modifier: Modifier = Modifier
+/**
+ * 메인 내부 네비게이션 (MainNavHost)
+ * MainScreen(Scaffold)의 안쪽 영역에서 MAP/MYPAGE만 교체하는 역할
+ */
+@Composable
+fun MainNavHost(
+    mainNavController: NavHostController,
+    rootNavController: NavController,
+    mapViewModel: MapViewModel,
+    modifier: Modifier = Modifier
+) {
+    // Context와 AppContainer를 미리 가져옵니다.
+    val context = LocalContext.current
+    val appContainer = (context.applicationContext as JoopJoopApplication).container
+
+    NavHost(
+        navController = mainNavController,
+        startDestination = Routes.MAP,
+        modifier = modifier
     ) {
-        // Context와 AppContainer를 미리 가져옵니다.
-        val context = LocalContext.current
-        val appContainer = (context.applicationContext as JoopJoopApplication).container
+        composable(Routes.MAP) {
+            // 실제 제작한 MapScreen으로 교체
+            MapScreen(
+                viewModel = mapViewModel,
+                onNavigateToNoteList = {
+                    // 쪽지 리스트 화면
+                    rootNavController.navigate(Routes.NOTE_LIST)
+                },
+                onNavigateToNoteDetail = { noteId ->
+                    // 쪽지 상세 화면으로 이동 (Routes.NOTE_DETAIL 형태에 맞춰 argument 전달)
+                    rootNavController.navigate("noteDetail/$noteId")
+                },
+                navController = rootNavController
+            )
+        }
 
-        NavHost(
-            navController = mainNavController,
-            startDestination = Routes.MAP,
-            modifier = modifier
-        ) {
-            composable(Routes.MAP) {
-                // 실제 제작한 MapScreen으로 교체
-                MapScreen(
-                    viewModel = mapViewModel,
-                    onNavigateToNoteList = {
-                        // 쪽지 리스트 화면
-                        rootNavController.navigate(Routes.NOTE_LIST)
-                    },
-                    onNavigateToNoteDetail = { noteId ->
-                        // 쪽지 상세 화면으로 이동 (Routes.NOTE_DETAIL 형태에 맞춰 argument 전달)
-                        rootNavController.navigate("noteDetail/$noteId")
-                    },
-                    navController = rootNavController
-                )
-            }
+        // [수정] 마이페이지 경로에 실제 뷰모델과 화면을 연결
+        composable(Routes.MYPAGE) {
+            val myPageViewModel: MyPageViewModel = viewModel(
+                factory = appContainer.myPageViewModelFactory
+            )
 
-            // [수정] 마이페이지 경로에 실제 뷰모델과 화면을 연결
-            composable(Routes.MYPAGE) {
-                val myPageViewModel: MyPageViewModel = viewModel(
-                    factory = appContainer.myPageViewModelFactory
-                )
-
-                // 실제 마이페이지 화면으로 교체
-                MyPageScreen(
-                    viewModel = myPageViewModel,
-                    // 설정화면 진입 버튼 연결
-                    onSettingClick = {
-                        rootNavController.navigate(Routes.SETTINGS)
-                    },
-                    // [F-MY-02] 내가 쓴 쪽지 리스트 부품 주입
-                    postContent = {
-                        MyPostListContent(
-                            viewModel = myPageViewModel,
-                            onNoteClick = { noteId ->
-                                // 상세 화면은 BottomNav가 없는 RootNavHost 영역이므로 rootNavController 사용
-                                rootNavController.navigate("noteDetail/$noteId")
-                            }
-                        )
-                    },
-                    scrapContent = {
-                        MyScrapListContent(
-                            viewModel = myPageViewModel,
-                            onNoteClick = { noteId ->
-                                rootNavController.navigate("noteDetail/$noteId")
-                            }
-                        )
-                    }
-                )
-            }
+            // 실제 마이페이지 화면으로 교체
+            MyPageScreen(
+                viewModel = myPageViewModel,
+                // 설정화면 진입 버튼 연결
+                onSettingClick = {
+                    rootNavController.navigate(Routes.SETTINGS)
+                },
+                // [F-MY-02] 내가 쓴 쪽지 리스트 부품 주입
+                postContent = {
+                    MyPostListContent(
+                        viewModel = myPageViewModel,
+                        onNoteClick = { noteId ->
+                            // 상세 화면은 BottomNav가 없는 RootNavHost 영역이므로 rootNavController 사용
+                            rootNavController.navigate("noteDetail/$noteId")
+                        }
+                    )
+                },
+                scrapContent = {
+                    MyScrapListContent(
+                        viewModel = myPageViewModel,
+                        onNoteClick = { noteId ->
+                            rootNavController.navigate("noteDetail/$noteId")
+                        }
+                    )
+                }
+            )
         }
     }
 }
