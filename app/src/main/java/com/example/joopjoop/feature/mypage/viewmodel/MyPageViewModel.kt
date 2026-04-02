@@ -92,8 +92,11 @@ class MyPageViewModel(
             val result = myPageRepository.getMyPosts(userId)
 
             if (result.isSuccess) {
+                val sortedPosts = result.getOrDefault(emptyList())
+                    .sortedByDescending { it.createdAt }
+
                 _postUiState.update { it.copy(
-                    posts = result.getOrDefault(emptyList()),
+                    posts = sortedPosts,
                     isLoading = false
                 )}
             } else {
@@ -117,8 +120,10 @@ class MyPageViewModel(
             val result = myPageRepository.getMyScraps(userId)
 
             result.onSuccess { scrapList ->
+                val sortedScraps = scrapList.sortedByDescending { it.createdAt }
+
                 _scrapUiState.update { it.copy(
-                    scraps = scrapList,
+                    scraps = sortedScraps,
                     isLoading = false
                 )}
             }.onFailure { exception ->

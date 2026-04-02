@@ -164,8 +164,68 @@ class WriteNoteViewModel(
             _uiState.update { it.copy(storageHours = timeOptions[currentIndex - 1]) }
         }
     }
-
     fun onImageSelected(uri: Uri, context: Context) {
+        // 1. 중복 실행 방지
+        if (_uiState.value.isImageUploading) return
+
+        viewModelScope.launch {
+            // 시작 시 로딩 및 프로그레스 초기화 (Main)
+            _uiState.update {
+                it.copy(isImageUploading = true, uploadProgress = 0f, errorMessage = null)
+            }
+
+            try {
+                // 2. 이미지 가공 + 업로드 - IO 쓰레드에서 수행
+                val uploadResult = withContext(Dispatchers.IO) {
+                    val processor = ImageProcessor(context.applicationContext)
+
+                    // 이미지 가공 (원본/썸네일)
+                    val originalData = processor.processOriginal(uri)
+                    val thumbData = processor.processThumbnail(uri)
+
+                    // 가공 실패 시 null을 반환하여 블록 밖으로
+                    if (originalData == null || thumbData == null) return@withContext null
+
+                    // 서버에 업로드
+                    repository.uploadImage(
+                        originalData = originalData,
+                        thumbnailData = thumbData,
+                        fileName = "note_${System.currentTimeMillis()}",
+                        onProgress = { progress ->
+                            _uiState.update { it.copy(uploadProgress = progress) }
+                        }
+                    )
+                }
+
+                // 3. 결과 받아서 UI 업데이트 (Main 쓰레드)
+                if (uploadResult == null) {
+                    _uiState.update {
+                        it.copy(isImageUploading = false, errorMessage = "이미지 가공 실패")
+                    }
+                    return@launch
+                }
+
+                // 업로드 성공 시 URL 추출 및 상태 반영
+                val (originalUrl, thumbnailUrl) = uploadResult
+                _uiState.update {
+                    it.copy(
+                        selectedImageUri = originalUrl,
+                        selectedThumbnailUri = thumbnailUrl,
+                        isImageUploading = false,
+                        uploadProgress = 1f
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isImageUploading = false, errorMessage = "오류 발생: ${e.message}")
+                }
+            } finally {
+                _uiState.update { it.copy(isImageUploading = false) }
+            }
+        }
+    }
+
+ /*   fun onImageSelected(uri: Uri, context: Context) {
         _uiState.update {
             it.copy(
                 selectedImageUri = uri.toString(),
@@ -220,7 +280,7 @@ class WriteNoteViewModel(
                 }
             }
         }
-    }
+    }*/
 
 
     fun onImageRemoved() {

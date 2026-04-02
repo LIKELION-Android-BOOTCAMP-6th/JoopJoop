@@ -11,6 +11,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import okio.`-DeprecatedOkio`.source
 
 class NoteRepositoryImpl(
     private val source: FirestoreNoteSource,
@@ -27,33 +29,37 @@ class NoteRepositoryImpl(
             val originalRef = storage.reference.child("notes/images/$fileName.jpg")
             val thumbnailRef = storage.reference.child("notes/thumbnails/${fileName}_thumb.jpg")
 
-            coroutineScope {   // ← 여기만 바뀐 것
-                val originalDeferred = async {
-                    Log.d("PhotoDebug", "원본 크기: ${originalData.size / 1024}KB")
-                    originalRef.putBytes(originalData)
-                        .addOnProgressListener { taskSnapshot ->
-                            val progress = (taskSnapshot.bytesTransferred.toDouble() /
-                                    taskSnapshot.totalByteCount.toDouble()).toFloat()
-                            onProgress(progress)
-                        }
-                        .await()
-                    originalRef.downloadUrl.await().toString()
-                }
+            // 원본과 썸네일 동시 업로드 - IO 스레드에서 수행
+            val uploadResult = withContext(Dispatchers.IO) {
+                coroutineScope {
+                    val originalDeferred = async {
+                        originalRef.putBytes(originalData)
+                            .addOnProgressListener { taskSnapshot ->
+                                val progress = (taskSnapshot.bytesTransferred.toDouble() /
+                                        taskSnapshot.totalByteCount.toDouble()).toFloat()
+                                onProgress(progress)
+                            }
+                            .await()
+                        originalRef.downloadUrl.await().toString()
+                    }
 
-                val thumbnailDeferred = async {
-                    Log.d("PhotoDebug", "썸네일 크기: ${thumbnailData.size / 1024}KB")
-                    thumbnailRef.putBytes(thumbnailData).await()
-                    thumbnailRef.downloadUrl.await().toString()
-                }
+                    val thumbnailDeferred = async {
+                        thumbnailRef.putBytes(thumbnailData).await()
+                        thumbnailRef.downloadUrl.await().toString()
+                    }
 
-                Pair(originalDeferred.await(), thumbnailDeferred.await())
+                    Pair(originalDeferred.await(), thumbnailDeferred.await())
+                }
             }
 
-        } catch (e: Exception) {
-            Log.e("PhotoDebug", "업로드 중 에러: ${e.message}")
-            null
-        }
+        // 결과 반환 (Main 스레드로 복귀)
+        uploadResult
+
+    } catch (e: Exception) {
+        Log.e("PhotoDebug", "업로드 중 에러: ${e.message}")
+        null
     }
+}
 
     // 반환 타입을 Pair<String, String>? 로 변경 (원본URL, 썸네일URL)
 //    override suspend fun uploadImage(
