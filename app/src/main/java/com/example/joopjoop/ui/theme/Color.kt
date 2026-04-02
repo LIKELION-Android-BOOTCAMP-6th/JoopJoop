@@ -9,7 +9,7 @@ val OrangeDark       = Color(0xFFB85E18)  // 버튼 pressed
 
 // ── Background ───────────────────────────
 val BgDarkest        = Color(0xFF1A1208)  // 앱 전체 최하단 배경
-val BgDark           = Color(0xFF251A0E)  // 카드, 바텀시트 배경
+val BgDark           = Color(0xFF38231B)  // 카드, 바텀시트 배경
 val BgSurface        = Color(0xFF332211)  // 입력창, 리스트 아이템
 val BgElevated       = Color(0xFF4A3520)  // 선택된 상태, 구분선
 

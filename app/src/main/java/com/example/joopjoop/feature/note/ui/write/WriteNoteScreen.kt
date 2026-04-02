@@ -217,86 +217,98 @@ fun WriteNoteScreen(
                     .background(BgDark, RoundedCornerShape(24.dp))
                     .padding(20.dp)
             ) {
-                OutlinedTextField(
-                    value = uiState.noteContent, // state 사용
-                    onValueChange = { viewModel.onContentChange(it) }, // 뷰모델 콜백 사용
-                    modifier = Modifier.fillMaxSize(), placeholder = {
-                        Text(
-                            text = stringResource(R.string.note_placeholder),
-                            color = TextTertiary,
-                            fontSize = 16.sp
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // 텍스트 입력창 (남은 공간을 모두 차지하도록 weight 사용)
+                    OutlinedTextField(
+                        value = uiState.noteContent,
+                        onValueChange = { viewModel.onContentChange(it) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f), // 이 설정이 하단 영역을 침범하지 않게 해줍니다.
+                        placeholder = {
+                            Text(
+                                text = stringResource(R.string.note_placeholder),
+                                color = TextTertiary,
+                                fontSize = 16.sp
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            cursorColor = OrangePrimary
                         )
-                    }, colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        cursorColor = OrangePrimary
                     )
-                )
 
-                Text(
-                    text = "${uiState.noteContent.length} / 300",
-                    color = if (uiState.noteContent.length >= 300) OrangePrimary else TextTertiary,
-                    fontSize = 12.sp,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(bottom = 8.dp, end = 8.dp)
-                )
-
-                val isImageAdded = !uiState.selectedImageUri.isNullOrBlank()
-
-                // 사진 추가 버튼 (기능은 나중에)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(bottom = 8.dp)
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(16.dp)) // 클릭 영역 제한
-                        .border(1.dp, TextTertiary, RoundedCornerShape(16.dp))
-                        .clickable { galleryLauncher.launch("image/*") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isImageAdded) {
-                        JoopJoopImage(
-                            model = uiState.selectedImageUri, // 뷰모델의 상태값 (Uri 또는 URL)
-                            contentDescription = "선택된 이미지",
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        // 이미지 삭제 버튼
+                    // 하단 영역 (사진 버튼과 글자 수 카운트를 가로로 배치)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp), // 입력창과의 간격
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        // 사진 추가 버튼 영역
+                        val isImageAdded = !uiState.selectedImageUri.isNullOrBlank()
                         Box(
                             modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(4.dp)
-                                .size(20.dp)
-                                .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                                .clickable { viewModel.onImageRemoved() }, // 이미지 제거 로직
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .border(1.dp, TextTertiary, RoundedCornerShape(16.dp))
+                                .clickable { galleryLauncher.launch("image/*") },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.outline_delete_24),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(12.dp)
-                            )
+                            if (isImageAdded) {
+                                JoopJoopImage(
+                                    model = uiState.selectedImageUri,
+                                    contentDescription = "선택된 이미지",
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                // 이미지 삭제 버튼
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(20.dp)
+                                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                                        .clickable { viewModel.onImageRemoved() },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.outline_delete_24),
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+                            } else {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_camera),
+                                        contentDescription = null,
+                                        tint = TextTertiary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.add_photo),
+                                        color = TextTertiary,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+                            if (uiState.isImageUploading) {
+                                ImageUploadIndicator(modifier = Modifier.fillMaxSize())
+                            }
                         }
-                    } else {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_camera),
-                                contentDescription = null,
-                                tint = TextTertiary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.add_photo),
-                                color = TextTertiary,
-                                fontSize = 10.sp
-                            )
-                        }
-                    }
-                    if (uiState.isImageUploading) {
-                        ImageUploadIndicator(modifier = Modifier.fillMaxSize())
+
+                        // 글자 수 표시 (오른쪽 하단 고정)
+                        Text(
+                            text = "${uiState.noteContent.length} / 300",
+                            color = if (uiState.noteContent.length >= 300) OrangePrimary else TextTertiary,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(bottom = 4.dp, end = 4.dp)
+                        )
                     }
                 }
             }
