@@ -32,5 +32,6 @@ data class NoteLocation(
     val latitude: Double = 0.0,    // 위도
     val longitude: Double = 0.0,   // 경도
     val address: String = "",      // 쪽지 위치 주소
-    val distance: String = ""      // 쪽지 거리 - 해당 쪽지와 사용자의 거리 표시 데이터 ("0m")
+    val distance: String = "",      // 쪽지 거리 - 해당 쪽지와 사용자의 거리 표시 데이터 ("0m")
+    val rawDistance: Float = 0f // 쪽지탐색 효율성을 위해 사용 (다른 작업에 지장없음)
 )

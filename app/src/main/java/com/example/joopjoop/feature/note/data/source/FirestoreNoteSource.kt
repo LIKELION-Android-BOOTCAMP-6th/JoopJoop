@@ -1,7 +1,7 @@
 package com.example.joopjoop.feature.note.data.source
 
 import android.util.Log
-import com.example.joopjoop.core.common.util.LocationUtil.getGeohash
+import com.example.joopjoop.core.common.policy.DistancePolicy
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
@@ -14,7 +14,9 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.util.Date
 
 
@@ -114,10 +116,10 @@ class FirestoreNoteSource(
     suspend fun getNotesByLocation(
         lat: Double,
         lng: Double
-    ): List<Note> {
+    ): List<Note> = withContext(Dispatchers.IO) { // 데이터 가공 및 중복 제거를 IO 스레드에서 수행
         // 1. 컴파일 에러 해결: GeoLocation 객체를 명확히 생성
         val centerLoc = GeoLocation(lat, lng)
-        val radiusInMeters = 2500.0 // 반지름 2.5km (DistancePolicy 반영)
+        val radiusInMeters = DistancePolicy.SEARCH_RADIUS_METERS.toDouble() // Policy 파일을 적용
 
         // 2. 9개 격자 범위 계산
         val bounds =
@@ -136,7 +138,8 @@ class FirestoreNoteSource(
             Tasks.whenAllSuccess<QuerySnapshot>(tasks).await()
         val currentTime = System.currentTimeMillis()
 
-        return snapshots.flatMap { snapshot ->
+        // 데이터 가공
+        snapshots.flatMap { snapshot ->
             snapshot.documents.mapNotNull { doc ->
                 val note = mapDocumentToNote(doc) ?: return@mapNotNull null // 맵핑
                 if (note.expiresAt.time <= currentTime) return@mapNotNull null // 쿼리에서 못 거른 시간 만료만 체크
@@ -309,6 +312,7 @@ class FirestoreNoteSource(
             null
         }
     }
+
     // 1. 조회수만 올리는 전용 함수 생성 (인터페이스에 없어도 내부용으로 사용 가능)
     suspend fun incrementViewCount(noteId: String) {
         db.collection(collectionPath).document(noteId)

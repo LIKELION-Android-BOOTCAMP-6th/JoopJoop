@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -34,10 +33,9 @@ import com.example.joopjoop.core.common.policy.DistancePolicy
 import com.example.joopjoop.core.common.util.LocationUtil
 import com.example.joopjoop.core.common.util.PermissionManager
 import com.example.joopjoop.core.designsystem.components.JoopJoopDialog
-import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.feature.map.ui.components.CurrentLocationButton
 import com.example.joopjoop.feature.map.ui.components.NearbyNoteCard
-import com.example.joopjoop.feature.map.ui.components.NoteMarker
+import com.example.joopjoop.feature.map.ui.components.NoteMarkers
 import com.example.joopjoop.feature.map.ui.components.SearchNoteButton
 import com.example.joopjoop.feature.map.viewmodel.MapViewModel
 import com.example.joopjoop.ui.theme.BgElevated
@@ -182,7 +180,7 @@ fun MapScreen(
                 )
             }
 
-            // [핵심 해결 4] 마커는 여기서 딱 한 번만 호출 (중복 제거)
+            // 마커는 여기서 딱 한 번만 호출
             NoteMarkers(
                 pickableNotes = uiState.pickableNotes,
                 distantNotes = uiState.distantNotes,
@@ -325,30 +323,6 @@ private fun MapRangeCircles(
     }
 }
 
-
-// 쪽지 마커들을 상태에 따라 렌더링
-@Composable
-private fun NoteMarkers(
-    pickableNotes: List<Note>,
-    distantNotes: List<Note>,
-    onNoteClick: (String) -> Unit
-) {
-    pickableNotes.forEach { note ->
-        key(note.id) {
-            NoteMarker(note = note, isPickable = true, onClick = { onNoteClick(note.id) })
-        }
-    }
-    distantNotes.forEach { note ->
-        key(note.id) {
-            NoteMarker(
-                note = note,
-                isPickable = false,
-                onClick = { /*TODO 거리가 멀면 클릭 안되게 하거나 안내 메시지 */ })
-        }
-    }
-}
-
-
 // 실제 Firestore 쿼리 범위를 로그로 출력하는 역할
 private fun GeohashDebugLogger(userLocation: LatLng?) {
     userLocation?.let { userPos ->
@@ -356,11 +330,11 @@ private fun GeohashDebugLogger(userLocation: LatLng?) {
         val centerLoc = com.firebase.geofire.GeoLocation(userPos.latitude, userPos.longitude)
         val queryBounds = com.firebase.geofire.GeoFireUtils.getGeoHashQueryBounds(centerLoc, radius)
 
-        android.util.Log.d("GeohashDebug", "-----------------------------------")
-        android.util.Log.d("GeohashDebug", "실제 쿼리 격자 개수: ${queryBounds.size}")
+        Log.d("GeohashDebug", "-----------------------------------")
+        Log.d("GeohashDebug", "실제 쿼리 격자 개수: ${queryBounds.size}")
         queryBounds.forEachIndexed { index, bound ->
-            android.util.Log.d("GeohashDebug", "격자 [$index]: ${bound.startHash} ~ ${bound.endHash}")
+            Log.d("GeohashDebug", "격자 [$index]: ${bound.startHash} ~ ${bound.endHash}")
         }
-        android.util.Log.d("GeohashDebug", "-----------------------------------")
+        Log.d("GeohashDebug", "-----------------------------------")
     }
 }

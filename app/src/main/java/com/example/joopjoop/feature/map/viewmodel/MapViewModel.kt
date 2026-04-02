@@ -11,10 +11,12 @@ import com.example.joopjoop.core.repository.NoteRepository
 import com.example.joopjoop.data.location.LocationProvider
 import com.example.joopjoop.feature.map.ui.MapUiState
 import com.google.android.gms.maps.model.LatLng
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MapViewModel(
     private val noteRepository: NoteRepository,
@@ -71,78 +73,64 @@ class MapViewModel(
             val myUid = authRepository.getCurrentUid() ?: ""
 
             try {
-                // [2] Firestore에서 '근처 후보 쪽지' 조회 (Geohash 기반, 대략적인 범위)
+                // [1] Firestore에서 '근처 후보 쪽지' 조회 (Geohash 기반, 대략적인 범위)
                 val notes = noteRepository.getNotesByLocation(
                     center.latitude,
                     center.longitude,
                     myUid
                 )
-                // [3] 현재 사용자 위치 가져오기 (거리 계산 기준점)
+                // [2] 현재 사용자 위치 가져오기 (거리 계산 기준점)
                 val userLocation = _uiState.value.currentUserLocation ?: return@launch
 
-                // [4] 결과를 담을 리스트 (UI에서 바로 사용할 데이터)
-                val pickable = mutableListOf<Note>()
-                val distant = mutableListOf<Note>()
+                // [3] Coroutine 적용
+                val (sortedPickable, sortedDistant) = withContext(Dispatchers.Default) {
+                    // [4] 결과를 담을 리스트 (UI에서 바로 사용할 데이터)
+                    val pickable = mutableListOf<Note>()
+                    val distant = mutableListOf<Note>()
 
-                notes.forEach { note ->
-                    // 1. 내 쪽지 여부 먼저 확인 (가장 강력한 권한)
-                    val isMyNote = myUid.isNotEmpty() && note.authorId == myUid
+                    notes.forEach { note ->
+                        // 0. 내 쪽지 여부 먼저 확인
+                        val isMyNote = myUid.isNotEmpty() && note.authorId == myUid
+                        val noteLatLng = LatLng(note.location.latitude, note.location.longitude)
 
-                    // 2. 거리 계산 (탐색 기준: 지도 중심)
-                    val distanceToCenter = LocationUtil.calculateDistance(
-                        center.latitude, center.longitude,
-                        note.location.latitude, note.location.longitude
-                    )
+                        // 1. 중심 거리를 여기서 계산
+                        val distanceToCenter = LocationUtil.calculateDistance(
+                            center.latitude, center.longitude,
+                            noteLatLng.latitude, noteLatLng.longitude
+                        )
+                        if (!DistancePolicy.isWithinSearchRange(distanceToCenter)) return@forEach
 
-                    // 정책(5km)을 벗어나면 다음 쪽지로 넘어감
-                    if (!DistancePolicy.isWithinSearchRange(distanceToCenter)) return@forEach
+                        // 2. 사용자와의 거리를 여기서 계산
+                        val distanceToUser = LocationUtil.calculateDistance(
+                            userLocation.latitude, userLocation.longitude,
+                            noteLatLng.latitude, noteLatLng.longitude
+                        )
 
-                    // 3. 거리 계산 (열람 기준: 내 실제 위치)
-                    val distanceToUser = LocationUtil.calculateDistance(
-                        userLocation.latitude, userLocation.longitude,
-                        note.location.latitude, note.location.longitude
-                    )
+                        // 3. 이미 계산된 distanceToUser를 재활용하여 텍스트 변환
+                        val updatedNote = note.copy(
+                            location = note.location.copy(
+                                distance = LocationUtil.formatDistanceText(distanceToUser), // 계산된 값만 전달
+                                rawDistance = distanceToUser
+                            )
+                        )
 
-                    // 4. UI용 거리 텍스트 생성
-                    val distanceText = LocationUtil.getDistanceText(
-                        userLocation.latitude, userLocation.longitude,
-                        note.location.latitude, note.location.longitude
-                    )
-
-                    val updatedNote = note.copy(
-                        location = note.location.copy(distance = distanceText)
-                    )
-
-                    // 열람 조건: 내 쪽지라면 거리 계산 무시하고 무조건 true!
-                    val isPickable =
-                        isMyNote || DistancePolicy.isWithinPickableRange(distanceToUser)
-
-                    if (isPickable) {
-                        pickable.add(updatedNote)
-                    } else {
-                        distant.add(updatedNote)
+                        if (DistancePolicy.isPickable(isMyNote, distanceToUser)) {
+                            pickable.add(updatedNote)
+                        } else {
+                            distant.add(updatedNote)
+                        }
                     }
-                }
-                // 사용자 거리순 정렬
-                val sortedPickable = pickable.sortedBy {
-                    LocationUtil.calculateDistance(
-                        userLocation.latitude,
-                        userLocation.longitude,
-                        it.location.latitude,
-                        it.location.longitude
-                    )
-                }
 
-                val sortedDistant = distant.sortedBy {
-                    LocationUtil.calculateDistance(
-                        userLocation.latitude,
-                        userLocation.longitude,
-                        it.location.latitude,
-                        it.location.longitude
-                    )
-                }
+                    // 정렬 시 다시 계산하지 않고 rawDistance 필드 사용
+                    val sPickable = pickable.sortedBy { it.location.rawDistance }
+                    val sDistant = distant.sortedBy { it.location.rawDistance }
 
-                // 최종 결과를 UI 상태에 반영
+                    // 코루틴이 Pair로 받기 때문에
+                    // (sortedPickable, sortedDistant) = withContext(Dispatchers.Default)
+                    sPickable to sDistant
+                }
+                // -----------------------------------------------------------------------
+
                 _uiState.update {
                     it.copy(
                         pickableNotes = sortedPickable,
@@ -153,7 +141,6 @@ class MapViewModel(
                 }
 
             } catch (e: Exception) {
-                // [예외 처리] 네트워크/DB 오류 발생 시 에러 메시지 표시
                 _uiState.update {
                     it.copy(
                         isLoading = false,
