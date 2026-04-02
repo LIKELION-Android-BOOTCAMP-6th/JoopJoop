@@ -176,11 +176,34 @@ class SettingViewModel(
             }
         }
     }
+    // [추가] 회원 탈퇴 실행
+    fun withdraw() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                authRepository.withdraw() // [추가] 레포지토리 탈퇴 호출
+                Log.d("SettingViewModel", "회원 탈퇴 성공")
+
+                _settingEvent.emit(SettingEvent.WithdrawSuccess) // [추가]성공 이벤트 전달
+
+            } catch (e: Exception) {
+                Log.e("SettingViewModel", "회원 탈퇴 에러: ${e.message}")
+
+                _settingEvent.emit(
+                    SettingEvent.Error(e.message ?: "회원 탈퇴 중 오류 발생")
+                )
+
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 }
 
 // 설정 화면에서 발생하는 이벤트 정의
 sealed class SettingEvent {
     object LogoutSuccess : SettingEvent()
+    object WithdrawSuccess : SettingEvent() // [추가] 회원 탈퇴 성공 이벤트
     object UpdateSuccess : SettingEvent()
     data class Error(val message: String) : SettingEvent()
 }

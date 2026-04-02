@@ -72,4 +72,10 @@ class FirestoreUserSource(
             throw e
         }
     }
+    // [추가] Firestore의 사용자 문서 상태 false로 변경
+    suspend fun deactivateUser(uid: String) {
+        userCollection.document(uid)
+            .update("isActive", false)
+            .await()
+    }
 }

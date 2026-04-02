@@ -453,4 +453,15 @@ class FirestoreNoteSource(
             0
         }
     }
+    // [추가] 회원 탈퇴 시 작성한 노트 전체 비활성화
+    suspend fun deactivateUserNotes(uid: String) {
+        val snapshot = db.collection(collectionPath)
+            .whereEqualTo("authorId", uid) // Note 모델 기준 작성자 필드
+            .get()
+            .await()
+
+        for (doc in snapshot.documents) {
+            doc.reference.update("isActive", false).await()
+        }
+    }
 }

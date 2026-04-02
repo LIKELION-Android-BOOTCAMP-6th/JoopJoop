@@ -115,6 +115,10 @@ fun SettingRoute(
                     onNavigateToLogin()
                 }
 
+                is SettingEvent.WithdrawSuccess -> { //회원 탈퇴 성공 이벤트 처리
+                    Toast.makeText(context, "회원 탈퇴가 완료되었습니다.", Toast.LENGTH_SHORT).show()
+                    onNavigateToLogin()
+                }
                 is SettingEvent.UpdateSuccess -> {
                     // 성공 토스트 알림
                     Toast.makeText(context, "프로필이 변경되었습니다.", Toast.LENGTH_SHORT).show()
@@ -147,11 +151,9 @@ fun SettingRoute(
         onDeleteProfileClick = { viewModel.deleteProfileImage() },
         onLogoutClick = { viewModel.logout() },
 
-        // [추가] 회원 탈퇴 실제 로직 연결 자리
-        // 아직 탈퇴 API/함수가 없으면 일단 비워두고,
-        // 나중에 viewModel.withdraw() 같은 걸 연결하면 된다.
+       //뷰모델 연결
         onWithdrawalClick = {
-            // TODO: 회원 탈퇴 API 연결
+            viewModel.withdraw()
         }
     )
 }
