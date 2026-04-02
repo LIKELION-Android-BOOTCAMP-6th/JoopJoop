@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -114,6 +115,7 @@ fun WriteNoteScreen(
     Scaffold(
         modifier = modifier
             .fillMaxSize()
+            .statusBarsPadding() // 상태바 겹치지 않게
             .pointerInput(Unit) { // 2. 터치 이벤트 감지 추가
                 detectTapGestures(onTap = {
                     focusManager.clearFocus() // 배경 터치 시 키보드 내림

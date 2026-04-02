@@ -115,7 +115,7 @@ fun RootNavHost() {
 
     Scaffold(
         containerColor = BgDarkest,
-        contentWindowInsets = WindowInsets.systemBars
+        contentWindowInsets = WindowInsets(0)
     ) { _ ->
 
         Box( // 번쩍임을 없애기 위해 검은 배경을 깔아둠
