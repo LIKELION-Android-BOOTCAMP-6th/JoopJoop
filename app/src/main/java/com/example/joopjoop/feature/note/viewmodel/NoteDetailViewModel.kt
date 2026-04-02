@@ -40,8 +40,11 @@ class NoteDetailViewModel(
 
     // 특정 쪽지의 상세 데이터를 가져옴
     fun loadNoteDetail(noteId: String, forceRefresh: Boolean = false) {
-        // noteId가 비어있는지 확인 로그를 찍어보세요!
+        // noteId가 비어있는지 확인 로그
         Log.d("NoteDetail", "전달받은 noteId: '$noteId'")
+
+        if (_uiState.value.isLoading) return
+
 
         if (!forceRefresh) {
             if (_uiState.value.isLoading || _uiState.value.contentText.isNotEmpty()) {
@@ -55,9 +58,10 @@ class NoteDetailViewModel(
                 // 로딩 시작
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
+                repository.incrementViewCount(noteId)
+
                 // 조회수 반영된 최신 데이터 가져오기
                 val noteData = repository.getNoteDetail(noteId)
-
                 // 좋아요 상태 로드
                 val isLiked = currentUserId?.let { repository.checkLikeExists(noteId, it) } ?: false
 
@@ -186,6 +190,7 @@ class NoteDetailViewModel(
 
     // 삭제 버튼 클릭 처리
     fun deleteNote(noteId: String, onSuccess: () -> Unit) {
+        val myId = currentUserId ?: return
         viewModelScope.launch {
             try {
                 val isSuccess = repository.deleteNote(noteId)

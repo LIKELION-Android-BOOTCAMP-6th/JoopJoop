@@ -1,6 +1,7 @@
 package com.example.joopjoop.feature.note.data.source
 
 import android.util.Log
+import com.example.joopjoop.core.common.util.LocationUtil.getGeohash
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.core.model.NoteLocation
 import com.example.joopjoop.core.model.Scrap
@@ -112,8 +113,7 @@ class FirestoreNoteSource(
     // 사용자 위치 중심으로 주변 쪽지 쿼리 ( 내 쪽지 포함 )
     suspend fun getNotesByLocation(
         lat: Double,
-        lng: Double,
-        myUid: String
+        lng: Double
     ): List<Note> {
         // 1. 컴파일 에러 해결: GeoLocation 객체를 명확히 생성
         val centerLoc = GeoLocation(lat, lng)
@@ -150,7 +150,7 @@ class FirestoreNoteSource(
         val docRef = db.collection(collectionPath).document(noteId)
 
         // 조회 요청 - 조회수 +1
-        docRef.update("viewCount", FieldValue.increment(1)).await()
+//        docRef.update("viewCount", FieldValue.increment(1)).await()
 
         val doc = docRef.get().await()
         // 문서 데이터 전체를 Map으로 가져옵니다.
@@ -267,7 +267,6 @@ class FirestoreNoteSource(
         }
     }
 
-    // FirestoreNoteSource.kt 클래스 내부 하단에 추가
     private fun mapDocumentToNote(doc: com.google.firebase.firestore.DocumentSnapshot): Note? {
         return try {
             val data = doc.data ?: return null
@@ -310,11 +309,10 @@ class FirestoreNoteSource(
             null
         }
     }
-
-    // 조회수 증가
+    // 1. 조회수만 올리는 전용 함수 생성 (인터페이스에 없어도 내부용으로 사용 가능)
     suspend fun incrementViewCount(noteId: String) {
-        val docRef = db.collection(collectionPath).document(noteId)
-        docRef.update("viewCount", FieldValue.increment(1)).await()
+        db.collection(collectionPath).document(noteId)
+            .update("viewCount", FieldValue.increment(1)).await()
     }
 
     // 좋아요 증가

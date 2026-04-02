@@ -54,7 +54,7 @@ class NoteRepositoryImpl(
         lng: Double,
         myUid: String
     ): List<Note> {
-        return source.getNotesByLocation(lat, lng, myUid)
+        return source.getNotesByLocation(lat, lng)
     }
 
     // 쪽지 상세 데이터 가져오기
@@ -66,7 +66,6 @@ class NoteRepositoryImpl(
     override suspend fun createNote(request: Note) {
         source.createNote(request)
     }
-
     // 조회수 증가
     override suspend fun incrementViewCount(noteId: String) {
         source.incrementViewCount(noteId)
@@ -118,5 +117,4 @@ class NoteRepositoryImpl(
         source.submitEditedNote(noteId, updatedNote)
     }
 }
-
 
