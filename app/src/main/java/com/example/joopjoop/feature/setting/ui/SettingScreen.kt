@@ -152,8 +152,8 @@ fun SettingRoute(
         onLogoutClick = { viewModel.logout() },
 
        //뷰모델 연결
-        onWithdrawalClick = {
-            viewModel.withdraw()
+        onWithdrawalClick = { password ->
+            viewModel.withdraw(password)
         }
     )
 }
@@ -171,7 +171,7 @@ fun SettingScreen(
     onProfileEditClick: () -> Unit = {},
     onDeleteProfileClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
-    onWithdrawalClick: () -> Unit = {} // [추가] 회원 탈퇴 전용 콜백 분리
+    onWithdrawalClick: (String) -> Unit = {} // [추가] 회원 탈퇴 전용 콜백 분리
 ) {
     val context = LocalContext.current
 
@@ -180,6 +180,7 @@ fun SettingScreen(
     var showImageDialog by remember { mutableStateOf(false) }
     var newNickname by remember { mutableStateOf(user?.nickname ?: "") }
     var showWithdrawalDialog by remember { mutableStateOf(false) }   // 회원 탈퇴 다이얼로그
+    var withdrawalPassword by remember { mutableStateOf("") }
 
     // 프로필 이미지 관리 다이얼로그 추가
     if (showImageDialog) {
@@ -467,12 +468,32 @@ fun SettingScreen(
                 )
             },
             text = {
-                Text(
-                    text = "정말 회원 탈퇴하시겠습니까?\n작성하신 모든 정보가 삭제되며 복구할 수 없습니다.",
-                    color = TextSecondary,
-                    fontSize = 16.sp,
-                    lineHeight = 22.sp
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "정말 회원 탈퇴하시겠습니까?\n작성하신 모든 정보가 삭제되며 복구할 수 없습니다.",
+                        color = TextSecondary,
+                        fontSize = 16.sp,
+                        lineHeight = 22.sp
+                    )
+
+                    TextField(
+                        value = withdrawalPassword,
+                        onValueChange = { withdrawalPassword = it },
+                        placeholder = { Text("비밀번호 입력") },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = BgSurface,
+                            unfocusedContainerColor = BgSurface,
+                            disabledContainerColor = BgSurface,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedPlaceholderColor = TextTertiary,
+                            unfocusedPlaceholderColor = TextTertiary,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        )
+                    )
+                }
             },
             confirmButton = {
                 Row(
@@ -487,6 +508,7 @@ fun SettingScreen(
                             .background(OrangePrimary)
                             .clickable {
                                 showWithdrawalDialog = false
+                                withdrawalPassword = ""
                             }
                             .padding(horizontal = 20.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center
@@ -507,8 +529,9 @@ fun SettingScreen(
                             .clip(RoundedCornerShape(10.dp))
                             .background(BgElevated)
                             .clickable {
+                                onWithdrawalClick(withdrawalPassword)
+                                withdrawalPassword = ""
                                 showWithdrawalDialog = false
-                                onWithdrawalClick() // 기존 로직 유지
                             }
                             .padding(horizontal = 20.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center

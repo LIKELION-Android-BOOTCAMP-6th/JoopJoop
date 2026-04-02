@@ -1,6 +1,7 @@
 package com.example.joopjoop.feature.auth.data.source
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.tasks.await
 
@@ -47,8 +48,13 @@ class FirebaseAuthSource {
         auth.signOut()
     }
 
-suspend fun deleteUser() {
-    val currentUser = auth.currentUser ?: throw Exception("로그인된 사용자가 없습니다.")
-    currentUser.delete().await()
-}
+    // 보안 민감 작업인 계정 삭제 전, 비밀번호 재인증을 수행
+    suspend fun reauthenticateAndDeleteUser(password: String) {
+        val currentUser = auth.currentUser ?: throw Exception("로그인된 사용자가 없습니다.")
+        val email = currentUser.email ?: throw Exception("이메일 정보를 찾을 수 없습니다.")
+        val credential = EmailAuthProvider.getCredential(email, password)
+
+        currentUser.reauthenticate(credential).await()
+        currentUser.delete().await()
+    }
 }

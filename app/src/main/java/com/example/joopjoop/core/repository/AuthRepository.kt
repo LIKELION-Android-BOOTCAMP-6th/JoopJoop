@@ -63,7 +63,7 @@ interface AuthRepository {
 
     //로그아웃
     suspend fun logout(): AuthResult<Unit>
-    //회원탈퇴
-    suspend fun withdraw(): AuthResult<Unit>//
+    //회원탈퇴 (재인증용 비밀번호 필요)
+    suspend fun withdraw(password: String): AuthResult<Unit>
 
 }

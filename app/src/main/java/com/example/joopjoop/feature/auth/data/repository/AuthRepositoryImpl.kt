@@ -191,14 +191,18 @@ class AuthRepositoryImpl(
         }
     }
     // [추가] 회원 탈퇴
-    override suspend fun withdraw(): AuthResult<Unit> {
+    override suspend fun withdraw(password: String): AuthResult<Unit> {
         return try {
             val uid = authSource.getCurrentUserId()
                 ?: throw Exception("로그인 정보 없음")
 
+            // 1) Firebase Auth 계정을 재인증 후 실제 삭제
+            authSource.reauthenticateAndDeleteUser(password)
+
+            // 2) Auth 삭제 성공 후 앱 데이터 정리
             userSource.deactivateUser(uid)
             noteSource.deactivateUserNotes(uid)
-            noteSource.deleteUserInteractions(uid)    // [추가] likes / scraps 삭제            authSource.deleteUser()
+            noteSource.deleteUserInteractions(uid)    // [추가] likes / scraps 삭제
 
             _currentUser.value = null
 

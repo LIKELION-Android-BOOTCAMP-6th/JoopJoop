@@ -177,14 +177,33 @@ class SettingViewModel(
         }
     }
     // [추가] 회원 탈퇴 실행
-    fun withdraw() {
+    fun withdraw(password: String) {
+        if (_isLoading.value) return
+        if (password.isBlank()) {
+            viewModelScope.launch {
+                _settingEvent.emit(SettingEvent.Error("비밀번호를 입력해 주세요."))
+            }
+            return
+        }
+
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                authRepository.withdraw() // [추가] 레포지토리 탈퇴 호출
-                Log.d("SettingViewModel", "회원 탈퇴 성공")
+                when (val result = authRepository.withdraw(password)) {
+                    is AuthResult.Success -> {
+                        Log.d("SettingViewModel", "회원 탈퇴 성공")
+                        _settingEvent.emit(SettingEvent.WithdrawSuccess)
+                    }
 
-                _settingEvent.emit(SettingEvent.WithdrawSuccess) // [추가]성공 이벤트 전달
+                    is AuthResult.Failure -> {
+                        Log.e("SettingViewModel", "회원 탈퇴 실패: ${result.exception.message}")
+                        _settingEvent.emit(
+                            SettingEvent.Error(result.exception.message ?: "회원 탈퇴 중 오류 발생")
+                        )
+                    }
+
+                    AuthResult.Loading -> Unit
+                }
 
             } catch (e: Exception) {
                 Log.e("SettingViewModel", "회원 탈퇴 에러: ${e.message}")
