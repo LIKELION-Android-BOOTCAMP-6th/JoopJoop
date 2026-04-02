@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -23,6 +24,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -333,7 +336,9 @@ fun SettingScreen(
     }
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .statusBarsPadding(),
         containerColor = BgDarkest,
         topBar = {
             Box(
@@ -346,17 +351,21 @@ fun SettingScreen(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable { onBackClick() }
                         .padding(8.dp)
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = OrangePrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    // 뒤로가기 아이콘
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_back),
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
-
                 Text(
                     text = stringResource(R.string.setting_title),
                     color = TextPrimary,
@@ -591,7 +600,6 @@ fun SettingScreenPreview() {
             onCheckNickname = {},       // 빈 함수
             onNicknameChanged = {},     // 빈 함수
             onUpdateNickname = {},      // 빈 함수
-            onBackClick = {},
             onProfileEditClick = {},
             onLogoutClick = {},
             onWithdrawalClick = {} // [추가] 프리뷰용 빈 함수

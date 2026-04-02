@@ -94,4 +94,7 @@ dependencies {
 
     // WorkManager 라이브러리 추가 (CoroutineWorker 사용 가능)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // EXIF 메타데이터(이미지 방향 정보 등)를 읽기 위한 라이브러리
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
 }

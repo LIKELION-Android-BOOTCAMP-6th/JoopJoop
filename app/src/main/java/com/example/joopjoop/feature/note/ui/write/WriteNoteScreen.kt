@@ -3,6 +3,8 @@ package com.example.joopjoop.feature.note.ui.write
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -19,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -28,6 +31,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -35,6 +40,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +60,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.JoopJoopImage
+import com.example.joopjoop.core.common.util.OnSingleClickListener
 import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
@@ -105,6 +114,26 @@ fun WriteNoteScreen(
     val focusManager = LocalFocusManager.current
 
 
+    // --- 뒤로가기 로직 추가 ---
+    var backPressedTime by remember { mutableStateOf(0L) }
+
+    // 뒤로가기 동작을 처리하는 공통 함수
+    val handleBackNavigation = {
+        val currentTime = System.currentTimeMillis()
+        // 2초(2000ms) 이내에 다시 누르면 뒤로가기 실행
+        if (currentTime - backPressedTime < 2000) {
+            navController.popBackStack()
+        } else {
+            backPressedTime = currentTime
+            Toast.makeText(context, "내용이 저장되지 않고 메인화면으로 돌아갑니다", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 시스템 뒤로가기 버튼 처리 (하단 내비게이션 바/제스처)
+    BackHandler(enabled = true) {
+        handleBackNavigation()
+    }
+
     LaunchedEffect(uiState.isSubmitSuccess) {
         if (uiState.isSubmitSuccess) {
             navController.popBackStack()
@@ -114,6 +143,7 @@ fun WriteNoteScreen(
     Scaffold(
         modifier = modifier
             .fillMaxSize()
+            .statusBarsPadding() // 상태바 겹치지 않게
             .pointerInput(Unit) { // 2. 터치 이벤트 감지 추가
                 detectTapGestures(onTap = {
                     focusManager.clearFocus() // 배경 터치 시 키보드 내림
@@ -125,17 +155,19 @@ fun WriteNoteScreen(
                     .padding(vertical = 16.dp, horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .clip(RoundedCornerShape(12.dp))
-                        // 람다 대신 navController를 직접 사용하여 뒤로가기 실행
-                        .clickable { navController.popBackStack() }
-                        .padding(8.dp)) {
+                // 뒤로가기 아이콘
+                IconButton(
+                    onClick = {
+                        OnSingleClickListener.onclick {
+                            handleBackNavigation()
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
+                        painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "Back",
-                        tint = TextPrimary,
+                        tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -193,86 +225,98 @@ fun WriteNoteScreen(
                     .background(BgDark, RoundedCornerShape(24.dp))
                     .padding(20.dp)
             ) {
-                OutlinedTextField(
-                    value = uiState.noteContent, // state 사용
-                    onValueChange = { viewModel.onContentChange(it) }, // 뷰모델 콜백 사용
-                    modifier = Modifier.fillMaxSize(), placeholder = {
-                        Text(
-                            text = stringResource(R.string.note_placeholder),
-                            color = TextTertiary,
-                            fontSize = 16.sp
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // 텍스트 입력창 (남은 공간을 모두 차지하도록 weight 사용)
+                    OutlinedTextField(
+                        value = uiState.noteContent,
+                        onValueChange = { viewModel.onContentChange(it) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f), // 이 설정이 하단 영역을 침범하지 않게 해줍니다.
+                        placeholder = {
+                            Text(
+                                text = stringResource(R.string.note_placeholder),
+                                color = TextTertiary,
+                                fontSize = 16.sp
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Transparent,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            cursorColor = OrangePrimary
                         )
-                    }, colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        cursorColor = OrangePrimary
                     )
-                )
 
-                Text(
-                    text = "${uiState.noteContent.length} / 300",
-                    color = if (uiState.noteContent.length >= 300) OrangePrimary else TextTertiary,
-                    fontSize = 12.sp,
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(bottom = 8.dp, end = 8.dp)
-                )
-
-                val isImageAdded = !uiState.selectedImageUri.isNullOrBlank()
-
-                // 사진 추가 버튼 (기능은 나중에)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(bottom = 8.dp)
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(16.dp)) // 클릭 영역 제한
-                        .border(1.dp, TextTertiary, RoundedCornerShape(16.dp))
-                        .clickable { galleryLauncher.launch("image/*") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isImageAdded) {
-                        JoopJoopImage(
-                            model = uiState.selectedImageUri, // 뷰모델의 상태값 (Uri 또는 URL)
-                            contentDescription = "선택된 이미지",
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        // 이미지 삭제 버튼
+                    // 하단 영역 (사진 버튼과 글자 수 카운트를 가로로 배치)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp), // 입력창과의 간격
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        // 사진 추가 버튼 영역
+                        val isImageAdded = !uiState.selectedImageUri.isNullOrBlank()
                         Box(
                             modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(4.dp)
-                                .size(20.dp)
-                                .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                                .clickable { viewModel.onImageRemoved() }, // 이미지 제거 로직
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .border(1.dp, TextTertiary, RoundedCornerShape(16.dp))
+                                .clickable { galleryLauncher.launch("image/*") },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.outline_delete_24),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(12.dp)
-                            )
+                            if (isImageAdded) {
+                                JoopJoopImage(
+                                    model = uiState.selectedImageUri,
+                                    contentDescription = "선택된 이미지",
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                // 이미지 삭제 버튼
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(20.dp)
+                                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                                        .clickable { viewModel.onImageRemoved() },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.outline_delete_24),
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+                            } else {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_camera),
+                                        contentDescription = null,
+                                        tint = TextTertiary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.add_photo),
+                                        color = TextTertiary,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+                            if (uiState.isImageUploading) {
+                                ImageUploadIndicator(modifier = Modifier.fillMaxSize())
+                            }
                         }
-                    } else {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_camera),
-                                contentDescription = null,
-                                tint = TextTertiary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.add_photo),
-                                color = TextTertiary,
-                                fontSize = 10.sp
-                            )
-                        }
-                    }
-                    if (uiState.isImageUploading) {
-                        ImageUploadIndicator(modifier = Modifier.fillMaxSize())
+
+                        // 글자 수 표시 (오른쪽 하단 고정)
+                        Text(
+                            text = "${uiState.noteContent.length} / 300",
+                            color = if (uiState.noteContent.length >= 300) OrangePrimary else TextTertiary,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(bottom = 4.dp, end = 4.dp)
+                        )
                     }
                 }
             }

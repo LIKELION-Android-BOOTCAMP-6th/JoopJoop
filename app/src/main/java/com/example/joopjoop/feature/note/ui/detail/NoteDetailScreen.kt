@@ -88,15 +88,13 @@ fun NoteDetailScreen(
 
     JoopJoopTheme {
         Scaffold(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(), // 상태바 가리지 않게
             containerColor = BgDarkest,
             topBar = {
                 DetailTopBar(navController)
             },
-            // 바텀네비게이션바 삭제
-//            bottomBar = {
-//                DetailBottomBar(navController)
-//            }
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
                 when {
@@ -568,7 +566,6 @@ fun DetailTopBar(navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp)
-            .statusBarsPadding()
             .background(BgDarkest),
         verticalAlignment = Alignment.CenterVertically
     ) {

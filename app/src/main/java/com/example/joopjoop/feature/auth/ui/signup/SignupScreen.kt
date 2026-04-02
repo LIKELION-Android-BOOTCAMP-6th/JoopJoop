@@ -1,6 +1,5 @@
 package com.example.joopjoop.feature.auth.ui.signup
 
-import android.R.id.message
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,11 +12,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -68,7 +69,7 @@ fun SignupRoute(
     // 에러 토스트 처리 로직
     androidx.compose.runtime.LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { message ->
-            Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT)
+            Toast.makeText(context, message, Toast.LENGTH_SHORT)
                 .show()
             viewModel.consumeErrorEvent()
         }
@@ -80,6 +81,7 @@ fun SignupRoute(
             onSignupSuccess()
         }
     }
+
     SignupScreen(
         uiState = uiState,
         onNicknameInput = viewModel::onNicknameInput,
@@ -105,7 +107,9 @@ fun SignupScreen(
     onCreateAccountClick: () -> Unit = {},
 ) {
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .statusBarsPadding(),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Box(
@@ -114,12 +118,10 @@ fun SignupScreen(
                     .padding(vertical = 16.dp, horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable { onBackClick() }
-                        .padding(8.dp)
+                // 뒤로가기 아이콘
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
@@ -149,7 +151,7 @@ fun SignupScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(150.dp)
                     .clip(RoundedCornerShape(24.dp))
                     .background(
                         brush = Brush.verticalGradient(

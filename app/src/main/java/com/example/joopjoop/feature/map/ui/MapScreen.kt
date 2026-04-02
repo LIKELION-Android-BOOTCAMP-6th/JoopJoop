@@ -1,5 +1,6 @@
 package com.example.joopjoop.feature.map.ui
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -22,7 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -57,6 +61,22 @@ fun MapScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
+    val view = LocalView.current // 현재 뷰 가져오기
+
+    // --- [상태바 아이콘 색상 제어 로직 추가] ---
+    DisposableEffect(Unit) {
+        val window = (context as Activity).window
+        val insetsController = WindowCompat.getInsetsController(window, view)
+
+        // 1. 화면 진입 시: 상태바 아이콘을 검은색(Light 모드)으로 변경
+        insetsController.isAppearanceLightStatusBars = true
+
+        onDispose {
+            // 2. 화면 이탈 시: 다시 흰색(Dark 모드)으로 복구
+            insetsController.isAppearanceLightStatusBars = false
+        }
+    }
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // 1. 권한 요청 런처 (시스템 팝업용)
