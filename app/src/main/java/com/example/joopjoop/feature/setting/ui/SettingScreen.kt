@@ -83,11 +83,22 @@ fun SettingRoute(
         )
     )
 
+    // 로딩 상태
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    // 뒤로가기 제어
+    androidx.activity.compose.BackHandler(enabled = isLoading) {
+        Toast.makeText(context, "프로필 변경 중에는 나갈 수 없습니다.", Toast.LENGTH_SHORT).show()
+    }
+
+    // 사진을 선택하자마자 토스트 호출
     val galleryLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
     ) { uri: android.net.Uri? ->
         // 사용자가 사진을 선택하면 ViewModel의 함수 호출
-        uri?.let { viewModel.updateProfileImage(it) }
+        uri?.let {
+            Toast.makeText(context, "프로필 사진을 변경 중입니다. 잠시만 기다려주세요.", Toast.LENGTH_SHORT).show()
+            viewModel.updateProfileImage(it) }
     }
 
     // 상태 수집
@@ -117,11 +128,19 @@ fun SettingRoute(
     SettingScreen(
         user = currentUser,
         isNicknameAvailable = isNicknameAvailable,
+        isLoading = isLoading,
         onCheckNickname = { viewModel.checkNicknameAvailability(it) },
         onNicknameChanged = { viewModel.onNicknameChanged() },
         onUpdateNickname = { viewModel.updateNickname(it) },
         onProfileEditClick = { galleryLauncher.launch("image/*") },
-        onBackClick = onBackClick,
+        onBackClick = {
+            // 상단바 뒤로가기 클릭 시에도 체크 로직 추가
+            if (isLoading) {
+                Toast.makeText(context, "변경 완료 후 나갈 수 있습니다.", Toast.LENGTH_SHORT).show()
+            } else {
+                onBackClick()
+            }
+        },
         onDeleteProfileClick = { viewModel.deleteProfileImage() },
         onLogoutClick = { viewModel.logout() },
 
@@ -138,6 +157,7 @@ fun SettingRoute(
 fun SettingScreen(
     user: User?,
     isNicknameAvailable: Boolean?,
+    isLoading: Boolean,
     onCheckNickname: (String) -> Unit,
     onNicknameChanged: () -> Unit,
     onUpdateNickname: (String) -> Unit,
@@ -148,6 +168,8 @@ fun SettingScreen(
     onLogoutClick: () -> Unit = {},
     onWithdrawalClick: () -> Unit = {} // [추가] 회원 탈퇴 전용 콜백 분리
 ) {
+    val context = LocalContext.current
+
     var isNotificationEnabled by remember { mutableStateOf(true) }
     var showDialog by remember { mutableStateOf(false) }
     var showImageDialog by remember { mutableStateOf(false) }
@@ -360,7 +382,7 @@ fun SettingScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_back),
                             contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onBackground,
+                            tint = if (isLoading) Color.Gray else MaterialTheme.colorScheme.onBackground, // 로딩 중엔 색상 변경(선택)
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -425,7 +447,13 @@ fun SettingScreen(
                                 .size(36.dp)
                                 .background(OrangePrimary, CircleShape)
                                 .border(2.dp, BgDark, CircleShape)
-                                .clickable { showImageDialog = true }, // 바로 갤러리 안 가고 다이얼로그 띄우기
+                                .clickable {
+                                    if (!isLoading) {
+                                        showImageDialog = true
+                                    } else {
+                                        Toast.makeText(context, "이미 처리 중입니다.", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -585,23 +613,6 @@ fun SettingActionRow(
             contentDescription = null,
             tint = TextTertiary,
             modifier = Modifier.size(24.dp)
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SettingScreenPreview() {
-    JoopJoopTheme {
-        SettingScreen(
-            user = null,                // 테스트용 유저 데이터 (null 가능)
-            isNicknameAvailable = null, // 중복 확인 전 상태
-            onCheckNickname = {},       // 빈 함수
-            onNicknameChanged = {},     // 빈 함수
-            onUpdateNickname = {},      // 빈 함수
-            onProfileEditClick = {},
-            onLogoutClick = {},
-            onWithdrawalClick = {} // [추가] 프리뷰용 빈 함수
         )
     }
 }
