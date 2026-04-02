@@ -46,4 +46,9 @@ class FirebaseAuthSource {
     fun logout() {
         auth.signOut()
     }
+
+suspend fun deleteUser() {
+    val currentUser = auth.currentUser ?: throw Exception("로그인된 사용자가 없습니다.")
+    currentUser.delete().await()
+}
 }

@@ -17,6 +17,7 @@ import com.example.joopjoop.feature.mypage.viewmodel.MyPageViewModelFactory
 import com.example.joopjoop.feature.note.data.repository.NoteRepositoryImpl
 import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.example.joopjoop.feature.note.viewmodel.NoteViewModelFactory
+import com.google.firebase.storage.FirebaseStorage
 
 // 앱 전체의 의존성을 관리하는 중앙 컨테이너
 class AppContainer(context: Context) {
@@ -35,6 +36,9 @@ class AppContainer(context: Context) {
     // 인터페이스 타입으로 선언하여 외부(ViewModel)에서는 구현체를 몰라도 되게 함
     val authRepository: AuthRepository by lazy {
         AuthRepositoryImpl(firebaseAuthSource, firestoreUserSource, firestoreNoteSource)
+        AuthRepositoryImpl(firebaseAuthSource,
+            firestoreUserSource,
+            firestoreNoteSource)
     }
 
     // Note 리포지토리
