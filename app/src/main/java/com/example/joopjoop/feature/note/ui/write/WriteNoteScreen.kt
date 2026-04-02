@@ -431,15 +431,15 @@ fun WriteNoteScreen(
                     fontWeight = FontWeight.Bold
                 )
             }
-            if (uiState.isSubmitting) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.5f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = OrangePrimary)
-                }
+        }
+        if (uiState.isSubmitting) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = OrangePrimary)
             }
         }
     }
