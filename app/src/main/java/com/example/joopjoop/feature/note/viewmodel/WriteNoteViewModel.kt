@@ -280,6 +280,7 @@ class WriteNoteViewModel(
      */
     fun submitNote(context: Context, success: () -> Boolean) {
         val currentState = _uiState.value
+
         if (currentState.noteContent.isBlank() || currentState.isSubmitting) return
 
         _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
