@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,6 +62,8 @@ import com.example.joopjoop.feature.setting.viewmodel.SettingEvent
 import com.example.joopjoop.feature.setting.viewmodel.SettingViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
+import com.example.joopjoop.ui.theme.BgElevated
+import com.example.joopjoop.ui.theme.BgSurface
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextPrimary
@@ -198,7 +201,7 @@ fun SettingScreen(
     }
     // 닉네임 수정 팝업창
     if (showDialog) {
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = {
                 showDialog = false
                 onNicknameChanged()
@@ -207,53 +210,60 @@ fun SettingScreen(
                 Text(
                     text = "닉네임 수정",
                     color = TextPrimary,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             },
             text = {
-                Column {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // 1. 입력 영역 (TextField + 중복 확인 버튼)
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(BgSurface)
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         TextField(
                             value = newNickname,
                             onValueChange = {
                                 newNickname = it
-                                onNicknameChanged() // [기존 유지] 입력 시 중복 확인 상태 초기화
+                                onNicknameChanged()
                             },
-                            placeholder = { Text("새 닉네임 입력") },
+                            placeholder = { Text("새 닉네임 입력", color = TextTertiary) },
                             modifier = Modifier.weight(1f),
                             singleLine = true,
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
-                                focusedIndicatorColor = OrangePrimary
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextPrimary,
+                                cursorColor = OrangePrimary,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
                             )
                         )
 
-                        Spacer(modifier = Modifier.width(8.dp))
-
                         Button(
                             onClick = { onCheckNickname(newNickname) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = OrangePrimary
-                            ),
-                            shape = RoundedCornerShape(8.dp)
+                            colors = ButtonDefaults.buttonColors(containerColor = OrangePrimary),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                         ) {
-                            Text("확인", fontSize = 12.sp)
+                            Text("중복 확인", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
-                    // 💡 중복 확인 결과 메시지
+                    // 2. 중복 확인 결과 메시지
                     val message = when (isNicknameAvailable) {
                         true -> "사용 가능한 닉네임입니다."
                         false -> "이미 존재하는 닉네임입니다."
                         else -> ""
                     }
-
                     val messageColor =
-                        if (isNicknameAvailable == true) Color.Green else Color.Red
+                        if (isNicknameAvailable == true) Color.Green else Color(0xFFD32F2F)
 
                     if (message.isNotEmpty()) {
                         Text(
@@ -263,31 +273,156 @@ fun SettingScreen(
                             modifier = Modifier.padding(top = 8.dp, start = 4.dp)
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // 3. 하단 액션 버튼 (수평 버튼형 배치)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End, // 오른쪽 정렬
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 취소 버튼 (BgElevated 박스 형태)
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(BgElevated)
+                                .clickable {
+                                    showDialog = false
+                                    onNicknameChanged()
+                                }
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "취소",
+                                color = TextSecondary,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        // 변경하기 버튼 (OrangePrimary 박스 형태)
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isNicknameAvailable == true) OrangePrimary else BgElevated)
+                                .clickable(enabled = isNicknameAvailable == true) {
+                                    onUpdateNickname(newNickname)
+                                    showDialog = false
+                                }
+                                .padding(horizontal = 20.dp, vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "변경하기",
+                                color = if (isNicknameAvailable == true) TextPrimary else TextTertiary,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             },
-            confirmButton = {
-                Text(
-                    text = "변경",
-                    modifier = Modifier.clickable(enabled = isNicknameAvailable == true) {
-                        onUpdateNickname(newNickname)
-                        showDialog = false
-                    },
-                    color = if (isNicknameAvailable == true) OrangePrimary else Color.Gray,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            dismissButton = {
-                Text(
-                    text = "취소",
-                    modifier = Modifier.clickable {
-                        showDialog = false
-                    },
-                    color = TextSecondary
-                )
-            },
-            containerColor = BgDark
+            confirmButton = {},
+            dismissButton = {},
+            containerColor = BgDark,
+            shape = RoundedCornerShape(28.dp)
         )
     }
+//    if (showDialog) {
+//        androidx.compose.material3.AlertDialog(
+//            onDismissRequest = {
+//                showDialog = false
+//                onNicknameChanged()
+//            },
+//            title = {
+//                Text(
+//                    text = "닉네임 수정",
+//                    color = TextPrimary,
+//                    fontWeight = FontWeight.Bold
+//                )
+//            },
+//            text = {
+//                Column {
+//                    Row(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        TextField(
+//                            value = newNickname,
+//                            onValueChange = {
+//                                newNickname = it
+//                                onNicknameChanged() // [기존 유지] 입력 시 중복 확인 상태 초기화
+//                            },
+//                            placeholder = { Text("새 닉네임 입력") },
+//                            modifier = Modifier.weight(1f),
+//                            singleLine = true,
+//                            colors = TextFieldDefaults.colors(
+//                                focusedContainerColor = Color.Transparent,
+//                                unfocusedContainerColor = Color.Transparent,
+//                                focusedIndicatorColor = OrangePrimary
+//                            )
+//                        )
+//
+//                        Spacer(modifier = Modifier.width(8.dp))
+//
+//                        Button(
+//                            onClick = { onCheckNickname(newNickname) },
+//                            colors = ButtonDefaults.buttonColors(
+//                                containerColor = OrangePrimary
+//                            ),
+//                            shape = RoundedCornerShape(8.dp)
+//                        ) {
+//                            Text("확인", fontSize = 12.sp)
+//                        }
+//                    }
+//
+//                    // 💡 중복 확인 결과 메시지
+//                    val message = when (isNicknameAvailable) {
+//                        true -> "사용 가능한 닉네임입니다."
+//                        false -> "이미 존재하는 닉네임입니다."
+//                        else -> ""
+//                    }
+//
+//                    val messageColor =
+//                        if (isNicknameAvailable == true) Color.Green else Color.Red
+//
+//                    if (message.isNotEmpty()) {
+//                        Text(
+//                            text = message,
+//                            color = messageColor,
+//                            fontSize = 12.sp,
+//                            modifier = Modifier.padding(top = 8.dp, start = 4.dp)
+//                        )
+//                    }
+//                }
+//            },
+//            confirmButton = {
+//                Text(
+//                    text = "변경",
+//                    modifier = Modifier.clickable(enabled = isNicknameAvailable == true) {
+//                        onUpdateNickname(newNickname)
+//                        showDialog = false
+//                    },
+//                    color = if (isNicknameAvailable == true) OrangePrimary else Color.Gray,
+//                    fontWeight = FontWeight.Bold
+//                )
+//            },
+//            dismissButton = {
+//                Text(
+//                    text = "취소",
+//                    modifier = Modifier.clickable {
+//                        showDialog = false
+//                    },
+//                    color = TextSecondary
+//                )
+//            },
+//            containerColor = BgDark
+//        )
+//    }
 
     // -----------------------------
     // [추가] 회원 탈퇴 확인 다이얼로그
@@ -302,38 +437,114 @@ fun SettingScreen(
                 Text(
                     text = "회원 탈퇴",
                     color = TextPrimary,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             },
             text = {
                 Text(
-                    text = "정말 회원 탈퇴하시겠습니까?",
-                    color = TextSecondary
+                    text = "정말 회원 탈퇴하시겠습니까?\n작성하신 모든 정보가 삭제되며 복구할 수 없습니다.",
+                    color = TextSecondary,
+                    fontSize = 16.sp,
+                    lineHeight = 22.sp
                 )
             },
             confirmButton = {
-                Text(
-                    text = "탈퇴",
-                    modifier = Modifier.clickable {
-                        showWithdrawalDialog = false
-                        onWithdrawalClick() // [추가] 실제 탈퇴 로직 호출
-                    },
-                    color = Color(0xFFD32F2F),
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 취소 버튼 (실수 방지를 위해 강조색인 OrangePrimary 적용)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(OrangePrimary)
+                            .clickable {
+                                showWithdrawalDialog = false
+                            }
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "취소",
+                            color = TextPrimary,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // 탈퇴 버튼 (위험 알림을 위해 BgElevated 배경 + Red 텍스트)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(BgElevated)
+                            .clickable {
+                                showWithdrawalDialog = false
+                                onWithdrawalClick() // 기존 로직 유지
+                            }
+                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "탈퇴",
+                            color = Color(0xFFD32F2F), // 경고 의미의 레드
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
             },
-            dismissButton = {
-                Text(
-                    text = "취소",
-                    modifier = Modifier.clickable {
-                        showWithdrawalDialog = false
-                    },
-                    color = TextSecondary
-                )
-            },
-            containerColor = BgDark
+            dismissButton = {}, // 내부 Row로 통합
+            containerColor = BgDark,
+            shape = RoundedCornerShape(28.dp)
         )
     }
+
+//    if (showWithdrawalDialog) {
+//        AlertDialog(
+//            onDismissRequest = {
+//                showWithdrawalDialog = false
+//            },
+//            title = {
+//                Text(
+//                    text = "회원 탈퇴",
+//                    color = TextPrimary,
+//                    fontWeight = FontWeight.Bold
+//                )
+//            },
+//            text = {
+//                Text(
+//                    text = "정말 회원 탈퇴하시겠습니까?",
+//                    color = TextSecondary
+//                )
+//            },
+//            confirmButton = {
+//                Text(
+//                    text = "탈퇴",
+//                    modifier = Modifier.clickable {
+//                        showWithdrawalDialog = false
+//                        onWithdrawalClick() // [추가] 실제 탈퇴 로직 호출
+//                    },
+//                    color = Color(0xFFD32F2F),
+//                    fontWeight = FontWeight.Bold
+//                )
+//            },
+//            dismissButton = {
+//                Text(
+//                    text = "취소",
+//                    modifier = Modifier.clickable {
+//                        showWithdrawalDialog = false
+//                    },
+//                    color = TextSecondary
+//                )
+//            },
+//            containerColor = BgDark
+//        )
+//    }
 
     Scaffold(
         modifier = modifier
