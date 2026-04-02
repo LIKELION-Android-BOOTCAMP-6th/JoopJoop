@@ -35,7 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -135,9 +137,10 @@ fun NoteList(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "주변에 쪽지가 없어요 \n 처음으로 발자국을 남겨보세요",
+                        text = stringResource(R.string.empty_note_list),
                         color = TextTertiary,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
