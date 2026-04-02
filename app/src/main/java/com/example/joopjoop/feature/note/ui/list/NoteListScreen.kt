@@ -23,6 +23,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +44,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.JoopJoopImage
+import com.example.joopjoop.core.common.util.OnSingleClickListener
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.feature.map.viewmodel.MapViewModel
 import com.example.joopjoop.ui.theme.BgDark
@@ -182,14 +185,21 @@ fun ListTopBar(navController: NavController) {
             contentAlignment = Alignment.Center
         ) {
             // 뒤로가기 아이콘
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_arrow_back_ios_24),
-                contentDescription = null,
-                tint = TextPrimary,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .clickable { navController.popBackStack() }
-            )
+            IconButton(
+                onClick = {
+                    OnSingleClickListener.onclick {
+                        navController.popBackStack()
+                    }
+                },
+                modifier = Modifier.align(Alignment.CenterStart)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_back),
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             // 제목
             Text(
                 text = "주변 쪽지 목록",

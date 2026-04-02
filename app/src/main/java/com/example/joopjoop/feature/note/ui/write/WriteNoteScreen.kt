@@ -30,6 +30,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -57,6 +59,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.JoopJoopImage
+import com.example.joopjoop.core.common.util.OnSingleClickListener
 import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
@@ -129,6 +132,7 @@ fun WriteNoteScreen(
     BackHandler(enabled = true) {
         handleBackNavigation()
     }
+
     LaunchedEffect(uiState.isSubmitSuccess) {
         if (uiState.isSubmitSuccess) {
             navController.popBackStack()
@@ -149,17 +153,19 @@ fun WriteNoteScreen(
                     .padding(vertical = 16.dp, horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .clip(RoundedCornerShape(12.dp))
-                        // 람다 대신 navController를 직접 사용하여 뒤로가기 실행
-                        .clickable { handleBackNavigation() }
-                        .padding(8.dp)) {
+                // 뒤로가기 아이콘
+                IconButton(
+                    onClick = {
+                        OnSingleClickListener.onclick {
+                            handleBackNavigation()
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.baseline_arrow_back_24),
+                        painter = painterResource(id = R.drawable.ic_back),
                         contentDescription = "Back",
-                        tint = TextPrimary,
+                        tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(24.dp)
                     )
                 }
