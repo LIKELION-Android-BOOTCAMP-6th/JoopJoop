@@ -6,9 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -16,11 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -116,7 +111,7 @@ fun RootNavHost() {
     Scaffold(
         containerColor = BgDarkest,
         contentWindowInsets = WindowInsets(0)
-    ) { _ ->
+    ) { _ -> // 여기 언더바 에러시 무시하세요. 사용하지 않지만 필요합니다. 빌드 문제없음 - 원화
 
         Box( // 번쩍임을 없애기 위해 검은 배경을 깔아둠
             modifier = Modifier
@@ -420,20 +415,5 @@ fun MainNavHost(
                 }
             )
         }
-    }
-}
-
-// 테스트용 임시화면
-@Composable
-fun PlaceholderScreen(text: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            fontSize = 24.sp,
-            color = Color.Gray
-        )
     }
 }

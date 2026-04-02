@@ -68,7 +68,7 @@ fun SignupRoute(
     // 에러 토스트 처리 로직
     androidx.compose.runtime.LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { message ->
-            Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT)
+            Toast.makeText(context, message, Toast.LENGTH_SHORT)
                 .show()
             viewModel.consumeErrorEvent()
         }
