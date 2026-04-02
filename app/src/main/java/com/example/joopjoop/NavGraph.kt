@@ -28,6 +28,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.example.joopjoop.Routes.NOTE_EDIT
+import com.example.joopjoop.core.common.util.OnSingleClickListener
 import com.example.joopjoop.feature.auth.ui.intro.IntroScreen
 import com.example.joopjoop.feature.auth.ui.login.LoginRoute
 import com.example.joopjoop.feature.auth.ui.signup.SignupRoute
@@ -153,10 +154,13 @@ fun RootNavHost() {
                     LoginRoute(
                         viewModel = loginViewModel,
                         notificationViewModel = notificationViewModel,  // 권한 요청 및 알림 시작 로직을 위해 직접 전달
-                        onLoginSuccess = {
-                        },
-                        onBackClick = { rootNavController.popBackStack() },
-                        onCreateAccountClick = { rootNavController.navigate(Routes.SIGNUP) }
+                        onLoginSuccess = {},
+                        onCreateAccountClick = { rootNavController.navigate(Routes.SIGNUP) },
+                        onBackClick = {
+                            OnSingleClickListener.onclick {
+                                rootNavController.popBackStack()
+                            }
+                        }
                     )
                 }
 
@@ -174,7 +178,9 @@ fun RootNavHost() {
                             rootNavController.popBackStack()
                         },
                         onBackClick = {
-                            rootNavController.popBackStack()
+                            OnSingleClickListener.onclick {
+                                rootNavController.popBackStack()
+                            }
                         }
                     )
                 }
@@ -297,7 +303,9 @@ fun RootNavHost() {
                         }
                     },
                     onBackClick = {
-                        rootNavController.popBackStack()
+                        OnSingleClickListener.onclick {
+                            rootNavController.popBackStack()
+                        }
                     }
                 )
             }
@@ -335,7 +343,9 @@ fun RootNavHost() {
                         }
                     },
                     onBackClick = {
-                        rootNavController.popBackStack()
+                        OnSingleClickListener.onclick {
+                            rootNavController.popBackStack()
+                        }
                     }
                 )
             }

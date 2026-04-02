@@ -1,6 +1,5 @@
 package com.example.joopjoop.feature.auth.ui.signup
 
-import android.R.id.message
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -80,6 +80,7 @@ fun SignupRoute(
             onSignupSuccess()
         }
     }
+
     SignupScreen(
         uiState = uiState,
         onNicknameInput = viewModel::onNicknameInput,
@@ -114,12 +115,10 @@ fun SignupScreen(
                     .padding(vertical = 16.dp, horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .clip(RoundedCornerShape(12.dp))
-                        .clickable { onBackClick() }
-                        .padding(8.dp)
+                // 뒤로가기 아이콘
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
