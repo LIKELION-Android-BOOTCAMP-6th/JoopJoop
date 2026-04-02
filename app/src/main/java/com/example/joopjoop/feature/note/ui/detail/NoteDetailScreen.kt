@@ -27,7 +27,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.PlatformTextStyle
@@ -55,6 +55,7 @@ import com.example.joopjoop.core.common.util.showToast
 import com.example.joopjoop.feature.note.viewmodel.NoteDetailViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
+import com.example.joopjoop.ui.theme.BgElevated
 import com.example.joopjoop.ui.theme.DividerColor
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 import com.example.joopjoop.ui.theme.OrangePrimary
@@ -512,27 +513,102 @@ fun DeleteNoteDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "쪽지 삭제", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = {
+            Text(
+                text = "쪽지 삭제",
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        },
         text = {
             Text(
                 text = "정말 이 쪽지를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.",
                 color = TextSecondary,
-                fontSize = 15.sp
+                fontSize = 15.sp,
+                lineHeight = 22.sp
             )
         },
-        containerColor = BgDark,
         confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(text = "삭제", color = OrangePrimary)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 취소 버튼 (강조색 적용으로 실수 방지)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(OrangePrimary)
+                        .clickable { onDismiss() }
+                        .padding(horizontal = 20.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "취소",
+                        color = TextPrimary,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // 삭제 버튼 (BgElevated 배경 + Red 텍스트)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(BgElevated)
+                        .clickable {
+                            onConfirm()
+                        }
+                        .padding(horizontal = 20.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "삭제",
+                        color = Color(0xFFD32F2F), // 삭제 경고 레드
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = "취소", color = TextTertiary)
-            }
-        }
+        dismissButton = {}, // Row 내부에 포함됨
+        containerColor = BgDark,
+        shape = RoundedCornerShape(28.dp)
     )
 }
+
+//@Composable
+//fun DeleteNoteDialog(
+//    onDismiss: () -> Unit,
+//    onConfirm: () -> Unit
+//) {
+//    AlertDialog(
+//        onDismissRequest = onDismiss,
+//        title = { Text(text = "쪽지 삭제", color = TextPrimary, fontWeight = FontWeight.Bold) },
+//        text = {
+//            Text(
+//                text = "정말 이 쪽지를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.",
+//                color = TextSecondary,
+//                fontSize = 15.sp
+//            )
+//        },
+//        containerColor = BgDark,
+//        confirmButton = {
+//            TextButton(onClick = onConfirm) {
+//                Text(text = "삭제", color = OrangePrimary)
+//            }
+//        },
+//        dismissButton = {
+//            TextButton(onClick = onDismiss) {
+//                Text(text = "취소", color = TextTertiary)
+//            }
+//        }
+//    )
+//}
 
 
 @Composable
