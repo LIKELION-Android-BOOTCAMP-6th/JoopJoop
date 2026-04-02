@@ -7,6 +7,7 @@ import com.example.joopjoop.core.common.util.ImageProcessor
 import com.example.joopjoop.core.model.User
 import com.example.joopjoop.core.repository.AuthRepository
 import com.example.joopjoop.feature.auth.data.model.AuthResult
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SettingViewModel(
     private val authRepository: AuthRepository,
@@ -94,20 +96,21 @@ class SettingViewModel(
 
         viewModelScope.launch {
             _isLoading.value = true
-
             try {
-                // ImageProcessor로 이미지 압축 (ByteArray 추출)
-                val compressedBytes = imageProcessor.processProfile(imageUri)
+                // 이미지 가공 관련 작업 IO로 빼기
+                val uploadResult = withContext(Dispatchers.IO) {
+                    val compressedBytes = imageProcessor.processProfile(imageUri)
 
-                if (compressedBytes == null) {
-                    _settingEvent.emit(SettingEvent.Error("이미지 가공 실패"))
-                    _isLoading.value = false // 실패 시 로딩 해제
-                    return@launch
+                    if (compressedBytes == null) return@withContext null
+
+                    authRepository.uploadProfileImage(compressedBytes)
                 }
 
-                // 압축된 데이터를 서버에 업로드 (ByteArray 기반 업로드)
-                // authRepository에 uploadProfileImage(ByteArray) 함수가 있다고 가정합니다.
-                val uploadResult = authRepository.uploadProfileImage(compressedBytes)
+                // 이미지 결과 받아서 ui에 뿌리기
+                if (uploadResult == null) {
+                    _settingEvent.emit(SettingEvent.Error("이미지 가공 실패"))
+                    return@launch
+                }
 
                 when (uploadResult) {
                     is AuthResult.Success<*> -> {
@@ -139,7 +142,7 @@ class SettingViewModel(
         if (_isLoading.value) return // 중복 실행 방지
 
         viewModelScope.launch {
-            _isLoading.value = true // 삭제 중에도 로딩 상태를 활성화하여 이탈 방지
+//            _isLoading.value = true // 삭제 중에도 로딩 상태를 활성화하여 이탈 방지
 
             val result = authRepository.deleteProfileImage()
             when (result) {
