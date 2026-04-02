@@ -7,7 +7,6 @@ import com.example.joopjoop.feature.auth.data.model.AuthResult
 import com.example.joopjoop.feature.auth.data.model.UserResponse
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
-import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.Firebase
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.CoroutineScope
@@ -22,7 +21,6 @@ import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource // [추
 class AuthRepositoryImpl(
     private val authSource: FirebaseAuthSource, // 사용자 인증 데이터
     private val userSource: FirestoreUserSource, // 사용자 데이터
-    private val noteSource: FirestoreNoteSource,
     // 필요 시 외부 스코프를 주입받거나 내부에서 정의 (여기서는 단순화를 위해 GlobalScope 대신 내부 스코프 활용)
     private val noteSource: FirestoreNoteSource, // [추가] 탈퇴 시 작성한 notes 비활성화
     externalScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
