@@ -142,7 +142,7 @@ fun WriteNoteScreen(
             navController.popBackStack()
         } else {
             backPressedTime = currentTime
-            Toast.makeText(context, "내용이 저장되지 않고 메인화면으로 돌아갑니다", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "뒤로가기를 한번 더 누르면 작성이 취소됩니다.", Toast.LENGTH_SHORT).show()
         }
     }
 
