@@ -464,7 +464,7 @@ class FirestoreNoteSource(
             doc.reference.update("isActive", false).await()
         }
     }
-    // [추가] 회원 탈퇴 시 likes / scraps 전체 삭제
+    //[추가] 회원 탈퇴 시 likes / scraps 전체 삭제
     suspend fun deleteUserInteractions(uid: String) {
         val userDoc = db.collection("users").document(uid)
 
