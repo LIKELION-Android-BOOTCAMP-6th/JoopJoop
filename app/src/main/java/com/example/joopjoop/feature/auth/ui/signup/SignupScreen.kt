@@ -1,6 +1,5 @@
 package com.example.joopjoop.feature.auth.ui.signup
 
-import android.R.id.message
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -149,7 +148,7 @@ fun SignupScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(150.dp)
                     .clip(RoundedCornerShape(24.dp))
                     .background(
                         brush = Brush.verticalGradient(
