@@ -198,6 +198,7 @@ class AuthRepositoryImpl(
 
             userSource.deactivateUser(uid)
             noteSource.deactivateUserNotes(uid)
+            noteSource.deleteUserInteractions(uid)    // [추가] likes / scraps 삭제
             authSource.deleteUser()
 
             _currentUser.value = null
