@@ -152,13 +152,13 @@ fun LoginScreen(
         topBar = {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 8.dp),
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 IconButton(
                     onClick = onBackClick,
                     modifier = Modifier.align(Alignment.CenterStart)
+                        .padding(8.dp, 0.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),

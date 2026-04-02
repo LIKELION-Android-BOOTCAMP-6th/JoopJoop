@@ -152,7 +152,7 @@ fun WriteNoteScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 8.dp),
+                    .padding(8.dp, 0.dp),
                 contentAlignment = Alignment.Center
             ) {
                 // 뒤로가기 아이콘

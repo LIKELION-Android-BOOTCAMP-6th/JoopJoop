@@ -177,12 +177,11 @@ fun ListTopBar(navController: NavController) {
             .fillMaxWidth()
             .background(BgDarkest),
         contentAlignment = Alignment.Center
-    )
-    {
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(8.dp, 0.dp),
             contentAlignment = Alignment.Center
         ) {
             // 뒤로가기 아이콘

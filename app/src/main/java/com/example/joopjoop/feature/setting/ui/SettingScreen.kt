@@ -343,15 +343,14 @@ fun SettingScreen(
         topBar = {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 8.dp),
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .clip(RoundedCornerShape(12.dp))
-                        .padding(8.dp)
+                        .padding(8.dp, 0.dp)
                 ) {
                     // 뒤로가기 아이콘
                     IconButton(
