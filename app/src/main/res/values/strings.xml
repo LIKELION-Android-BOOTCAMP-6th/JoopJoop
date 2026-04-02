@@ -37,6 +37,7 @@
     <string name="hours_unit">시간</string>
     <string name="leave_note_button">쪽지 남기기</string>
     <string name="edit_note">쪽지 수정하기</string>
+    <string name="empty_note_list">주변에 쪽지가 없어요 \n처음으로 발자국을 남겨보세요</string>
 
     <!-- 설정관련 -->
     <string name="setting_title">계정 설정</string>

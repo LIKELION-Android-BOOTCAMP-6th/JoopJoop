@@ -35,7 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -112,6 +114,7 @@ fun NoteList(
         modifier = modifier
             .fillMaxSize()
             .background(BgDarkest)
+            .padding(10.dp, 0.dp)
     ) {
         // 로딩 화면 표시
         if (isLoading) {
@@ -135,9 +138,10 @@ fun NoteList(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "주변에 쪽지가 없어요 \n 처음으로 발자국을 남겨보세요",
+                        text = stringResource(R.string.empty_note_list),
                         color = TextTertiary,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -145,9 +149,9 @@ fun NoteList(
             // 쪽지 리스트
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2), // 한 줄 두개씩
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 // 가까운 쪽지
                 items(pickableNotes, key = { it.id }) { note ->
@@ -177,12 +181,11 @@ fun ListTopBar(navController: NavController) {
             .fillMaxWidth()
             .background(BgDarkest),
         contentAlignment = Alignment.Center
-    )
-    {
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(8.dp, 0.dp),
             contentAlignment = Alignment.Center
         ) {
             // 뒤로가기 아이콘
@@ -336,11 +339,13 @@ fun NoteCard(item: Note, isLocked: Boolean, onClick: () -> Unit = {}) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             lineHeight = 16.sp,
+            modifier = Modifier.padding(10.dp, 0.dp)
         )
 
         // 거리 정보 표시 영역(아이콘 + 텍스트)
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(10.dp, 0.dp)
         ) {//나침반 화살표 아이콘(45도 회전, 수평 맞추기 위해 윗쪽으로 미세 조정)
             Icon(
                 painter = painterResource(id = R.drawable.baseline_navigation_24),

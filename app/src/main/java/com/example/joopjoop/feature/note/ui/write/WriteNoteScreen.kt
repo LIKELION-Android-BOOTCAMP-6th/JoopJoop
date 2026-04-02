@@ -114,6 +114,23 @@ fun WriteNoteScreen(
     val focusManager = LocalFocusManager.current
 
 
+    // 1. 사진 업로드 완료 토스트 처리
+    LaunchedEffect(uiState.isImageUploading) {
+        // 업로드 중(true)이었다가 완료(false)로 바뀌는 순간 + 이미지가 실제로 있는 경우
+        if (!uiState.isImageUploading && !uiState.selectedImageUri.isNullOrBlank()) {
+            // ViewModel에서 에러가 없을 때만 성공 토스트 출력
+            Toast.makeText(context, "사진 업로드가 완료되었습니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+// 2. 에러 메시지 발생 시 토스트 (ViewModel의 errorMessage 처리)
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearError() // 토스트 띄운 후 에러 초기화
+        }
+    }
+
     // --- 뒤로가기 로직 추가 ---
     var backPressedTime by remember { mutableStateOf(0L) }
 
@@ -152,7 +169,7 @@ fun WriteNoteScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 8.dp),
+                    .padding(8.dp, 0.dp),
                 contentAlignment = Alignment.Center
             ) {
                 // 뒤로가기 아이콘
@@ -408,6 +425,7 @@ fun WriteNoteScreen(
             Button(
                 onClick = {
                     viewModel.submitNote(context) {
+                        // 여기가 success: () -> Unit 부분입니다.
                         navController.previousBackStackEntry
                             ?.savedStateHandle
                             ?.set("SHOULD_REFRESH", true)
@@ -417,29 +435,38 @@ fun WriteNoteScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp),
-                enabled = uiState.noteContent.isNotBlank() && !uiState.isSubmitting,
+                // 업로드 중일 때도 버튼을 비활성화
+                enabled = uiState.noteContent.isNotBlank() && !uiState.isSubmitting && !uiState.isImageUploading,
                 shape = RoundedCornerShape(32.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = OrangePrimary, contentColor = TextPrimary,
+                    containerColor = OrangePrimary,
+                    contentColor = TextPrimary,
                     disabledContainerColor = OrangePrimary.copy(alpha = 0.3f),
                     disabledContentColor = TextTertiary
                 )
             ) {
+                // 조건 처리
+                val buttonText = when {
+                    uiState.isSubmitting -> "제출 중..."
+                    uiState.isImageUploading -> "사진 업로드 중..."
+                    else -> "> ${stringResource(R.string.leave_note_button)}" // 기본: "쪽지 남기기"
+                }
+
                 Text(
-                    text = "> ${stringResource(R.string.leave_note_button)}",
+                    text = buttonText,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
-            if (uiState.isSubmitting) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.5f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = OrangePrimary)
-                }
+        }
+        if (uiState.isSubmitting) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = OrangePrimary)
             }
         }
     }

@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.joopjoop.R
+import com.example.joopjoop.core.common.util.showToast
 import com.example.joopjoop.feature.auth.viewmodel.LoginViewModel
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 import com.example.joopjoop.ui.theme.JoopJoopTheme
@@ -122,6 +123,15 @@ fun LoginRoute(
     }
     // POST_NOTIFICATIONS는 **Android 13(API 33) 이상부터 위험 권한으로 분류되어 확인 필요
 
+    // errorEvent 상태를 관찰하여 토스트 출력
+    LaunchedEffect(Unit) { // 키를 Unit으로 두어 화면 진입 시 한 번만 구독
+        viewModel.errorEvent.collect { message ->
+            context.showToast(message)
+            // 여기서는 clearErrorMessage()를 부를 필요도 없습니다.
+            // Flow는 이미 흘러갔기 때문이죠.
+        }
+    }
+
     LoginScreen(
         uiState = uiState,
         onEmailInput = viewModel::onEmailInput,
@@ -152,13 +162,13 @@ fun LoginScreen(
         topBar = {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 8.dp),
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 IconButton(
                     onClick = onBackClick,
                     modifier = Modifier.align(Alignment.CenterStart)
+                        .padding(8.dp, 0.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_back),
@@ -261,7 +271,7 @@ fun LoginScreen(
                 value = uiState.password,
                 onValueChange = onPasswordInput,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("••••••••") },
+                placeholder = { Text("비밀번호를 입력해 주세요") },
                 leadingIcon = {
                     Icon(painterResource(R.drawable.ic_lock), null, modifier = Modifier.size(20.dp))
                 },
