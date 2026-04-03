@@ -301,6 +301,7 @@ fun RootNavHost() {
                         authRepository = appContainer.authRepository,
                         notificationViewModel = viewModel(), // 필요 시 appContainer에서 가져올 수도 있음.
                         onNavigateToLogin = {
+                            mapViewModel.resetSessionState()
                             // 로그아웃 성공 시 AUTH 화면으로 이동하며 스택 정리
                             rootNavController.navigate(Routes.AUTH) {
                                 popUpTo(Routes.MAIN) { inclusive = true }

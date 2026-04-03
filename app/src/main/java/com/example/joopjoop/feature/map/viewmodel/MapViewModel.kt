@@ -26,6 +26,11 @@ class MapViewModel(
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState = _uiState.asStateFlow()
 
+    // 계정 전환 시 이전 지도/쪽지 상태 잔상을 제거
+    fun resetSessionState() {
+        _uiState.value = MapUiState(isPermissionGranted = _uiState.value.isPermissionGranted)
+    }
+
     //앱 시작 시 또는 특정 시점에 내 현재 위치를 즉시 가져와 지도를 이동
     //LocationProvider의 suspend 함수를 사용하여 콜백 없이 구현
     fun fetchCurrentLocationIfNeeded() {
