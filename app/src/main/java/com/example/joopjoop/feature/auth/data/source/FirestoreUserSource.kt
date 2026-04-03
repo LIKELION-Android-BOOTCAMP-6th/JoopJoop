@@ -78,4 +78,8 @@ class FirestoreUserSource(
             .update("isActive", false)
             .await()
     }
+    // [추가] Firestore의 사용자 문서 완전 삭제
+    suspend fun deleteUserDocument(uid: String) {
+        userCollection.document(uid).delete().await()
+    }
 }
