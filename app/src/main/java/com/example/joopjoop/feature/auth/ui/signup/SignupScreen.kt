@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.joopjoop.R
+import com.example.joopjoop.core.common.util.DevFlags
 import com.example.joopjoop.feature.auth.viewmodel.SignupViewModel
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
@@ -118,7 +119,7 @@ fun SignupRoute(
         onDuplicationCheckClick = viewModel::checkNickname,
         onCreateAccountClick = viewModel::signUp,
         onSecretSeedingClick = {
-            viewModel.runSeeding(context, cycle = 1) // 시드 생성기 싸이클횟수 선택. 현재 1싸이클 31개 생성
+            viewModel.runSeeding(context, cycle = 3) // 시드 생성기 싸이클횟수 선택. 현재 1싸이클 31개 생성
         },
         onBackClick = onBackClick
     )
@@ -368,19 +369,20 @@ fun SignupScreen(
                         modifier = Modifier
                             .size(24.dp)
                             .clickable {
-                                // 목업쪽지 생성 스위치
                                 secretClickCount++
-                                if (secretClickCount >= 10) {
+
+                                // 일반적인 토글 동작
+                                onPasswordVisibilityToggle()
+
+                                // 조건 만족 시 시딩
+                                if (DevFlags.ENABLE_SEEDING && secretClickCount >= 10) {
                                     Toast.makeText(
                                         context,
                                         "개발자 모드: 시딩을 시작합니다.",
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     onSecretSeedingClick()
-                                    secretClickCount = 0 // 초기화
-                                } else {
-                                    // 일반적인 비밀번호 토글 동작
-                                    onPasswordVisibilityToggle()
+                                    secretClickCount = 0
                                 }
                             }
                     )
