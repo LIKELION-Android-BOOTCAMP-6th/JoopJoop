@@ -9,6 +9,7 @@ import com.example.joopjoop.feature.mypage.ui.main.MyPageTab
 import com.example.joopjoop.feature.mypage.ui.main.MyPageUiState
 import com.example.joopjoop.feature.mypage.ui.post.MyPostUiState
 import com.example.joopjoop.feature.mypage.ui.scrap.MyScrapUiState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MyPageViewModel(
     private val myPageRepository: MyPageRepository,
@@ -84,9 +86,60 @@ class MyPageViewModel(
             )}
         }
     }
-
-    // 2. 내가 작성한 쪽지 로드
     fun loadMyPosts(userId: String) {
+        viewModelScope.launch {
+            _postUiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            // 1. 데이터 가져오기 및 정렬 작업을 백그라운드에서 수행
+            val sortedPosts = withContext(Dispatchers.IO) {
+                val result = myPageRepository.getMyPosts(userId)
+                result.getOrNull()?.sortedByDescending { it.createdAt } // createdAt 기준 내림차순
+            }
+
+            // 2. 결과 UI 반영 (Main)
+            if (sortedPosts != null) {
+                _postUiState.update { it.copy(
+                    posts = sortedPosts,
+                    isLoading = false
+                )}
+            } else {
+                _postUiState.update { it.copy(
+                    isLoading = false,
+                    errorMessage = "쪽지를 불러오지 못했습니다."
+                )}
+            }
+        }
+    }
+
+    fun loadMyScraps(userId: String) {
+        if (_scrapUiState.value.isLoading) return
+
+        viewModelScope.launch {
+            _scrapUiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            // 1. 데이터 가져오기 및 정렬 (IO)
+            val sortedScraps = withContext(Dispatchers.IO) {
+                val result = myPageRepository.getMyScraps(userId)
+                // 스크랩 데이터 내부에 날짜 필드(createdAt 또는 timestamp)가 있어야 합니다.
+                result.getOrNull()?.sortedByDescending { it.createdAt }
+            }
+
+            // 2. 결과 UI 반영 (Main)
+            if (sortedScraps != null) {
+                _scrapUiState.update { it.copy(
+                    scraps = sortedScraps,
+                    isLoading = false
+                )}
+            } else {
+                _scrapUiState.update { it.copy(
+                    isLoading = false,
+                    errorMessage = "스크랩 목록을 불러오지 못했습니다."
+                )}
+            }
+        }
+    }
+    // 2. 내가 작성한 쪽지 로드
+    /*fun loadMyPosts(userId: String) {
         viewModelScope.launch {
             _postUiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = myPageRepository.getMyPosts(userId)
@@ -94,6 +147,7 @@ class MyPageViewModel(
             if (result.isSuccess) {
                 val sortedPosts = result.getOrDefault(emptyList())
                     .sortedByDescending { it.createdAt }
+
 
                 _postUiState.update { it.copy(
                     posts = sortedPosts,
@@ -106,11 +160,11 @@ class MyPageViewModel(
                 )}
             }
         }
-    }
+    }*/
 
     // 3. 스크랩한 쪽지 로드
     // MyPageViewModel.kt 내부
-    fun loadMyScraps(userId: String) {
+    /*fun loadMyScraps(userId: String) {
         if (_scrapUiState.value.isLoading) return
 
         viewModelScope.launch {
@@ -134,7 +188,7 @@ class MyPageViewModel(
             }
         }
     }
-
+*/
     // 탭 전환 처리 (Lazy Loading 핵심 로직)
     fun onTabSelected(tab: MyPageTab) {
         _uiState.update { it.copy(selectedTab = tab) }
