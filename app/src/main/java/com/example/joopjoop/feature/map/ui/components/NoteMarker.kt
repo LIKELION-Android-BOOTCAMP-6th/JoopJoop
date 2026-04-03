@@ -1,54 +1,107 @@
 package com.example.joopjoop.feature.map.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material3.Icon
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import com.example.joopjoop.core.model.Note
 import com.example.joopjoop.ui.theme.OrangePrimary
 import com.example.joopjoop.ui.theme.TextTertiary
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.MarkerComposable
+import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 
-/**
- * 지도 위에 표시될 개별 쪽지 마커 컴포넌트
- * @param isPickable 내 위치 기준 30m 이내 여부에 따라 색상 변경
- */
+
+// 지도 위에 표시될 개별 쪽지 마커 컴포넌트
+
 @Composable
-fun NoteMarker(
-    note: Note, isPickable: Boolean, onClick: () -> Unit = {}
+fun NoteMarkers(
+    pickableNotes: List<Note>,
+    distantNotes: List<Note>,
+    onNoteClick: (String) -> Unit
 ) {
-    // 마커의 고유 아이디를 키로 설정하여 성능 최적화
-    key(note.id) {
-        MarkerComposable(
-            state = MarkerState(position = LatLng(note.location.latitude, note.location.longitude)),
-            title = note.id,
-            onClick = {
-                onClick()
-                true // true를 반환해야 지도의 기본 동작(카메라 중앙 이동 등)을 제어할 수 있다.
-            }) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = if (isPickable) OrangePrimary else TextTertiary, // 주황(줍기 가능) vs 회색(멂)
-                        shape = CircleShape
+    val context = LocalContext.current
+
+    // [성능의 핵심] 주황색/회색 아이콘을 딱 한 번만 그려서 메모리에 저장
+    val pickableIcon = remember { createCustomMarkerDescription(context, OrangePrimary) }
+    val distantIcon = remember { createCustomMarkerDescription(context, TextTertiary) }
+
+    // 줍기 가능한 쪽지들
+    pickableNotes.forEach { note ->
+        key(note.id) {
+            Marker(
+                state = MarkerState(
+                    position = LatLng(
+                        note.location.latitude,
+                        note.location.longitude
                     )
-                    .padding(8.dp), contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.Email, null, tint = Color.White)
-            }
+                ),
+                icon = pickableIcon, // 미리 저장해둔 비트맵 사용
+                title = note.id,
+                onClick = {
+                    onNoteClick(note.id)
+                    true
+                }
+            )
         }
     }
+
+    // 거리가 먼 쪽지들
+    distantNotes.forEach { note ->
+        key(note.id) {
+            Marker(
+                state = MarkerState(
+                    position = LatLng(
+                        note.location.latitude,
+                        note.location.longitude
+                    )
+                ),
+                icon = distantIcon, // 미리 저장해둔 비트맵 사용
+                title = note.id,
+                onClick = {
+                    /*TODO 거리가 멀면 클릭 안되게 하거나 안내 메시지 */
+                    true
+                } // 클릭 차단 혹은 안내
+            )
+        }
+    }
+}
+
+// Compose 디자인을 Google Maps용 Bitmap으로 변환
+fun createCustomMarkerDescription(
+    context: Context,
+    backgroundColor: Color
+): BitmapDescriptor {
+    val size = 110 // 40.dp 정도의 크기를 픽셀로 환산 (해상도에 따라 조절 가능)
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+
+    // 1. 원형 배경 그리기
+    val paint = android.graphics.Paint().apply {
+        color = backgroundColor.toArgb()
+        isAntiAlias = true
+    }
+    canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint)
+
+    // 2. 메일 아이콘 그리기 (Vector Drawable을 비트맵 위에 얹음)
+    val drawable = ContextCompat.getDrawable(
+        context,
+        android.R.drawable.ic_dialog_email
+    )
+    drawable?.let {
+        it.setTint(android.graphics.Color.WHITE)
+        val margin = size / 4
+        it.setBounds(margin, margin, size - margin, size - margin)
+        it.draw(canvas)
+    }
+
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
 }
