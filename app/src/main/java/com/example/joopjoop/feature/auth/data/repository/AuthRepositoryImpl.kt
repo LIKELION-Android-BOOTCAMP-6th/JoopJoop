@@ -191,7 +191,8 @@ class AuthRepositoryImpl(
         }
     }
     // [추가] 회원 탈퇴
-  
+
+
     // [추가] 회원 탈퇴
     override suspend fun withdraw(password: String): AuthResult<Unit> {
         return try {
@@ -209,6 +210,7 @@ class AuthRepositoryImpl(
             authSource.reauthenticateAndDeleteUser(password)
 
             _currentUser.value = null
+
 
             AuthResult.Success(Unit)
         } catch (e: Exception) {
