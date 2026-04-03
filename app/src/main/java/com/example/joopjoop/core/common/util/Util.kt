@@ -39,3 +39,7 @@ object OnSingleClickListener {
         }
     }
 }
+// 개발자모드 - 목업데이터 시딩 On / Off
+object DevFlags {
+    const val ENABLE_SEEDING = true
+}
