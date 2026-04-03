@@ -72,10 +72,13 @@ fun NoteListScreen(
     // 쪽지 신호 감지시 쪽지 재검색
     LaunchedEffect(isNoteRefresh) {
         if (isNoteRefresh) {
-            // 현재 내 위치를 기준으로 다시 로드 (viewModel에 현재 위치 정보가 있다고 가정)
-            uiState.currentUserLocation?.let { location ->
+            // 현재 내 위치 기준이 아니라 카메라가 보이는 기준으로 쪽지를 검색
+            val targetPoint = uiState.mapCenterLocation ?: uiState.currentUserLocation
+
+            targetPoint?.let { location ->
                 viewModel.loadNotes(location)
             }
+
             // 위 작업 후 마무리 (안바꾸면 계속 새로고침하게됨)
             navController.currentBackStackEntry?.savedStateHandle?.set("SHOULD_REFRESH", false)
         }

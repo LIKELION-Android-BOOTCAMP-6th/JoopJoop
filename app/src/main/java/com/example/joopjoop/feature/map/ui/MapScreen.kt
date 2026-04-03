@@ -128,14 +128,19 @@ fun MapScreen(
     val isNoteRefresh =
         navBackStackEntry?.savedStateHandle?.get<Boolean>("SHOULD_REFRESH") ?: false
 
-    // 쪽지 신호 감지시 쪽지 재검색
+
+    // 상세화면 뒤로가기 할때 호출 (삭제 상황을 바로 반영하기 위해서)
     LaunchedEffect(isNoteRefresh) {
+        // 쪽지 신호 감지시 쪽지 재검색
         Log.d("jay", "=============== isNoteRefresh: $isNoteRefresh")
         if (isNoteRefresh) {
-            // 현재 내 위치를 기준으로 다시 로드 (viewModel에 현재 위치 정보가 있다고 가정)
-            uiState.currentUserLocation?.let { location ->
+            // 현재 내 위치 기준이 아니라 카메라가 보이는 기준으로 쪽지를 검색
+            val targetPoint = uiState.mapCenterLocation ?: uiState.currentUserLocation
+
+            targetPoint?.let { location ->
                 viewModel.loadNotes(location)
             }
+
             // 위 작업 후 마무리 (안바꾸면 계속 새로고침하게됨)
             navController.currentBackStackEntry?.savedStateHandle?.set("SHOULD_REFRESH", false)
         }
@@ -147,7 +152,6 @@ fun MapScreen(
 //        // 삭제 금지 - 원화
 //        // 로그 전용 함수 호출 (실제 쿼리 Geohash 수 로그 )
 //        GeohashDebugLogger(uiState.currentUserLocation)
-//
 
         // [레이어 1] 구글 지도 영역
         GoogleMap(
