@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -41,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.joopjoop.R
+import com.example.joopjoop.core.designsystem.components.JoopJoopButton
 import com.example.joopjoop.ui.theme.BgDarkest
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 import com.example.joopjoop.ui.theme.OrangePrimary
@@ -167,23 +165,37 @@ fun IntroScreen(
                 enter = fadeIn()
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Button(
+
+                    // 공용 버튼
+                    JoopJoopButton(
+                        text = stringResource(R.string.go_to_login),
                         onClick = onLoginClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(64.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = OrangePrimary,
-                            contentColor = TextPrimary
-                        )
-                    ) {
-                        Text(
-                            text = stringResource(R.string.go_to_login),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                        isLoading = false,
+                        enabled = true
+                    )
+
+//                    //기존 버튼
+//                    Button(
+//                        onClick = onLoginClick,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(64.dp),
+//                        shape = RoundedCornerShape(16.dp),
+//                        colors = ButtonDefaults.buttonColors(
+//                            containerColor = OrangePrimary,
+//                            contentColor = TextPrimary
+//                        )
+//                    ) {
+//                        Text(
+//                            text = stringResource(R.string.go_to_login),
+//                            fontSize = 20.sp,
+//                            fontWeight = FontWeight.Bold
+//                        )
+//                    }
+
                     Spacer(modifier = Modifier.height(24.dp))
                     Text(
                         text = buildAnnotatedString {

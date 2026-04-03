@@ -21,5 +21,6 @@ data class SignupUiState(
     val isSignupSuccess: Boolean = false,
 
     // 에러 발생 시 토스트
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isLoading: Boolean = false
 )

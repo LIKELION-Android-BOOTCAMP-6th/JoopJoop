@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.showToast
+import com.example.joopjoop.core.designsystem.components.JoopJoopButton
 import com.example.joopjoop.feature.auth.viewmodel.LoginViewModel
 import com.example.joopjoop.feature.notification.viewmodel.NotificationViewModel
 import com.example.joopjoop.ui.theme.JoopJoopTheme
@@ -167,7 +166,8 @@ fun LoginScreen(
             ) {
                 IconButton(
                     onClick = onBackClick,
-                    modifier = Modifier.align(Alignment.CenterStart)
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
                         .padding(8.dp, 0.dp)
                 ) {
                     Icon(
@@ -292,28 +292,39 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // 로그인 버튼
-            Button(
+            // 공용 버튼
+            JoopJoopButton(
+                text = stringResource(R.string.sign_in),
                 onClick = onSignInClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                enabled = !uiState.isLoading // 로딩 중일 때 버튼 비활성화
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text(
-                        stringResource(R.string.sign_in),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+                    .height(56.dp), // 크기만 결정
+                isLoading = uiState.isLoading, // 로딩 상태만 전달
+                enabled = !uiState.isLoading   // 활성화 여부 전달 (내부에서 한 번 더 검증함)
+            )
+
+            // 기존 버튼
+//            Button(
+//                onClick = onSignInClick,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(56.dp),
+//                shape = RoundedCornerShape(16.dp),
+//                enabled = !uiState.isLoading // 로딩 중일 때 버튼 비활성화
+//            ) {
+//                if (uiState.isLoading) {
+//                    CircularProgressIndicator(
+//                        modifier = Modifier.size(24.dp),
+//                        color = MaterialTheme.colorScheme.onPrimary
+//                    )
+//                } else {
+//                    Text(
+//                        stringResource(R.string.sign_in),
+//                        fontSize = 18.sp,
+//                        fontWeight = FontWeight.Bold
+//                    )
+//                }
+//            }
 
             Spacer(modifier = Modifier.weight(1f))
 
