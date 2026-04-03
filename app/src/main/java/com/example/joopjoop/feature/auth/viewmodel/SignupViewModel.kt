@@ -107,55 +107,67 @@ class SignupViewModel(
         Log.d("SignUp", "회원가입 시작: ${state.email}")
 
         viewModelScope.launch {
-            // Repository에 회원가입 요청
-            val result = authRepository.signUp(
-                email = state.email,
-                password = state.password,
-                nickname = state.nickname
-            )
+            // 1. 로딩 시작 알림
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                // Repository에 회원가입 요청
+                val result = authRepository.signUp(
+                    email = state.email,
+                    password = state.password,
+                    nickname = state.nickname
+                )
 
-            Log.d("SignUp", "결과 도착: $result")
+                Log.d("SignUp", "결과 도착: $result")
 
-            // AuthResult 분기처리
-            when (result) {
-                is com.example.joopjoop.feature.auth.data.model.AuthResult.Success -> {
-                    // 성공 시
-                    Log.d("SignUp", "회원가입 성공, 가입된 유저 : ${result.data.nickname}")
-                    _uiState.update {
-                        it.copy(
-                            isSignupSuccess = true,
-                            errorMessage = "회원가입에 성공했습니다!"
-                        )
-                    }
-                }
-
-                is com.example.joopjoop.feature.auth.data.model.AuthResult.Failure -> {
-                    // 실패 시
-                    Log.e("SignUp", "실패: ${result.exception.message}")
-                    // 1. 발생한 예외(Exception)의 종류에 따라
-                    val friendlyMessage = when (result.exception) {
-                        // 이미 가입된 이메일인 경우
-                        is com.google.firebase.auth.FirebaseAuthUserCollisionException ->
-                            "이미 가입된 이메일 주소입니다. 다른 이메일을 사용해 주세요."
-                        // 이메일 형식이 잘못된 경우
-                        is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
-                            "유효하지 않은 이메일 형식입니다."
-                        // 네트워크 연결이 불안정한 경우
-                        is com.google.firebase.FirebaseNetworkException ->
-                            "네트워크 연결이 불안정합니다. 인터넷 설정을 확인해 주세요."
-                        // 그 외 알 수 없는 에러
-                        else -> "회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+                // AuthResult 분기처리
+                when (result) {
+                    is com.example.joopjoop.feature.auth.data.model.AuthResult.Success -> {
+                        // 성공 시
+                        Log.d("SignUp", "회원가입 성공, 가입된 유저 : ${result.data.nickname}")
+                        _uiState.update {
+                            it.copy(
+                                isSignupSuccess = true,
+                                errorMessage = "회원가입에 성공했습니다!"
+                            )
+                        }
                     }
 
-                    // 2. 결정된 친절한 메시지를 UI State에 업데이트합니다.
-                    _uiState.update {
-                        it.copy(errorMessage = friendlyMessage)
+                    is com.example.joopjoop.feature.auth.data.model.AuthResult.Failure -> {
+                        // 실패 시
+                        Log.e("SignUp", "실패: ${result.exception.message}")
+                        // 1. 발생한 예외(Exception)의 종류에 따라
+
+                        val friendlyMessage = when (result.exception) {
+                            // 이미 가입된 이메일인 경우
+                            is com.google.firebase.auth.FirebaseAuthUserCollisionException ->
+                                "이미 가입된 이메일 주소입니다. 다른 이메일을 사용해 주세요."
+                            // 이메일 형식이 잘못된 경우
+                            is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException ->
+                                "유효하지 않은 이메일 형식입니다."
+                            // 네트워크 연결이 불안정한 경우
+                            is com.google.firebase.FirebaseNetworkException ->
+                                "네트워크 연결이 불안정합니다. 인터넷 설정을 확인해 주세요."
+                            // 그 외 알 수 없는 에러
+                            else -> "회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+                        }
+
+                        // 2. 결정된 친절한 메시지를 UI State에 업데이트합니다.
+                        _uiState.update {
+                            it.copy(errorMessage = friendlyMessage)
+                        }
+                    }
+
+                    is com.example.joopjoop.feature.auth.data.model.AuthResult.Loading -> {
+                        // 필요시 로딩 상태 UI 반영할 것
+                        _uiState.update { it.copy(isLoading = true) }
                     }
                 }
-
-                is com.example.joopjoop.feature.auth.data.model.AuthResult.Loading -> {
-                    // 필요시 로딩 상태 UI 반영할 것
-                }
+            } catch (e: Exception) {
+                // 예기치 못한 크래시 방지용
+                _uiState.update { it.copy(errorMessage = "알 수 없는 오류가 발생했습니다.") }
+            } finally {
+                // 3. 성공하든 실패하든 마지막엔 무조건 로딩을 꺼줌
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }

@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.DevFlags
+import com.example.joopjoop.core.designsystem.components.JoopJoopButton
 import com.example.joopjoop.feature.auth.viewmodel.SignupViewModel
 import com.example.joopjoop.ui.theme.JoopJoopTheme
 
@@ -263,22 +262,36 @@ fun SignupScreen(
                     singleLine = true
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(
+
+                // 공용버튼
+                JoopJoopButton(
+                    text = stringResource(R.string.duplication_check),
                     onClick = onDuplicationCheckClick,
-                    modifier = Modifier.height(56.dp),
-                    enabled = uiState.nickname.isNotBlank(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.duplication_check),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                    modifier = Modifier
+                        .height(56.dp)
+                        .width(100.dp), // 적절한 너비 설정
+                    // 닉네임이 있고 + 회원가입 로딩 중이 아닐 때만 활성화
+                    enabled = uiState.nickname.isNotBlank() && !uiState.isLoading,
+                    isLoading = false // 중복 확인 버튼 자체가 로딩을 돌릴 필요는 없으므로 false
+                )
+
+                // 기존 버튼
+//                Button(
+//                    onClick = onDuplicationCheckClick,
+//                    modifier = Modifier.height(56.dp),
+//                    enabled = uiState.nickname.isNotBlank(),
+//                    shape = RoundedCornerShape(12.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = MaterialTheme.colorScheme.primary,
+//                        contentColor = Color.White
+//                    )
+//                ) {
+//                    Text(
+//                        text = stringResource(R.string.duplication_check),
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Bold
+//                    )
+//                }
             }
 
             // 닉네임 중복 확인 결과 메시지
@@ -407,24 +420,33 @@ fun SignupScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             // 회원가입 버튼
-            Button(
+            JoopJoopButton(
+                text = stringResource(R.string.create_account),
                 onClick = onCreateAccountClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = uiState.isSignupButtonEnabled,
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White
-                )
-            ) {
-                Text(
-                    text = stringResource(R.string.create_account),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+                isLoading = uiState.isLoading,
+                enabled = uiState.isSignupButtonEnabled && !uiState.isLoading
+            )
+//            Button(
+//                onClick = onCreateAccountClick,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(56.dp),
+//                enabled = uiState.isSignupButtonEnabled,
+//                shape = RoundedCornerShape(16.dp),
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = MaterialTheme.colorScheme.primary,
+//                    contentColor = Color.White
+//                )
+//            ) {
+//                Text(
+//                    text = stringResource(R.string.create_account),
+//                    fontSize = 18.sp,
+//                    fontWeight = FontWeight.Bold
+//                )
+//            }
         }
     }
 }
