@@ -458,4 +458,31 @@ class FirestoreNoteSource(
             0
         }
     }
+    // [추가] 회원 탈퇴 시 작성한 노트 전체 비활성화
+    suspend fun deactivateUserNotes(uid: String) {
+        val snapshot = db.collection(collectionPath)
+            .whereEqualTo("authorId", uid) // Note 모델 기준 작성자 필드
+            .get()
+            .await()
+
+        for (doc in snapshot.documents) {
+            doc.reference.update("isActive", false).await()
+        }
+    }
+    //[추가] 회원 탈퇴 시 likes / scraps 전체 삭제
+    suspend fun deleteUserInteractions(uid: String) {
+        val userDoc = db.collection("users").document(uid)
+
+        // likes 삭제
+        val likesSnapshot = userDoc.collection("likes").get().await()
+        for (doc in likesSnapshot.documents) {
+            doc.reference.delete().await()
+        }
+
+        // scraps 삭제
+        val scrapsSnapshot = userDoc.collection("scraps").get().await()
+        for (doc in scrapsSnapshot.documents) {
+            doc.reference.delete().await()
+        }
+    }
 }

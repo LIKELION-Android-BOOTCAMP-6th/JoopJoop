@@ -115,6 +115,10 @@ fun SettingRoute(
                     onNavigateToLogin()
                 }
 
+                is SettingEvent.WithdrawSuccess -> { //회원 탈퇴 성공 이벤트 처리
+                    Toast.makeText(context, "회원 탈퇴가 완료되었습니다.", Toast.LENGTH_SHORT).show()
+                    onNavigateToLogin()
+                }
                 is SettingEvent.UpdateSuccess -> {
                     // 성공 토스트 알림
                     Toast.makeText(context, "프로필이 변경되었습니다.", Toast.LENGTH_SHORT).show()
@@ -147,11 +151,9 @@ fun SettingRoute(
         onDeleteProfileClick = { viewModel.deleteProfileImage() },
         onLogoutClick = { viewModel.logout() },
 
-        // [추가] 회원 탈퇴 실제 로직 연결 자리
-        // 아직 탈퇴 API/함수가 없으면 일단 비워두고,
-        // 나중에 viewModel.withdraw() 같은 걸 연결하면 된다.
-        onWithdrawalClick = {
-            // TODO: 회원 탈퇴 API 연결
+       //뷰모델 연결
+        onWithdrawalClick = { password ->
+            viewModel.withdraw(password)
         }
     )
 }
@@ -169,7 +171,7 @@ fun SettingScreen(
     onProfileEditClick: () -> Unit = {},
     onDeleteProfileClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
-    onWithdrawalClick: () -> Unit = {} // [추가] 회원 탈퇴 전용 콜백 분리
+    onWithdrawalClick: (String) -> Unit = {} // [추가] 회원 탈퇴 전용 콜백 분리
 ) {
     val context = LocalContext.current
 
@@ -178,6 +180,7 @@ fun SettingScreen(
     var showImageDialog by remember { mutableStateOf(false) }
     var newNickname by remember { mutableStateOf(user?.nickname ?: "") }
     var showWithdrawalDialog by remember { mutableStateOf(false) }   // 회원 탈퇴 다이얼로그
+    var withdrawalPassword by remember { mutableStateOf("") }
 
     // 프로필 이미지 관리 다이얼로그 추가
     if (showImageDialog) {
@@ -465,12 +468,32 @@ fun SettingScreen(
                 )
             },
             text = {
-                Text(
-                    text = "정말 회원 탈퇴하시겠습니까?\n작성하신 모든 정보가 삭제되며 복구할 수 없습니다.",
-                    color = TextSecondary,
-                    fontSize = 16.sp,
-                    lineHeight = 22.sp
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "정말 회원 탈퇴하시겠습니까?\n작성하신 모든 정보가 삭제되며 복구할 수 없습니다.",
+                        color = TextSecondary,
+                        fontSize = 16.sp,
+                        lineHeight = 22.sp
+                    )
+
+                    TextField(
+                        value = withdrawalPassword,
+                        onValueChange = { withdrawalPassword = it },
+                        placeholder = { Text("비밀번호 입력") },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = BgSurface,
+                            unfocusedContainerColor = BgSurface,
+                            disabledContainerColor = BgSurface,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedPlaceholderColor = TextTertiary,
+                            unfocusedPlaceholderColor = TextTertiary,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        )
+                    )
+                }
             },
             confirmButton = {
                 Row(
@@ -485,6 +508,7 @@ fun SettingScreen(
                             .background(OrangePrimary)
                             .clickable {
                                 showWithdrawalDialog = false
+                                withdrawalPassword = ""
                             }
                             .padding(horizontal = 20.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center
@@ -505,8 +529,9 @@ fun SettingScreen(
                             .clip(RoundedCornerShape(10.dp))
                             .background(BgElevated)
                             .clickable {
+                                onWithdrawalClick(withdrawalPassword)
+                                withdrawalPassword = ""
                                 showWithdrawalDialog = false
-                                onWithdrawalClick() // 기존 로직 유지
                             }
                             .padding(horizontal = 20.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center

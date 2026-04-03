@@ -7,7 +7,6 @@ import com.example.joopjoop.feature.auth.data.model.AuthResult
 import com.example.joopjoop.feature.auth.data.model.UserResponse
 import com.example.joopjoop.feature.auth.data.source.FirebaseAuthSource
 import com.example.joopjoop.feature.auth.data.source.FirestoreUserSource
-import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource
 import com.google.firebase.Firebase
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.CoroutineScope
@@ -17,12 +16,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.example.joopjoop.feature.note.data.source.FirestoreNoteSource // [추가] 탈퇴 시 notes 비활성화용
 
 class AuthRepositoryImpl(
     private val authSource: FirebaseAuthSource, // 사용자 인증 데이터
     private val userSource: FirestoreUserSource, // 사용자 데이터
-    private val noteSource: FirestoreNoteSource,
     // 필요 시 외부 스코프를 주입받거나 내부에서 정의 (여기서는 단순화를 위해 GlobalScope 대신 내부 스코프 활용)
+    private val noteSource: FirestoreNoteSource, // [추가] 탈퇴 시 작성한 notes 비활성화
     externalScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : AuthRepository {
 
@@ -185,6 +185,33 @@ class AuthRepositoryImpl(
             authSource.logout()
             // [추가] 로그아웃 시 캐시 비우기
             _currentUser.value = null
+            AuthResult.Success(Unit)
+        } catch (e: Exception) {
+            AuthResult.Failure(e)
+        }
+    }
+    // [추가] 회원 탈퇴
+
+
+    // [추가] 회원 탈퇴
+    override suspend fun withdraw(password: String): AuthResult<Unit> {
+        return try {
+            val uid = authSource.getCurrentUserId()
+                ?: throw Exception("로그인 정보 없음")
+
+            // 1) note 정책 유지: 작성 노트 비활성화 + likes/scraps 삭제
+            noteSource.deactivateUserNotes(uid)
+            noteSource.deleteUserInteractions(uid)
+
+            // 2) users 문서 완전 삭제
+            userSource.deleteUserDocument(uid)
+
+            // 3) Firebase Auth 계정 삭제
+            authSource.reauthenticateAndDeleteUser(password)
+
+            _currentUser.value = null
+
+
             AuthResult.Success(Unit)
         } catch (e: Exception) {
             AuthResult.Failure(e)
