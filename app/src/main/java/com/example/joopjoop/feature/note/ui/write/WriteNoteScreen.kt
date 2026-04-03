@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,8 +27,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,6 +59,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.joopjoop.R
 import com.example.joopjoop.core.common.util.JoopJoopImage
 import com.example.joopjoop.core.common.util.OnSingleClickListener
+import com.example.joopjoop.core.designsystem.components.JoopJoopButton
 import com.example.joopjoop.feature.note.viewmodel.WriteNoteViewModel
 import com.example.joopjoop.ui.theme.BgDark
 import com.example.joopjoop.ui.theme.BgDarkest
@@ -429,10 +427,22 @@ fun WriteNoteScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             // 4. 쪽지 남기기 버튼
-            Button(
+            // 공용 버튼
+            val isButtonEnabled = uiState.noteContent.isNotBlank() &&
+                    !uiState.isSubmitting &&
+                    !uiState.isImageUploading
+
+            // 버튼에 표시될 텍스트 조건 처리
+            val buttonText = when {
+                uiState.isSubmitting -> "제출 중..."
+                uiState.isImageUploading -> "사진 업로드 중..."
+                else -> "> ${stringResource(R.string.leave_note_button)}"
+            }
+
+            JoopJoopButton(
+                text = buttonText,
                 onClick = {
                     viewModel.submitNote(context) {
-                        // 여기가 success: () -> Unit 부분입니다.
                         navController.previousBackStackEntry
                             ?.savedStateHandle
                             ?.set("SHOULD_REFRESH", true)
@@ -442,29 +452,48 @@ fun WriteNoteScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp),
-                // 업로드 중일 때도 버튼을 비활성화
-                enabled = uiState.noteContent.isNotBlank() && !uiState.isSubmitting && !uiState.isImageUploading,
-                shape = RoundedCornerShape(32.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = OrangePrimary,
-                    contentColor = TextPrimary,
-                    disabledContainerColor = OrangePrimary.copy(alpha = 0.3f),
-                    disabledContentColor = TextTertiary
-                )
-            ) {
-                // 조건 처리
-                val buttonText = when {
-                    uiState.isSubmitting -> "제출 중..."
-                    uiState.isImageUploading -> "사진 업로드 중..."
-                    else -> "> ${stringResource(R.string.leave_note_button)}" // 기본: "쪽지 남기기"
-                }
+                // JoopJoopButton 내부의 로딩 인디케이터를 활용 (제출 중일 때만 표시)
+                isLoading = false,
+                enabled = isButtonEnabled
+            )
 
-                Text(
-                    text = buttonText,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            // 기존 버튼
+//            Button(
+//                onClick = {
+//                    viewModel.submitNote(context) {
+//                        // 여기가 success: () -> Unit 부분입니다.
+//                        navController.previousBackStackEntry
+//                            ?.savedStateHandle
+//                            ?.set("SHOULD_REFRESH", true)
+//                        navController.popBackStack()
+//                    }
+//                },
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(64.dp),
+//                // 업로드 중일 때도 버튼을 비활성화
+//                enabled = uiState.noteContent.isNotBlank() && !uiState.isSubmitting && !uiState.isImageUploading,
+//                shape = RoundedCornerShape(32.dp),
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = OrangePrimary,
+//                    contentColor = TextPrimary,
+//                    disabledContainerColor = OrangePrimary.copy(alpha = 0.3f),
+//                    disabledContentColor = TextTertiary
+//                )
+//            ) {
+//                // 조건 처리
+//                val buttonText = when {
+//                    uiState.isSubmitting -> "제출 중..."
+//                    uiState.isImageUploading -> "사진 업로드 중..."
+//                    else -> "> ${stringResource(R.string.leave_note_button)}" // 기본: "쪽지 남기기"
+//                }
+//
+//                Text(
+//                    text = buttonText,
+//                    fontSize = 20.sp,
+//                    fontWeight = FontWeight.Bold
+//                )
+//            }
         }
         if (uiState.isSubmitting) {
             Box(

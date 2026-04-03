@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.joopjoop.ui.theme.OrangePrimary
+import com.example.joopjoop.ui.theme.TextPrimary
+import com.example.joopjoop.ui.theme.TextTertiary
 
 
 @Composable
@@ -70,7 +72,7 @@ fun JoopJoopButton(
             onClick = onClick,
             enabled = enabled && !isLoading, // 로딩 중에는 클릭 방지
             shape = RoundedCornerShape(20.dp),
-            color = if (enabled) OrangePrimary else Color.Gray, // 비활성 시 색상 변경(선택)
+            color = if (enabled) OrangePrimary else OrangePrimary.copy(alpha = 0.3f), // 비활성 시 색상 변경(선택)
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
@@ -89,7 +91,11 @@ fun JoopJoopButton(
                 } else {
                     Text(
                         text = text,
-                        color = Color.White,
+                        color = if (enabled) {
+                            TextPrimary
+                        } else {
+                            TextTertiary
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
