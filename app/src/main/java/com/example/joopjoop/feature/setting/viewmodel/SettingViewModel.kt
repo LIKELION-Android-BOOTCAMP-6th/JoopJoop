@@ -70,7 +70,10 @@ class SettingViewModel(
 
         viewModelScope.launch {
             _isLoading.value = true
-            val result = authRepository.updateProfile(newNickname = newNickname)
+
+            val currentImageUrl = currentUser.value?.profileImageUrl
+
+            val result = authRepository.updateProfile(newNickname = newNickname, newImageUrl = currentImageUrl)
 
             when (result) {
                 is AuthResult.Success -> {
