@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -86,6 +87,8 @@ fun WriteNoteScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
+
+    val uploadProgress by viewModel.uploadProgress.collectAsStateWithLifecycle()
 
     val categories = listOf(
         stringResource(R.string.category_daily),
@@ -323,7 +326,11 @@ fun WriteNoteScreen(
                                 }
                             }
                             if (uiState.isImageUploading) {
-                                ImageUploadIndicator(modifier = Modifier.fillMaxSize())
+                                ImageUploadIndicator(
+                                    progress = uploadProgress,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+//                                ImageUploadIndicator(modifier = Modifier.fillMaxSize())
                             }
                         }
 
@@ -506,6 +513,32 @@ fun ImageUploadIndicator(
             modifier = Modifier.size(30.dp),
             color = OrangePrimary,
             strokeWidth = 3.dp
+        )
+    }
+}
+
+@Composable
+fun ImageUploadIndicator(
+    progress: Float, // 0.0f ~ 1.0f
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.7f)), // 숫자가 잘 보이게 더 어둡게
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            progress = { progress },  // 람다로 감싸기
+            modifier = Modifier.size(72.dp),
+            color = OrangePrimary,
+            strokeWidth = 6.dp
+        )
+        Text(
+            text = "${(progress * 100).toInt()}%",
+            color = TextPrimary,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }

@@ -220,7 +220,8 @@ class FirestoreNoteSource(
         documentRef.set(noteData).await()
     }
 
-    suspend fun uploadImage(
+    // 사용 안하는 함수 임시 주석 처리
+    /*suspend fun uploadImage(
         originalData: ByteArray,    // 원본 데이터
         thumbnailData: ByteArray,   // 썸네일 데이터
         fileName: String,
@@ -251,7 +252,7 @@ class FirestoreNoteSource(
             Log.e("PhotoDebug", "업로드 중 에러: ${e.message}")
             null
         }
-    }
+    }*/
 
     suspend fun getNotesByAuthor(authorId: String): List<Note> {
         return try {
