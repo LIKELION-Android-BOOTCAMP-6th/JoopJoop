@@ -211,4 +211,27 @@ class AuthRepositoryImpl(
             AuthResult.Failure(e)
         }
     }
+    // [추가] 회원 탈퇴
+    override suspend fun withdraw(password: String): AuthResult<Unit> {
+        return try {
+            val uid = authSource.getCurrentUserId()
+                ?: throw Exception("로그인 정보 없음")
+
+            // 1) note 정책 유지: 작성 노트 비활성화 + likes/scraps 삭제
+            noteSource.deactivateUserNotes(uid)
+            noteSource.deleteUserInteractions(uid)
+
+            // 2) users 문서 완전 삭제
+            userSource.deleteUserDocument(uid)
+
+            // 3) Firebase Auth 계정 삭제
+            authSource.reauthenticateAndDeleteUser(password)
+
+            _currentUser.value = null
+
+            AuthResult.Success(Unit)
+        } catch (e: Exception) {
+            AuthResult.Failure(e)
+        }
+    }
 }
