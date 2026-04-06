@@ -1,3 +1,50 @@
 <resources>
-    <string name="app_name">JoopJoop</string>
+    <!-- 인트로 관련 -->
+    <string name="app_name">줍줍</string>
+    <string name="sub_name">줍줍</string>
+    <string name="app_description">산책과 주변 이슈들에 관심있어하는 사람들\n을 위한 쪽지 플랫폼</string>
+    <string name="go_to_login">쪽지 확인하러 가기</string>
+
+    <!-- 로그인 관련 -->
+    <string name="login_title">로그인</string>
+    <string name="welcome_back">돌아오셨군요!</string>
+    <string name="sign_in_message">로그인을 위해 회원정보를 입력해 주세요</string>
+    <string name="email_address">이메일 주소</string>
+    <string name="email_placeholder">name@example.com</string>
+    <string name="password">비밀번호</string>
+    <string name="sign_in">로그인하기</string>
+    <string name="dont_have_account">계정이 없으신가요?</string>
+    <string name="create_account">계정 만들기</string>
+
+    <!-- 회원가입 관련 -->
+    <string name="signup_title">회원가입</string>
+    <string name="join_us">쪽지 남길 준비되셨나요?</string>
+    <string name="sign_up_message">회원가입을 위해 회원정보를 입력해 주세요</string>
+    <string name="nickname">닉네임</string>
+    <string name="duplication_check">중복확인</string>
+
+    <!-- 쪽지 작성 관련 -->
+    <string name="write_note_title">쪽지 남기기</string>
+    <string name="select_category">카테고리 선택</string>
+    <string name="category_daily">일상</string>
+    <string name="category_emotion">감성</string>
+    <string name="category_memory">추억</string>
+    <string name="category_restaurant">맛집</string>
+    <string name="note_placeholder">당신의 발자국을 남겨보세요!</string>
+    <string name="add_photo">사진 추가</string>
+    <string name="storage_period">보관 기간</string>
+    <string name="storage_period_desc">지도에 노출되는 시간</string>
+    <string name="hours_unit">시간</string>
+    <string name="leave_note_button">쪽지 남기기</string>
+    <string name="edit_note">쪽지 수정하기</string>
+    <string name="empty_note_list">주변에 쪽지가 없어요 \n처음으로 발자국을 남겨보세요</string>
+
+    <!-- 설정관련 -->
+    <string name="setting_title">계정 설정</string>
+    <string name="setting_section_title">설정</string>
+    <string name="notification_setting">알림 설정</string>
+    <string name="logout">로그아웃</string>
+    <string name="membership">회원탈퇴</string>
+
+
 </resources>

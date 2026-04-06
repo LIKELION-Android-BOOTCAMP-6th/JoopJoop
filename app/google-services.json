@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "693178225183",
+    "project_id": "joopjoop-7a730",
+    "storage_bucket": "joopjoop-7a730.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:693178225183:android:23755513dcf09b0e2e3b2a",
+        "android_client_info": {
+          "package_name": "com.example.joopjoop"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-_-2WcYLTDYwOAObgzj7ErfNUCUJH1Og"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
