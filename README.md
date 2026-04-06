@@ -67,7 +67,7 @@
 
 ## Database
 
-![Firebase Auth](https://img.shields.io/badge/Firebase%20Auth-FFCA28?style=flat-square&logo=Firebase&logoColor=white) ![Cloud Firestore](https://img.shields.io/badge/Cloud%20Firestore-FFCA28?style=flat-square&logo=Firebase&logoColor=white) ![Firebase Storage](https://img.shields.io/badge/Firebase%20Storage-FFCA28?style=flat-square&logo=Firebase&logoColor=white)
+![Google Auth](https://img.shields.io/badge/Google%20Auth-4285F4?style=flat-square&logo=Google&logoColor=white) ![Cloud Firestore](https://img.shields.io/badge/Cloud%20Firestore-FFCA28?style=flat-square&logo=Firebase&logoColor=white) ![Firebase Storage](https://img.shields.io/badge/Firebase%20Storage-FFCA28?style=flat-square&logo=Firebase&logoColor=white)
 
 ## Image Processing
 
