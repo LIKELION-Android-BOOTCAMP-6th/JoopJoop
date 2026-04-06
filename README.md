@@ -147,7 +147,6 @@
 - feature 모듈별로 Route를 정의하여 컴파일 타임에 경로 오류를 방지하고, 화면 간 데이터 전달의 안정성을 확보했습니다.
 - Scaffold와 BottomNavigation을 MainScreen에 배치하고, 내부 컨텐츠만 NavHost를 통해 교체하는 방식으로 UI 구조를 표준화했습니다.
 - Repository를 인터페이스로 추상화하여, 향후 단위 테스트(Unit Test) 시 가짜 객체(Mock)를 주입하기 쉬운 구조로 설계했습니다.
--
 
 ```
 com.example.joopjoop
